@@ -2,7 +2,6 @@ package be.bow.db;
 
 import be.bow.application.LateCloseableComponent;
 import be.bow.application.memory.MemoryManager;
-import be.bow.application.memory.MemoryGobbler;
 import be.bow.application.status.StatusViewable;
 import be.bow.cache.CachesManager;
 import be.bow.db.bloomfilter.BloomFilterDataInterface;
@@ -51,14 +50,6 @@ public abstract class DataInterfaceFactory implements StatusViewable, LateClosea
         }
         synchronized (allInterfaces) {
             allInterfaces.add(result);
-            //ugly!
-            DataInterface child = result;
-            while (child != null) {
-                if (child instanceof MemoryGobbler) {
-                    memoryManager.registerMemoryGobbler((MemoryGobbler) child);
-                }
-                child = child.getImplementingDataInterface();
-            }
         }
         return result;
     }
