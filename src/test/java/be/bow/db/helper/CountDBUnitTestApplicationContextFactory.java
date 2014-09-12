@@ -1,4 +1,4 @@
-package be.bow.application;
+package be.bow.db.helper;
 
 import be.bow.util.UnitTestApplicationContextFactory;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;

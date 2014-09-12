@@ -1,5 +1,6 @@
 package be.bow.db;
 
+import be.bow.db.combinator.Combinator;
 import be.bow.util.KeyValue;
 
 import java.util.ArrayList;

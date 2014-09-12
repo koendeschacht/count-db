@@ -1,6 +1,6 @@
-package be.bow.application.config;
+package be.bow.db.application.config;
 
-import be.bow.application.environment.CountDBEnvironmentProperties;
+import be.bow.db.application.environment.FileCountDBEnvironmentProperties;
 import be.bow.application.file.OpenFilesManager;
 import be.bow.application.memory.MemoryManager;
 import be.bow.cache.CachesManager;
@@ -15,13 +15,13 @@ public class FileDataInterfaceConfiguration {
 
     @Bean
     @Autowired
-    public DataInterfaceFactory dataInterfaceFactory(OpenFilesManager openFilesManager, CachesManager cachesManager, MemoryManager memoryManager, CountDBEnvironmentProperties environmentProperties) {
+    public DataInterfaceFactory dataInterfaceFactory(OpenFilesManager openFilesManager, CachesManager cachesManager, MemoryManager memoryManager, FileCountDBEnvironmentProperties environmentProperties) {
         return new FileDataInterfaceFactory(openFilesManager, cachesManager, memoryManager, environmentProperties.getDataDirectory() + "server/");
     }
 
     @Bean
     @Autowired
-    public VirtualFileService virtualFileService(CountDBEnvironmentProperties environmentProperties) {
+    public VirtualFileService virtualFileService(FileCountDBEnvironmentProperties environmentProperties) {
         return new LocalFileService(environmentProperties.getDataDirectory() + "virtualFiles/");
     }
 

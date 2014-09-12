@@ -1,5 +1,9 @@
 package be.bow.db;
 
+import be.bow.db.combinator.DoubleCombinator;
+import be.bow.db.combinator.OverWriteCombinator;
+import be.bow.db.helper.TestObject;
+import be.bow.db.helper.UnitTestContextLoader;
 import be.bow.iterator.CloseableIterator;
 import be.bow.util.KeyValue;
 import be.bow.util.Utils;
@@ -298,20 +302,15 @@ public class TestDataInterface extends BaseTestDataInterface {
     public void testDoubleValues() {
         final DataInterface<Double> db = dataInterfaceFactory.createDataInterface(type, "testDoubleValues", Double.class, new DoubleCombinator());
         db.dropAllData();
-
         for (int i = 0; i < 1000; i++) {
             db.write(i, (double) i);
         }
-
         db.write(-1, null);
-
         db.flush();
-
         for (int i = 0; i < 1000; i++) {
             Double value = db.read(i);
             Assert.assertEquals(new Double(i), value);
         }
-
         Assert.assertNull(db.read(-1));
     }
 

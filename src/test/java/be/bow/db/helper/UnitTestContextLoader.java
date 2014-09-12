@@ -1,8 +1,8 @@
-package be.bow.db;
+package be.bow.db.helper;
 
 
 import be.bow.application.ApplicationContextFactory;
-import be.bow.application.CountDBUnitTestApplicationContextFactory;
+import be.bow.db.helper.CountDBUnitTestApplicationContextFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.test.context.ContextLoader;

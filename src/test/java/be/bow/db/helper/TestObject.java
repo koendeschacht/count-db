@@ -1,4 +1,4 @@
-package be.bow.db;
+package be.bow.db.helper;
 
 /**
  * Used in TestDataInterface unit tests

@@ -1,6 +1,6 @@
 package be.bow.db.data;
 
-import be.bow.db.Combinator;
+import be.bow.db.combinator.Combinator;
 
 public class StringHashSetCombinator implements Combinator<StringHashSet> {
 

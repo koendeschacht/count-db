@@ -1,6 +1,7 @@
 package be.bow.db;
 
 
+import be.bow.db.combinator.Combinator;
 import be.bow.iterator.CloseableIterator;
 import be.bow.iterator.DataIterable;
 import be.bow.iterator.IterableUtils;

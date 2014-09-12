@@ -13,23 +13,25 @@ import java.io.OutputStream;
 public class RemoteFile implements VirtualFile {
 
     private String host;
+    private int port;
     private File relPath;
 
-    public RemoteFile(String host, File relPath) {
+    public RemoteFile(String host, int port, File relPath) {
         this.host = host;
+        this.port = port;
         this.relPath = relPath;
     }
 
     @Override
     public VirtualFile getFile(String relativePath) {
         File newRelPath = new File(relPath, relativePath);
-        return new RemoteFile(host, newRelPath);
+        return new RemoteFile(host, port, newRelPath);
     }
 
     @Override
     public InputStream createInputStream() {
         try {
-            WrappedSocketConnection connection = new WrappedSocketConnection(host, 1220);
+            WrappedSocketConnection connection = new WrappedSocketConnection(host, port);
             connection.writeByte((byte) RemoteFileServer.Action.INPUT_STREAM.ordinal());
             connection.writeString(relPath.getPath());
             connection.flush();
@@ -38,10 +40,10 @@ public class RemoteFile implements VirtualFile {
                 return connection.getIs();
             } else {
                 String message = connection.readString();
-                throw new RuntimeException("Received unexpected response while creating input stream to " + host + " " + message);
+                throw new RuntimeException("Received unexpected response while creating input stream to " + host + ":" + port + " " + message);
             }
         } catch (IOException exp) {
-            throw new RuntimeException("Received exception while creating input stream to " + host, exp);
+            throw new RuntimeException("Received exception while creating input stream to " + host + ":" + port, exp);
         }
     }
 
@@ -57,10 +59,10 @@ public class RemoteFile implements VirtualFile {
                 return connection.getOs();
             } else {
                 String message = connection.readString();
-                throw new RuntimeException("Received unexpected response while creating output stream to " + host + " " + message);
+                throw new RuntimeException("Received unexpected response while creating output stream to " + host + ":" + port + " " + message);
             }
         } catch (IOException exp) {
-            throw new RuntimeException("Received exception while creating output stream to " + host, exp);
+            throw new RuntimeException("Received exception while creating output stream to " + host + ":" + port, exp);
         }
     }
 
@@ -74,7 +76,7 @@ public class RemoteFile implements VirtualFile {
             connection.flush();
             return connection.readBoolean();
         } catch (IOException exp) {
-            throw new RuntimeException("Received exception while querying exists to " + host, exp);
+            throw new RuntimeException("Received exception while querying exists to " + host + ":" + port, exp);
         } finally {
             IOUtils.closeQuietly(connection);
         }

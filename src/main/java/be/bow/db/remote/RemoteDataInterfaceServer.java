@@ -3,7 +3,12 @@ package be.bow.db.remote;
 import be.bow.application.BaseServer;
 import be.bow.application.annotations.BowComponent;
 import be.bow.application.status.StatusViewable;
-import be.bow.db.*;
+import be.bow.db.ChangedValuesListener;
+import be.bow.db.DataInterface;
+import be.bow.db.DataInterfaceFactory;
+import be.bow.db.DatabaseCachingType;
+import be.bow.db.application.environment.RemoteCountDBEnvironmentProperties;
+import be.bow.db.combinator.Combinator;
 import be.bow.iterator.CloseableIterator;
 import be.bow.iterator.IterableUtils;
 import be.bow.iterator.SimpleIterator;
@@ -26,8 +31,8 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
     private final List<WrappedSocketConnection> listenToChangesConnections;
 
     @Autowired
-    public RemoteDataInterfaceServer(DataInterfaceFactory dataInterfaceFactory) throws IOException {
-        super("RemoteDataInterfaceServer", 1208);
+    public RemoteDataInterfaceServer(DataInterfaceFactory dataInterfaceFactory, RemoteCountDBEnvironmentProperties properties) throws IOException {
+        super("RemoteDataInterfaceServer", properties.getDataInterfaceServerPort());
         this.allInterfaces = new HashMap<>();
         this.dataInterfaceFactory = dataInterfaceFactory;
         this.listenToChangesConnections = new ArrayList<>();

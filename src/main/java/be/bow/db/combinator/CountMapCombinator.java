@@ -1,4 +1,4 @@
-package be.bow.db;
+package be.bow.db.combinator;
 
 import be.bow.counts.Counter;
 

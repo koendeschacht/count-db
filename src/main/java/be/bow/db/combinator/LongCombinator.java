@@ -1,4 +1,4 @@
-package be.bow.db;
+package be.bow.db.combinator;
 
 public class LongCombinator implements Combinator<Long> {
 

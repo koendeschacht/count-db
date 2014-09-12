@@ -1,6 +1,6 @@
 package be.bow.db.data;
 
-import be.bow.db.Combinator;
+import be.bow.db.combinator.Combinator;
 
 import java.util.Collections;
 

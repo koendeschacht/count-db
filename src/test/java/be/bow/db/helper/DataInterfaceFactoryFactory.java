@@ -1,10 +1,11 @@
-package be.bow.db;
+package be.bow.db.helper;
 
 import be.bow.application.annotations.BowComponent;
-import be.bow.application.environment.CountDBEnvironmentProperties;
 import be.bow.application.file.OpenFilesManager;
 import be.bow.application.memory.MemoryManager;
 import be.bow.cache.CachesManager;
+import be.bow.db.DataInterfaceFactory;
+import be.bow.db.DatabaseBackendType;
 import be.bow.db.filedb4.FileDataInterfaceFactory;
 import be.bow.db.leveldb.LevelDBDataInterfaceFactory;
 import be.bow.db.memory.InMemoryDataInterfaceFactory;
@@ -25,14 +26,14 @@ public class DataInterfaceFactoryFactory {
     @Autowired
     private OpenFilesManager openFilesManager;
     @Autowired
-    private CountDBEnvironmentProperties environmentProperties;
+    private UnitTestEnvironmentProperties environmentProperties;
 
     public DataInterfaceFactory createFactory(DatabaseBackendType backendType) {
         switch (backendType) {
             case FILE:
                 return new FileDataInterfaceFactory(openFilesManager, cachesManager, memoryManager, environmentProperties.getDataDirectory() + "server/");
             case REMOTE:
-                return new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDatabaseServerAddress(), 1208);
+                return new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDatabaseServerAddress(), environmentProperties.getDataInterfaceServerPort());
             case MEMORY:
                 return new InMemoryDataInterfaceFactory(cachesManager, memoryManager);
             case LEVELDB:

@@ -1,6 +1,6 @@
 package be.bow.db.remote;
 
-import be.bow.db.Combinator;
+import be.bow.db.combinator.Combinator;
 import be.bow.db.DataInterface;
 import be.bow.iterator.CloseableIterator;
 import be.bow.ui.UI;

@@ -2,7 +2,7 @@ package be.bow.db.leveldb;
 
 import be.bow.application.memory.MemoryManager;
 import be.bow.cache.CachesManager;
-import be.bow.db.Combinator;
+import be.bow.db.combinator.Combinator;
 import be.bow.db.DataInterface;
 import be.bow.db.DataInterfaceFactory;
 

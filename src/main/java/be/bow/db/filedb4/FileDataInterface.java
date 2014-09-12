@@ -8,7 +8,7 @@ import be.bow.iterator.IterableUtils;
 import be.bow.iterator.SimpleIterator;
 import be.bow.ui.UI;
 import be.bow.util.*;
-import be.bow.db.Combinator;
+import be.bow.db.combinator.Combinator;
 import be.bow.db.CoreDataInterface;
 import be.bow.db.DataInterface;
 

@@ -1,6 +1,6 @@
 package be.bow.db.leveldb;
 
-import be.bow.db.Combinator;
+import be.bow.db.combinator.Combinator;
 import be.bow.db.CoreDataInterface;
 import be.bow.db.DataInterface;
 import be.bow.iterator.CloseableIterator;

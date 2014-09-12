@@ -3,8 +3,11 @@ package be.bow.db;
 import be.bow.application.file.OpenFilesManager;
 import be.bow.application.memory.MemoryManager;
 import be.bow.cache.CachesManager;
-import be.bow.db.remote.RemoteDataInterfaceServer;
+import be.bow.db.application.environment.RemoteCountDBEnvironmentProperties;
+import be.bow.db.combinator.LongCombinator;
+import be.bow.db.helper.DataInterfaceFactoryFactory;
 import be.bow.db.remote.DatabaseServerDataInterfaceFactory;
+import be.bow.db.remote.RemoteDataInterfaceServer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runners.Parameterized;
@@ -45,6 +48,8 @@ public class BaseTestDataInterface {
     private MemoryManager memoryManager;
     @Autowired
     private OpenFilesManager openFilesManager;
+    @Autowired
+    private RemoteCountDBEnvironmentProperties properties;
 
     private DatabaseBackendType backendType;
     protected DatabaseCachingType type;
@@ -66,7 +71,7 @@ public class BaseTestDataInterface {
 
         if (backendType == DatabaseBackendType.REMOTE) {
             dataInterfaceServerFactory = new DatabaseServerDataInterfaceFactory(openFilesManager, cachesManager, memoryManager, "/tmp/dbServer");
-            remoteDataInterfaceServer = new RemoteDataInterfaceServer(dataInterfaceServerFactory);
+            remoteDataInterfaceServer = new RemoteDataInterfaceServer(dataInterfaceServerFactory, properties);
             remoteDataInterfaceServer.start();
         }
     }

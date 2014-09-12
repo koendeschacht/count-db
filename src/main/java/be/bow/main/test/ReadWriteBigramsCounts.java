@@ -4,15 +4,14 @@ import be.bow.application.ApplicationManager;
 import be.bow.db.DataInterface;
 import be.bow.db.DataInterfaceFactory;
 import be.bow.db.DatabaseCachingType;
-import be.bow.db.LongCombinator;
-import be.bow.db.application.CountDBApplicationContextFactory;
+import be.bow.db.combinator.LongCombinator;
 
 import java.io.IOException;
 
 public class ReadWriteBigramsCounts extends BaseReadWriteBigrams {
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        ApplicationManager.runSafely(new CountDBApplicationContextFactory(ReadWriteBigramsCounts.class));
+        ApplicationManager.runSafely(new SpeedTestApplicationContextFactory(ReadWriteBigramsCounts.class));
     }
 
     @Override

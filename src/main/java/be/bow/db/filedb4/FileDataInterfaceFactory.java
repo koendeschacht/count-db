@@ -3,7 +3,7 @@ package be.bow.db.filedb4;
 import be.bow.application.file.OpenFilesManager;
 import be.bow.application.memory.MemoryManager;
 import be.bow.cache.CachesManager;
-import be.bow.db.Combinator;
+import be.bow.db.combinator.Combinator;
 import be.bow.db.DataInterface;
 import be.bow.db.DataInterfaceFactory;
 

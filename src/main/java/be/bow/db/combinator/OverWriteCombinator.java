@@ -1,4 +1,4 @@
-package be.bow.db;
+package be.bow.db.combinator;
 
 public class OverWriteCombinator<T> implements Combinator<T> {
 
