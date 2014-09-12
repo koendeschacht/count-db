@@ -2,9 +2,9 @@ package be.bow.virtualfile.remote;
 
 import be.bow.application.BaseServer;
 import be.bow.application.annotations.BowComponent;
+import be.bow.application.environment.CountDBEnvironmentProperties;
 import be.bow.ui.UI;
 import be.bow.util.WrappedSocketConnection;
-import be.bow.application.environment.OnionDBEnvironmentProperties;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +21,12 @@ public class RemoteFileServer extends BaseServer {
     private File rootDirectory;
     private ServerSocket serverSocket;
 
+    public RemoteFileServer() {
+        super("RemoteFileServer", 1220);
+    }
+
     @Autowired
-    private void setRootDirectory(OnionDBEnvironmentProperties environmentProperties) {
+    private void setRootDirectory(CountDBEnvironmentProperties environmentProperties) {
         File dataDir = new File(environmentProperties.getDataDirectory());
         rootDirectory = new File(dataDir, "virtualFiles");
         try {
@@ -30,10 +34,6 @@ public class RemoteFileServer extends BaseServer {
         } catch (IOException e) {
             throw new RuntimeException("Failed to create directory " + rootDirectory.getAbsolutePath(), e);
         }
-    }
-
-    public RemoteFileServer() {
-        super("RemoteFileServer", 1220);
     }
 
     @Override

@@ -42,10 +42,10 @@ public abstract class DataInterfaceFactory implements StatusViewable, LateClosea
 
     public <T extends Object> DataInterface<T> createDataInterface(final DatabaseCachingType type, final String subset, final Class<T> objectClass, final Combinator<T> combinator) {
         DataInterface<T> result = createBaseDataInterface(subset, objectClass, combinator);
-        if (type == DatabaseCachingType.CACHED || type == DatabaseCachingType.CACHED_AND_BLOOM) {
+        if (type.useCache()) {
             result = cached(result);
         }
-        if (type == DatabaseCachingType.CACHED_AND_BLOOM) {
+        if (type.useBloomFilter()) {
             result = bloom(result);
         }
         synchronized (allInterfaces) {

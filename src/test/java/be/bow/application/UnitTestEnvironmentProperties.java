@@ -1,8 +1,8 @@
 package be.bow.application;
 
-import be.bow.application.environment.OnionDBEnvironmentProperties;
+import be.bow.application.environment.CountDBEnvironmentProperties;
 
-public class UnitTestEnvironmentProperties implements OnionDBEnvironmentProperties {
+public class UnitTestEnvironmentProperties implements CountDBEnvironmentProperties {
 
     private String dataDirectory = "/tmp/unitTest/" + System.currentTimeMillis() + "/";
 

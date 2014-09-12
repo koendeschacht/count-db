@@ -1,10 +1,10 @@
 package be.bow.db;
 
 import be.bow.application.annotations.BowComponent;
+import be.bow.application.environment.CountDBEnvironmentProperties;
 import be.bow.application.file.OpenFilesManager;
 import be.bow.application.memory.MemoryManager;
 import be.bow.cache.CachesManager;
-import be.bow.application.environment.OnionDBEnvironmentProperties;
 import be.bow.db.filedb4.FileDataInterfaceFactory;
 import be.bow.db.leveldb.LevelDBDataInterfaceFactory;
 import be.bow.db.memory.InMemoryDataInterfaceFactory;
@@ -25,7 +25,7 @@ public class DataInterfaceFactoryFactory {
     @Autowired
     private OpenFilesManager openFilesManager;
     @Autowired
-    private OnionDBEnvironmentProperties environmentProperties;
+    private CountDBEnvironmentProperties environmentProperties;
 
     public DataInterfaceFactory createFactory(DatabaseBackendType backendType) {
         switch (backendType) {

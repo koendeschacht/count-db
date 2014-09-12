@@ -2,7 +2,7 @@ package be.bow.main;
 
 import be.bow.application.ApplicationManager;
 import be.bow.application.MainClass;
-import be.bow.application.config.LocalDBOnionDBApplicationContextFactory;
+import be.bow.application.config.FileApplicationContextFactory;
 import be.bow.db.remote.RemoteDataInterfaceServer;
 import be.bow.virtualfile.remote.RemoteFileServer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,7 @@ public class DatabaseServerMain implements MainClass {
     private RemoteFileServer remoteFileServer;
 
     public static void main(String[] args) throws IOException {
-        ApplicationManager.runSafely(new LocalDBOnionDBApplicationContextFactory(DatabaseServerMain.class));
+        ApplicationManager.runSafely(new FileApplicationContextFactory(DatabaseServerMain.class));
     }
 
     @Override

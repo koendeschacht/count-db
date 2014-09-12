@@ -1,12 +1,8 @@
 package be.bow.main.test;
 
-import be.bow.application.MainClass;
 import be.bow.application.file.OpenFilesManager;
 import be.bow.application.memory.MemoryManager;
 import be.bow.cache.CachesManager;
-import be.bow.text.WordIterator;
-import be.bow.ui.UI;
-import be.bow.util.Utils;
 import be.bow.db.DataInterface;
 import be.bow.db.DataInterfaceFactory;
 import be.bow.db.DatabaseCachingType;
@@ -15,6 +11,9 @@ import be.bow.db.filedb4.FileDataInterfaceFactory;
 import be.bow.db.leveldb.LevelDBDataInterfaceFactory;
 import be.bow.db.memory.InMemoryDataInterfaceFactory;
 import be.bow.db.remote.RemoteDatabaseInterfaceFactory;
+import be.bow.text.WordIterator;
+import be.bow.ui.UI;
+import be.bow.util.Utils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,10 +22,9 @@ import java.io.*;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 
-public abstract class TestDatabaseSpeed implements MainClass {
+public abstract class BaseReadWriteBigrams extends BaseSpeedTest {
 
     private static final long CHARS_TO_READ = 200 * 1024 * 1024;
-    private static final boolean includeInMemory = false;
     private static final int NUM_OF_THREADS = 20;
     private static final File largeTextFile = new File("/home/koen/bow/data/wikipedia/nlwiki-20140113-pages-articles.xml");
     private static final File tmpDbDir = new File("/tmp/testDatabaseSpeed");
@@ -45,11 +43,14 @@ public abstract class TestDatabaseSpeed implements MainClass {
             LevelDBDataInterfaceFactory levelDBDataInterfaceFactory = new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB");
             FileDataInterfaceFactory fileDataInterfaceFactory = new FileDataInterfaceFactory(openFilesManager, cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/fileDb4");
             RemoteDatabaseInterfaceFactory remoteDatabaseInterfaceFactory = new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, "localhost", 1208);
+            InMemoryDataInterfaceFactory inMemoryDataInterfaceFactory = new InMemoryDataInterfaceFactory(cachesManager, memoryManager);
 
             List<TestResult> testResults = new ArrayList<>();
             doTest(testResults, levelDBDataInterfaceFactory, DatabaseCachingType.DIRECT, cachesManager, largeTextFile);
             doTest(testResults, fileDataInterfaceFactory, DatabaseCachingType.CACHED_AND_BLOOM, cachesManager, largeTextFile);
             doTest(testResults, remoteDatabaseInterfaceFactory, DatabaseCachingType.CACHED_AND_BLOOM, cachesManager, largeTextFile);
+            doTest(testResults, inMemoryDataInterfaceFactory, DatabaseCachingType.BLOOM, cachesManager, largeTextFile);
+
 
             for (DataInterface di : fileDataInterfaceFactory.getAllInterfaces()) {
                 DataInterface implementing = di;
@@ -58,10 +59,6 @@ public abstract class TestDatabaseSpeed implements MainClass {
                 }
                 FileDataInterface dataInterface4 = ((FileDataInterface) implementing);
                 UI.write("Clean reads " + dataInterface4.numOfCleanReads + " dirty reads " + dataInterface4.numOfDirtyReads);
-            }
-            if (includeInMemory) {
-                InMemoryDataInterfaceFactory inMemoryDataInterfaceFactory = new InMemoryDataInterfaceFactory(cachesManager, memoryManager);
-                doTest(testResults, inMemoryDataInterfaceFactory, DatabaseCachingType.DIRECT, cachesManager, largeTextFile);
             }
             UI.write("Sorted by avg write time");
             Collections.sort(testResults, new Comparator<TestResult>() {

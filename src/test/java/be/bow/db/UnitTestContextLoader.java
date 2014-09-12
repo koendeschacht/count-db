@@ -2,7 +2,7 @@ package be.bow.db;
 
 
 import be.bow.application.ApplicationContextFactory;
-import be.bow.application.OnionDBUnitTestApplicationContextFactory;
+import be.bow.application.CountDBUnitTestApplicationContextFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.test.context.ContextLoader;
@@ -21,7 +21,7 @@ public class UnitTestContextLoader implements ContextLoader {
 
     @Override
     public ApplicationContext loadContext(String... locations) throws Exception {
-        ApplicationContextFactory applicationContextFactory = new OnionDBUnitTestApplicationContextFactory();
+        ApplicationContextFactory applicationContextFactory = new CountDBUnitTestApplicationContextFactory();
         AnnotationConfigApplicationContext applicationContext = applicationContextFactory.createApplicationContext();
         applicationContext.refresh();
         return applicationContext;

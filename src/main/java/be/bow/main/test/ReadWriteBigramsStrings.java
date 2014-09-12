@@ -5,14 +5,14 @@ import be.bow.db.DataInterface;
 import be.bow.db.DataInterfaceFactory;
 import be.bow.db.DatabaseCachingType;
 import be.bow.db.OverWriteCombinator;
-import be.bow.db.application.OnionDBApplicationContextFactory;
+import be.bow.db.application.CountDBApplicationContextFactory;
 
 import java.io.IOException;
 
-public class TestDatabaseSpeedStrings extends TestDatabaseSpeed {
+public class ReadWriteBigramsStrings extends BaseReadWriteBigrams {
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        ApplicationManager.runSafely(new OnionDBApplicationContextFactory(TestDatabaseSpeedStrings.class));
+        ApplicationManager.runSafely(new CountDBApplicationContextFactory(ReadWriteBigramsStrings.class));
     }
 
 

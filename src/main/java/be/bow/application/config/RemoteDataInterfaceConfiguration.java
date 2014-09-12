@@ -1,6 +1,6 @@
 package be.bow.application.config;
 
-import be.bow.application.environment.OnionDBEnvironmentProperties;
+import be.bow.application.environment.CountDBEnvironmentProperties;
 import be.bow.application.memory.MemoryManager;
 import be.bow.cache.CachesManager;
 import be.bow.db.DataInterfaceFactory;
@@ -14,13 +14,13 @@ public class RemoteDataInterfaceConfiguration {
 
     @Bean
     @Autowired
-    public DataInterfaceFactory dataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, OnionDBEnvironmentProperties environmentProperties) {
+    public DataInterfaceFactory dataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, CountDBEnvironmentProperties environmentProperties) {
         return new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDatabaseServerAddress(), 1208);
     }
 
     @Bean
     @Autowired
-    public VirtualFileService virtualFileService(OnionDBEnvironmentProperties environmentProperties) {
+    public VirtualFileService virtualFileService(CountDBEnvironmentProperties environmentProperties) {
         return new RemoteFileService(environmentProperties.getDatabaseServerAddress());
     }
 
