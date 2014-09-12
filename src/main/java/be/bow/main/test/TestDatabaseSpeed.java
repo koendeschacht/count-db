@@ -201,7 +201,7 @@ public abstract class TestDatabaseSpeed implements MainClass {
         countDownLatchReads.await();
         taken = (System.currentTimeMillis() - startOfRead);
         double avgRead = taken / (double) numOfReads.intValue();
-        UI.write("Finished read phase, closing DI");
+        UI.write("Finished read phase, closing data interface");
         dataInterface.close();
         return new TestResult(type, factory, avgRead, avgWrite, numOfReads.intValue(), numOfWrites.intValue());
     }

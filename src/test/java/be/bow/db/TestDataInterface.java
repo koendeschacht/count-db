@@ -1,7 +1,6 @@
 package be.bow.db;
 
 import be.bow.iterator.CloseableIterator;
-import be.bow.ui.UI;
 import be.bow.util.KeyValue;
 import be.bow.util.Utils;
 import org.junit.Assert;
@@ -21,20 +20,16 @@ public class TestDataInterface extends BaseTestDataInterface {
     }
 
     @Test
-    public void sanityCheck() {
+    public void sanityCheck() throws Exception {
         Random random = new Random(1204);
         DataInterface<TestObject> dataInterface = dataInterfaceFactory.createDataInterface(type, "sanityCheck", TestObject.class, new OverWriteCombinator<TestObject>());
         dataInterface.dropAllData();
-        try {
-            writeRandomObjects(dataInterface, 200, random);
-            TestObject randomObj = createRandomObject(random);
-            dataInterface.write("obj", randomObj);
-            writeRandomObjects(dataInterface, 200, random);
-            TestObject readObj = dataInterface.read("obj");
-            Assert.assertEquals(randomObj, readObj);
-        } catch (Exception exp) {
-            UI.write("huh?");
-        }
+        writeRandomObjects(dataInterface, 200, random);
+        TestObject randomObj = createRandomObject(random);
+        dataInterface.write("obj", randomObj);
+        writeRandomObjects(dataInterface, 200, random);
+        TestObject readObj = dataInterface.read("obj");
+        Assert.assertEquals(randomObj, readObj);
     }
 
     @Test
@@ -71,14 +66,14 @@ public class TestDataInterface extends BaseTestDataInterface {
     @Test
     public void testRandomValues() throws Exception {
         long numOfExamples = 200;
-        DataInterface<TestObject> DI = dataInterfaceFactory.createDataInterface(type, "testRandomValues", TestObject.class, new OverWriteCombinator<TestObject>());
-        DI.dropAllData();
+        DataInterface<TestObject> dataInterface = dataInterfaceFactory.createDataInterface(type, "testRandomValues", TestObject.class, new OverWriteCombinator<TestObject>());
+        dataInterface.dropAllData();
         for (int i = 0; i < numOfExamples; i++) {
-            DI.write(Integer.toString(i), new TestObject(i, Integer.toString(i)));
+            dataInterface.write(Integer.toString(i), new TestObject(i, Integer.toString(i)));
         }
-        DI.flush();
+        dataInterface.flush();
         for (int i = 0; i < numOfExamples; i++) {
-            TestObject obj = DI.read(Integer.toString(i));
+            TestObject obj = dataInterface.read(Integer.toString(i));
             Assert.assertNotNull(obj);
             Assert.assertEquals(i, obj.getValue1());
         }

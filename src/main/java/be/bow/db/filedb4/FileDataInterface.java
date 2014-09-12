@@ -982,7 +982,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 }
                 totalTime += System.nanoTime();
                 if (numOfFilesRewritten > 0) {
-                    UI.write("Rewrote " + numOfFilesRewritten + ",  created " + numOfNewFiles + " and merged " + numOfFilesMerged + " file(s) for DI " + FileDataInterface.this.getName() + " " + (System.currentTimeMillis() - timeOfLastWrite) + "/" + (System.currentTimeMillis() - timeOfLastRead) + " ms since last write/read, took " + (System.currentTimeMillis() - start) + " ms. " + timeReading + " " + timeSorting + " " + timeWriting + " " + totalTime);
+                    UI.write("Rewrote " + numOfFilesRewritten + ",  created " + numOfNewFiles + " and merged " + numOfFilesMerged + " file(s) for data interface " + FileDataInterface.this.getName() + " " + (System.currentTimeMillis() - timeOfLastWrite) + "/" + (System.currentTimeMillis() - timeOfLastRead) + " ms since last write/read, took " + (System.currentTimeMillis() - start) + " ms. " + timeReading + " " + timeSorting + " " + timeWriting + " " + totalTime);
                 }
                 if (numOfFilesRewritten > 0 || (someFilesAreDirty && System.currentTimeMillis() - timeOfLastWriteOfCleanFileList > 1000)) {
                     writeCleanFilesList();
