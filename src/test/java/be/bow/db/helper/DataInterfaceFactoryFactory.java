@@ -6,7 +6,7 @@ import be.bow.application.memory.MemoryManager;
 import be.bow.cache.CachesManager;
 import be.bow.db.DataInterfaceFactory;
 import be.bow.db.DatabaseBackendType;
-import be.bow.db.filedb4.FileDataInterfaceFactory;
+import be.bow.db.filedb.FileDataInterfaceFactory;
 import be.bow.db.leveldb.LevelDBDataInterfaceFactory;
 import be.bow.db.memory.InMemoryDataInterfaceFactory;
 import be.bow.db.remote.RemoteDatabaseInterfaceFactory;

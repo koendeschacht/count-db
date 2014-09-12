@@ -192,7 +192,7 @@ public class TestDataInterface extends BaseTestDataInterface {
         }
         db.flush();
         db.read(10);
-        Iterator<KeyValue<Long>> valueIterator = db.read(valuesToRead.iterator());
+        Iterator<KeyValue<Long>> valueIterator = db.iterator(valuesToRead.iterator());
         int numOfValuesRead = 0;
         Long prevKey = null;
         while (valueIterator.hasNext()) {

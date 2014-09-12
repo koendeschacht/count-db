@@ -28,7 +28,7 @@ public abstract class BaseSpeedTest implements MainClass {
 
                 @Override
                 public String getThreadSampleLocation() {
-                    return "./";
+                    return "./perf";
                 }
             });
             bean(WebContainerConfiguration.class);

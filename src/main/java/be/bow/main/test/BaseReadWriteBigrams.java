@@ -6,26 +6,26 @@ import be.bow.cache.CachesManager;
 import be.bow.db.DataInterface;
 import be.bow.db.DataInterfaceFactory;
 import be.bow.db.DatabaseCachingType;
-import be.bow.db.filedb4.FileDataInterface;
-import be.bow.db.filedb4.FileDataInterfaceFactory;
+import be.bow.db.filedb.FileDataInterfaceFactory;
 import be.bow.db.leveldb.LevelDBDataInterfaceFactory;
 import be.bow.db.memory.InMemoryDataInterfaceFactory;
 import be.bow.db.remote.RemoteDatabaseInterfaceFactory;
 import be.bow.text.WordIterator;
 import be.bow.ui.UI;
-import be.bow.util.Utils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.mutable.MutableInt;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 public abstract class BaseReadWriteBigrams extends BaseSpeedTest {
 
-    private static final long CHARS_TO_READ = 200 * 1024 * 1024;
-    private static final int NUM_OF_THREADS = 20;
+    private static final long CHARS_TO_READ = 100 * 1024 * 1024;
     private static final File largeTextFile = new File("/home/koen/bow/data/wikipedia/nlwiki-20140113-pages-articles.xml");
     private static final File tmpDbDir = new File("/tmp/testDatabaseSpeed");
 
@@ -41,40 +41,19 @@ public abstract class BaseReadWriteBigrams extends BaseSpeedTest {
             warmupTextFile(largeTextFile);
             prepareTmpDir(tmpDbDir);
             LevelDBDataInterfaceFactory levelDBDataInterfaceFactory = new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB");
-            FileDataInterfaceFactory fileDataInterfaceFactory = new FileDataInterfaceFactory(openFilesManager, cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/fileDb4");
+            FileDataInterfaceFactory fileDataInterfaceFactory = new FileDataInterfaceFactory(openFilesManager, cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/fileDb");
             RemoteDatabaseInterfaceFactory remoteDatabaseInterfaceFactory = new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, "localhost", 1208);
             InMemoryDataInterfaceFactory inMemoryDataInterfaceFactory = new InMemoryDataInterfaceFactory(cachesManager, memoryManager);
 
             List<TestResult> testResults = new ArrayList<>();
-            doTest(testResults, levelDBDataInterfaceFactory, DatabaseCachingType.DIRECT, cachesManager, largeTextFile);
-            doTest(testResults, fileDataInterfaceFactory, DatabaseCachingType.CACHED_AND_BLOOM, cachesManager, largeTextFile);
-            doTest(testResults, remoteDatabaseInterfaceFactory, DatabaseCachingType.CACHED_AND_BLOOM, cachesManager, largeTextFile);
-            doTest(testResults, inMemoryDataInterfaceFactory, DatabaseCachingType.BLOOM, cachesManager, largeTextFile);
 
-
-            for (DataInterface di : fileDataInterfaceFactory.getAllInterfaces()) {
-                DataInterface implementing = di;
-                while (implementing.getImplementingDataInterface() != null) {
-                    implementing = implementing.getImplementingDataInterface();
-                }
-                FileDataInterface dataInterface4 = ((FileDataInterface) implementing);
-                UI.write("Clean reads " + dataInterface4.numOfCleanReads + " dirty reads " + dataInterface4.numOfDirtyReads);
+            for (int numberOfThreads = 1; numberOfThreads <= 64; numberOfThreads *= 2) {
+                doTest(testResults, levelDBDataInterfaceFactory, DatabaseCachingType.DIRECT, largeTextFile, numberOfThreads);
+                doTest(testResults, fileDataInterfaceFactory, DatabaseCachingType.CACHED_AND_BLOOM, largeTextFile, numberOfThreads);
+                doTest(testResults, remoteDatabaseInterfaceFactory, DatabaseCachingType.CACHED_AND_BLOOM, largeTextFile, numberOfThreads);
+                doTest(testResults, inMemoryDataInterfaceFactory, DatabaseCachingType.DIRECT, largeTextFile, numberOfThreads);
             }
-            UI.write("Sorted by avg write time");
-            Collections.sort(testResults, new Comparator<TestResult>() {
-                @Override
-                public int compare(TestResult o1, TestResult o2) {
-                    return Double.compare(o1.getAvgWrite(), o2.getAvgWrite());
-                }
-            });
-            printTestResults(testResults);
-            UI.write("Sorted by avg read time");
-            Collections.sort(testResults, new Comparator<TestResult>() {
-                @Override
-                public int compare(TestResult o1, TestResult o2) {
-                    return Double.compare(o1.getAvgRead(), o2.getAvgRead());
-                }
-            });
+
             printTestResults(testResults);
             levelDBDataInterfaceFactory.close();
             fileDataInterfaceFactory.close();
@@ -108,28 +87,24 @@ public abstract class BaseReadWriteBigrams extends BaseSpeedTest {
 
     private static void printTestResults(List<TestResult> testResults) {
         for (TestResult testResult : testResults) {
-            UI.write(testResult.getFactory().getClass().getSimpleName() + " " + testResult.getType() + " " + testResult.getNumOfWrites() + " " + testResult.getAvgWrite() + " " + testResult.getNumOfReads() + " " + testResult.getAvgRead());
+            UI.write(testResult.getFactory().getClass().getSimpleName() + " " + testResult.getType() + " " + testResult.getAvgWrite() + " " + testResult.getAvgRead());
         }
     }
 
-    public void doTest(List<TestResult> testResults, DataInterfaceFactory factory, DatabaseCachingType type, CachesManager cachesManager, File largeTextFile) throws InterruptedException, IOException {
-        testResults.add(testWritingAndReading(factory, type, largeTextFile));
-        cachesManager.flushAll();
-        System.gc();
-        Utils.threadSleep(1000);
-        System.gc();
+    public void doTest(List<TestResult> testResults, DataInterfaceFactory factory, DatabaseCachingType type, File largeTextFile, int numberOfThreads) throws InterruptedException, IOException {
+        testResults.add(testWritingAndReading(factory, type, largeTextFile, numberOfThreads));
     }
 
-    public TestResult testWritingAndReading(DataInterfaceFactory factory, DatabaseCachingType type, File largeTextFile) throws InterruptedException, FileNotFoundException {
-        UI.write("Starting tests for " + type + " " + factory.getClass().getSimpleName());
+    public TestResult testWritingAndReading(DataInterfaceFactory factory, DatabaseCachingType type, File largeTextFile, int numberOfThreads) throws InterruptedException, FileNotFoundException {
+        UI.write("Starting tests for " + type + " " + factory.getClass().getSimpleName() + " with " + numberOfThreads + " threads.");
         final DataInterface dataInterface = createDataInterface(type, factory);
         dataInterface.dropAllData();
         final MutableInt numOfWrites = new MutableInt(0);
         final MutableInt charsReadForWrite = new MutableInt(0);
         final long startOfWrite = System.currentTimeMillis();
-        final CountDownLatch countDownLatchWrites = new CountDownLatch(NUM_OF_THREADS);
+        final CountDownLatch countDownLatchWrites = new CountDownLatch(numberOfThreads);
         final BufferedReader rdr = new BufferedReader(new FileReader(largeTextFile));
-        for (int i = 0; i < NUM_OF_THREADS; i++) {
+        for (int i = 0; i < numberOfThreads; i++) {
             new Thread() {
                 public void run() {
                     char[] textBuffer = new char[200000];
@@ -166,8 +141,8 @@ public abstract class BaseReadWriteBigrams extends BaseSpeedTest {
         final long startOfRead = System.currentTimeMillis();
         final MutableInt numOfReads = new MutableInt(0);
         final MutableInt charsReadForReads = new MutableInt(0);
-        final CountDownLatch countDownLatchReads = new CountDownLatch(NUM_OF_THREADS);
-        for (int i = 0; i < NUM_OF_THREADS; i++) {
+        final CountDownLatch countDownLatchReads = new CountDownLatch(numberOfThreads);
+        for (int i = 0; i < numberOfThreads; i++) {
             new Thread() {
                 public void run() {
                     char[] textBuffer = new char[200000];
@@ -200,7 +175,7 @@ public abstract class BaseReadWriteBigrams extends BaseSpeedTest {
         double avgRead = taken / (double) numOfReads.intValue();
         UI.write("Finished read phase, closing data interface");
         dataInterface.close();
-        return new TestResult(type, factory, avgRead, avgWrite, numOfReads.intValue(), numOfWrites.intValue());
+        return new TestResult(type, factory, numberOfThreads, avgRead, avgWrite);
     }
 
     protected abstract DataInterface createDataInterface(DatabaseCachingType type, DataInterfaceFactory factory);
@@ -212,18 +187,16 @@ public abstract class BaseReadWriteBigrams extends BaseSpeedTest {
     private static class TestResult {
         private final DatabaseCachingType type;
         private final DataInterfaceFactory factory;
-        private final long numOfReads;
-        private final long numOfWrites;
+        private final int numberOfThreads;
         private final double avgRead;
         private final double avgWrite;
 
-        private TestResult(DatabaseCachingType type, DataInterfaceFactory factory, double avgRead, double avgWrite, long numOfReads, long numOfWrites) {
+        private TestResult(DatabaseCachingType type, DataInterfaceFactory factory, int numberOfThreads, double avgRead, double avgWrite) {
             this.type = type;
             this.factory = factory;
             this.avgRead = avgRead;
             this.avgWrite = avgWrite;
-            this.numOfReads = numOfReads;
-            this.numOfWrites = numOfWrites;
+            this.numberOfThreads = numberOfThreads;
         }
 
         private DatabaseCachingType getType() {
@@ -242,12 +215,8 @@ public abstract class BaseReadWriteBigrams extends BaseSpeedTest {
             return avgWrite;
         }
 
-        private long getNumOfReads() {
-            return numOfReads;
-        }
-
-        private long getNumOfWrites() {
-            return numOfWrites;
+        public int getNumberOfThreads() {
+            return numberOfThreads;
         }
     }
 

@@ -189,7 +189,7 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
         }
 
         private void handleReadValues() throws IOException {
-            CloseableIterator<KeyValue> valueIt = dataInterface.read(IterableUtils.iterator(new SimpleIterator<Long>() {
+            CloseableIterator<KeyValue> valueIt = dataInterface.iterator(IterableUtils.iterator(new SimpleIterator<Long>() {
                 @Override
                 public Long next() throws Exception {
                     return connection.readLong();

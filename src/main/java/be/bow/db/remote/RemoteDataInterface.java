@@ -202,7 +202,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     }
 
     @Override
-    public CloseableIterator<KeyValue<T>> read(final Iterator<Long> keyIterator) {
+    public CloseableIterator<KeyValue<T>> iterator(final Iterator<Long> keyIterator) {
         try {
             final Connection connection = new Connection(host, port);
             doAction(Action.READVALUES, connection);

@@ -1,4 +1,4 @@
-package be.bow.db.filedb4;
+package be.bow.db.filedb;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,7 +8,7 @@ import java.util.concurrent.Semaphore;
 public class FileBucket implements Comparable<FileBucket> {
 
     private final long firstKey; //inclusive
-    private final long lastKey; //inclusive;
+    private final long lastKey; //inclusive
     private final List<FileInfo> files;
     private final Semaphore lock;
 
@@ -23,16 +23,20 @@ public class FileBucket implements Comparable<FileBucket> {
         return files;
     }
 
-    public FileInfo getFile(long key) {
+    public int getFileInd(long key) {
         int pos = Collections.binarySearch((List) files, key);
         if (pos < 0) {
             pos = -(pos + 2);
         }
-        return files.get(pos);
+        return pos;
     }
 
     public long getFirstKey() {
         return firstKey;
+    }
+
+    public FileInfo getFile(long key) {
+        return files.get(getFileInd(key));
     }
 
     public long getLastKey() {

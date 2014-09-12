@@ -4,7 +4,7 @@ import be.bow.application.file.OpenFilesManager;
 import be.bow.application.memory.MemoryManager;
 import be.bow.cache.CachesManager;
 import be.bow.db.DataInterface;
-import be.bow.db.filedb4.FileDataInterfaceFactory;
+import be.bow.db.filedb.FileDataInterfaceFactory;
 
 public class DatabaseServerDataInterfaceFactory extends FileDataInterfaceFactory {
 

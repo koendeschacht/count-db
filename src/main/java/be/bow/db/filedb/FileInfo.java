@@ -1,4 +1,4 @@
-package be.bow.db.filedb4;
+package be.bow.db.filedb;
 
 import be.bow.util.Pair;
 import org.apache.commons.io.IOUtils;
@@ -9,13 +9,13 @@ import java.util.List;
 class FileInfo implements Comparable {
 
     private final long firstKey;
-    private long size;
+    private int size;
     private DataInputStream inputStream;
     private boolean isDirty;
     //This field is only filled in when the file is clean (i.e. not isDirty)
     private List<Pair<Long, Integer>> fileLocations;
 
-    public FileInfo(long firstKey, long size) {
+    public FileInfo(long firstKey, int size) {
         this.firstKey = firstKey;
         this.size = size;
         this.isDirty = size > 0;
@@ -29,11 +29,11 @@ class FileInfo implements Comparable {
         return firstKey;
     }
 
-    public long getSize() {
+    public int getSize() {
         return size;
     }
 
-    public void setSize(long size) {
+    public void setSize(int size) {
         this.size = size;
     }
 

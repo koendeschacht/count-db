@@ -59,8 +59,8 @@ public class LayeredDataInterface<T> extends DataInterface<T> {
         baseInterface.write(entries);
     }
 
-    public CloseableIterator<KeyValue<T>> read(final Iterator<Long> keyIterator) {
-        return baseInterface.read(keyIterator);
+    public CloseableIterator<KeyValue<T>> iterator(final Iterator<Long> keyIterator) {
+        return baseInterface.iterator(keyIterator);
     }
 
     public CloseableIterator<Long> keyIterator() {
