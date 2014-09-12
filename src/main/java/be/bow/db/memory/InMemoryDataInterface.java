@@ -1,58 +1,66 @@
 package be.bow.db.memory;
 
-import be.bow.db.combinator.Combinator;
 import be.bow.db.CoreDataInterface;
 import be.bow.db.DataInterface;
+import be.bow.db.combinator.Combinator;
 import be.bow.iterator.CloseableIterator;
 import be.bow.iterator.IterableUtils;
+import be.bow.util.DataLock;
 import be.bow.util.KeyValue;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T> {
 
-    private HashMap<Long, T> values;
+    private Map<Long, T> values;
+    private final DataLock lock;
 
     protected InMemoryDataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
         super(name, objectClass, combinator);
-        this.values = new HashMap<>();
+        this.values = new ConcurrentHashMap<>();
+        this.lock = new DataLock();
     }
 
     @Override
     protected T readInt(long key) {
-        synchronized (values) {
-            return values.get(key);
-        }
+        return values.get(key);
     }
 
     @Override
     protected void writeInt0(long key, T value) {
-        synchronized (values) {
-            if (value == null) {
-                values.remove(key);
+        lock.lockWrite(key);
+        nonSynchronizedWrite(key, value);
+        lock.unlockWrite(key);
+    }
+
+    private void nonSynchronizedWrite(long key, T value) {
+        if (value == null) {
+            values.remove(key);
+        } else {
+            T currentValue = values.get(key);
+            if (currentValue == null) {
+                values.put(key, value);
             } else {
-                T currentValue = values.get(key);
-                if (currentValue == null) {
-                    values.put(key, value);
-                } else {
-                    values.put(key, getCombinator().combine(currentValue, value));
-                }
+                values.put(key, getCombinator().combine(currentValue, value));
             }
         }
     }
 
     @Override
     protected void writeInt0(Iterator<KeyValue<T>> entries) {
-        synchronized (values) {
-            while (entries.hasNext()) {
-                KeyValue<T> entry = entries.next();
-                writeInt0(entry.getKey(), entry.getValue());
-            }
+        lock.lockWriteAll();
+        while (entries.hasNext()) {
+            KeyValue<T> entry = entries.next();
+            nonSynchronizedWrite(entry.getKey(), entry.getValue());
         }
+        lock.unlockWriteAll();
     }
 
     @Override
     public CloseableIterator<KeyValue<T>> iterator() {
+        //We should probably add locking for this iterator, but do we want to
+        //keep all the data locked until it is closed?
         List<Map.Entry<Long, T>> sortedValues = new ArrayList<>(values.entrySet());
         Collections.sort(sortedValues, new Comparator<Map.Entry<Long, T>>() {
             @Override
@@ -87,17 +95,23 @@ public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T
 
     @Override
     public void dropAllData() {
+        lock.lockWriteAll();
         values.clear();
+        lock.unlockWriteAll();
     }
 
     @Override
     public void flush() {
-        //do nothing
+        //make sure that all writes have completely finished:
+        lock.lockWriteAll();
+        lock.unlockWriteAll();
     }
 
     @Override
     public void close() {
+        lock.lockWriteAll();
         values = null;
+        lock.unlockWriteAll();
     }
 
     @Override
@@ -107,23 +121,31 @@ public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T
 
     @Override
     public long apprSize() {
-        return values.size();
+        return values.size();  //no locking needed since it is only the approximate size
     }
 
     @Override
     public CloseableIterator<Long> keyIterator() {
+        lock.lockReadAll();
         List<Long> sortedKeys = new ArrayList<>(values.keySet());
+        lock.unlockReadAll();
         Collections.sort(sortedKeys);
         return IterableUtils.iterator(sortedKeys.iterator());
     }
 
     @Override
     public long exactSize() {
-        return values.size();
+        lock.lockReadAll();
+        long result = values.size();
+        lock.unlockReadAll();
+        return result;
     }
 
     @Override
     public boolean mightContain(long key) {
-        return values.containsKey(key);
+        lock.lockRead(key);
+        boolean result = values.containsKey(key);
+        lock.unlockRead(key);
+        return result;
     }
 }
