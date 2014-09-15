@@ -26,14 +26,12 @@ import java.util.*;
 @BowComponent
 public class RemoteDataInterfaceServer extends BaseServer implements StatusViewable {
 
-    private final Map<String, DataInterface> allInterfaces;
     private final DataInterfaceFactory dataInterfaceFactory;
     private final List<WrappedSocketConnection> listenToChangesConnections;
 
     @Autowired
     public RemoteDataInterfaceServer(DataInterfaceFactory dataInterfaceFactory, RemoteCountDBEnvironmentProperties properties) throws IOException {
         super("RemoteDataInterfaceServer", properties.getDataInterfaceServerPort());
-        this.allInterfaces = new HashMap<>();
         this.dataInterfaceFactory = dataInterfaceFactory;
         this.listenToChangesConnections = new ArrayList<>();
     }
@@ -88,15 +86,14 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
             Class objectClass = readClass();
             Class combinatorClass = readClass();
             Combinator combinator = (Combinator) ReflectionUtils.createObject(combinatorClass);
-            synchronized (allInterfaces) {
-                dataInterface = allInterfaces.get(interfaceName);
+            synchronized (dataInterfaceFactory.getAllInterfaces()) {
+                dataInterface = findInterface(dataInterfaceFactory.getAllInterfaces(), interfaceName);
                 if (dataInterface != null) {
                     if (dataInterface.getCombinator().getClass() != combinator.getClass() || dataInterface.getObjectClass() != objectClass) {
-                        writeError(" Subset " + interfaceName + " was already initialized!");
+                        writeError(" Data interface " + interfaceName + " was already initialized!");
                     }
                 } else {
                     dataInterface = dataInterfaceFactory.createDataInterface(DatabaseCachingType.CACHED_AND_BLOOM, interfaceName, objectClass, combinator);
-                    allInterfaces.put(interfaceName, dataInterface);
                     dataInterface.registerListener(new ChangedValuesListener() {
                         @Override
                         public void valuesChanged(long[] keys) {
@@ -105,13 +102,18 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
                     });
                 }
             }
-            if (dataInterface != null) {
-                setName(getName() + "_" + dataInterface.getName());
-                connection.writeLong(LONG_OK);
-                connection.flush();
-            } else {
-                throw new RuntimeException("Failed to initialize socket request handler for " + interfaceName);
+            setName(getName() + "_" + dataInterface.getName());
+            connection.writeLong(LONG_OK);
+            connection.flush();
+        }
+
+        private DataInterface findInterface(List<DataInterface> allInterfaces, String interfaceName) {
+            for (DataInterface dataInterface : allInterfaces) {
+                if (dataInterface.getName().equals(interfaceName)) {
+                    return dataInterface;
+                }
             }
+            return null;
         }
 
         @Override
