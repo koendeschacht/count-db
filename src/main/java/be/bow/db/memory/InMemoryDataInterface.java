@@ -134,6 +134,11 @@ public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T
     }
 
     @Override
+    public void optimizeForReading() {
+        //do nothing
+    }
+
+    @Override
     public long exactSize() {
         lock.lockReadAll();
         long result = values.size();

@@ -150,6 +150,8 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         });
     }
 
+    public abstract void optimizeForReading();
+
     protected abstract T readInt(long key);
 
     protected abstract void writeInt(long key, T value);

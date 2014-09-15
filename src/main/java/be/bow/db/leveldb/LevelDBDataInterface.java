@@ -1,8 +1,8 @@
 package be.bow.db.leveldb;
 
-import be.bow.db.combinator.Combinator;
 import be.bow.db.CoreDataInterface;
 import be.bow.db.DataInterface;
+import be.bow.db.combinator.Combinator;
 import be.bow.iterator.CloseableIterator;
 import be.bow.util.DataLock;
 import be.bow.util.KeyValue;
@@ -42,13 +42,12 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
         Options options = new Options();
         options.createIfMissing(true);
         options.cacheSize(20 * 1024 * 1024);
-//        Logger logger = new Logger() {
-//            public void log(String message) {
-//                UI.write("LevelBD " + message);
-//            }
-//        };
-//        options.logger(logger);
         return options;
+    }
+
+    @Override
+    public void optimizeForReading() {
+        db.compactRange(null, null);
     }
 
     @Override

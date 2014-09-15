@@ -3,25 +3,17 @@ package be.bow.db.bloomfilter;
 import be.bow.db.DataInterface;
 import be.bow.db.LayeredDataInterface;
 import be.bow.iterator.CloseableIterator;
-import be.bow.ui.UI;
 
 import java.util.concurrent.locks.ReentrantLock;
 
 public class BloomFilterDataInterface<T extends Object> extends LayeredDataInterface<T> {
 
-    private static final boolean DEBUG = false;
-
-    /**
-     * TODO: optimize these variables
-     */
-    private final static double INITIAL_FPP = 0.001;
-    private final static double MAX_FPP = 0.05;
+    private static final double INITIAL_FPP = 0.01;
+    private final static double MAX_FPP = INITIAL_FPP * 2;
     private final DataInterface<LongBloomFilterWithCheckSum> bloomFilterDataInterface;
     private LongBloomFilterWithCheckSum bloomFilter;
     private ReentrantLock modifyBloomFilterLock;
     private long currentKeyForNewBloomFilterCreation = Long.MAX_VALUE;
-    private int truePositive;
-    private int falsePositive;
 
     public BloomFilterDataInterface(DataInterface<T> baseInterface, DataInterface<LongBloomFilterWithCheckSum> bloomFilterDataInterface) {
         super(baseInterface);
@@ -32,7 +24,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
     private void createNewBloomFilter() {
         baseInterface.flush(); //Make sure all values are written to disk
         long numOfValuesForBloomFilter = Math.max(1000, baseInterface.apprSize());
-        UI.write("Creating bloomfilter " + getName());
+//        UI.write("Creating bloomfilter " + getName());
         currentKeyForNewBloomFilterCreation = Long.MIN_VALUE;
         bloomFilter = new LongBloomFilterWithCheckSum(numOfValuesForBloomFilter, INITIAL_FPP);
         bloomFilter.setDataCheckSum(baseInterface.dataCheckSum());
@@ -46,8 +38,14 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
             currentKeyForNewBloomFilterCreation = key;
         }
         it.close();
-        long taken = (System.currentTimeMillis() - start);
-        UI.write("Created bloomfilter " + getName() + " in " + taken + " ms for " + numOfKeys + " keys.");
+//        long taken = (System.currentTimeMillis() - start);
+//        UI.write("Created bloomfilter " + getName() + " in " + taken + " ms for " + numOfKeys + " keys.");
+    }
+
+    @Override
+    public void optimizeForReading() {
+        checkInitialization(); //create bloom filter if necessary
+        baseInterface.optimizeForReading();
     }
 
     @Override
@@ -64,15 +62,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
                 //bloom filter might have become null. We don't use a lock to prevent that case since that slows things down too much.
             }
             if (mightContainValue) {
-                T value = baseInterface.read(key);
-                if (DEBUG) {
-                    if (value != null) {
-                        truePositive++;
-                    } else {
-                        falsePositive++;
-                    }
-                }
-                return value;
+                return baseInterface.read(key);
             } else {
                 return null;
             }
@@ -102,14 +92,6 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
         } finally {
             modifyBloomFilterLock.unlock();
         }
-    }
-
-    public int getTruePositive() {
-        return truePositive;
-    }
-
-    public int getFalsePositive() {
-        return falsePositive;
     }
 
     @Override

@@ -306,6 +306,20 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         lockAndUnlockAllBuckets();
     }
 
+    @Override
+    public void optimizeForReading() {
+        for (FileBucket fileBucket : fileBuckets) {
+            fileBucket.lockWrite();
+            for (int fileInd = 0; fileInd < fileBucket.getFiles().size(); fileInd++) {
+                FileInfo file = fileBucket.getFiles().get(fileInd);
+                if (file.isDirty()) {
+                    rewriteFile(fileBucket, fileInd, file, false, MAX_FILE_SIZE_READ);
+                }
+            }
+            fileBucket.unlockWrite();
+        }
+    }
+
     private void lockAndUnlockAllBuckets() {
         for (FileBucket bucket : fileBuckets) {
             bucket.lockWrite();

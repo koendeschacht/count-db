@@ -1,7 +1,7 @@
 package be.bow.db.remote;
 
-import be.bow.db.combinator.Combinator;
 import be.bow.db.DataInterface;
+import be.bow.db.combinator.Combinator;
 import be.bow.iterator.CloseableIterator;
 import be.bow.ui.UI;
 import be.bow.util.KeyValue;
@@ -368,6 +368,11 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     @Override
     public void flush() {
         doSimpleAction(Action.FLUSH);
+    }
+
+    @Override
+    public void optimizeForReading() {
+        doSimpleAction(Action.OPTMIZE_FOR_READING);
     }
 
     @Override

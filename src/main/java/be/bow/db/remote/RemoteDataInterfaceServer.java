@@ -155,6 +155,8 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
                     handleFlush();
                 } else if (action == Action.MIGHT_CONTAIN) {
                     handleMightContain();
+                } else if (action == Action.OPTMIZE_FOR_READING) {
+                    handleOptimizeForReading();
                 } else {
                     writeError("Unkown action " + action);
                     return false;
@@ -233,6 +235,11 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
 
         private void handleDropAllData() throws IOException {
             dataInterface.dropAllData();
+            connection.writeLong(LONG_OK);
+        }
+
+        private void handleOptimizeForReading() throws IOException {
+            dataInterface.optimizeForReading();
             connection.writeLong(LONG_OK);
         }
 
@@ -339,7 +346,7 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
 
 
     public static enum Action {
-        READVALUE, WRITEVALUE, READVALUES, READKEYS, WRITEVALUES, DROPALLDATA, CLOSE_CONNECTION, FLUSH, READALLVALUES, APPROXIMATE_SIZE, MIGHT_CONTAIN, EXACT_SIZE, LISTEN_TO_CHANGES, CONNECT_TO_INTERFACE
+        READVALUE, WRITEVALUE, READVALUES, READKEYS, WRITEVALUES, DROPALLDATA, CLOSE_CONNECTION, FLUSH, READALLVALUES, APPROXIMATE_SIZE, MIGHT_CONTAIN, EXACT_SIZE, LISTEN_TO_CHANGES, CONNECT_TO_INTERFACE, OPTMIZE_FOR_READING
     }
 
     @Override

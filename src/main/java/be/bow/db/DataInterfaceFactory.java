@@ -62,13 +62,17 @@ public abstract class DataInterfaceFactory implements StatusViewable, LateClosea
     }
 
     protected <T extends Object> DataInterface<T> bloom(DataInterface<T> dataInterface) {
+        checkInitialisationCachedBloomFilters();
+        return new BloomFilterDataInterface<>(dataInterface, cachedBloomFilters);
+    }
+
+    private void checkInitialisationCachedBloomFilters() {
         if (cachedBloomFilters == null) {
             cachedBloomFilters = cached(createBaseDataInterface("system/bloomFilter", LongBloomFilterWithCheckSum.class, new OverWriteCombinator<LongBloomFilterWithCheckSum>()));
             synchronized (allInterfaces) {
                 allInterfaces.add(cachedBloomFilters);
             }
         }
-        return new BloomFilterDataInterface<>(dataInterface, cachedBloomFilters);
     }
 
     public List<DataInterface> getAllInterfaces() {

@@ -46,6 +46,11 @@ public class LayeredDataInterface<T> extends DataInterface<T> {
     }
 
     @Override
+    public void optimizeForReading() {
+        baseInterface.optimizeForReading();
+    }
+
+    @Override
     public DataInterface getImplementingDataInterface() {
         return baseInterface;
     }
