@@ -7,6 +7,8 @@ import java.util.concurrent.Semaphore;
 
 public class FileBucket implements Comparable<FileBucket> {
 
+    private static final int NUMBER_OF_READ_PERMITS = 1000;
+
     private final long firstKey; //inclusive
     private final long lastKey; //inclusive
     private final List<FileInfo> files;
@@ -16,7 +18,7 @@ public class FileBucket implements Comparable<FileBucket> {
         this.firstKey = firstKey;
         this.lastKey = lastKey;
         this.files = new ArrayList<>();
-        this.lock = new Semaphore(1);
+        this.lock = new Semaphore(NUMBER_OF_READ_PERMITS);
     }
 
     public List<FileInfo> getFiles() {
@@ -43,23 +45,34 @@ public class FileBucket implements Comparable<FileBucket> {
         return lastKey;
     }
 
-    public void unlock() {
-        lock.release();
-        if (lock.availablePermits() > 1) {
+    public void unlockWrite() {
+        lock.release(NUMBER_OF_READ_PERMITS);
+        if (lock.availablePermits() > NUMBER_OF_READ_PERMITS) {
             throw new RuntimeException("Illegal state of lock: too many unlocks");
         }
     }
 
-    public void lock() {
-        lock.acquireUninterruptibly();
+    public void lockWrite() {
+        lock.acquireUninterruptibly(NUMBER_OF_READ_PERMITS);
     }
 
-    public boolean tryLock() {
-        return lock.tryAcquire();
+    public void unlockRead() {
+        lock.release(1);
+        if (lock.availablePermits() > NUMBER_OF_READ_PERMITS) {
+            throw new RuntimeException("Illegal state of lock: too many unlocks");
+        }
+    }
+
+    public void lockRead() {
+        lock.acquireUninterruptibly(1);
+    }
+
+    public boolean tryLockRead() {
+        return lock.tryAcquire(1);
     }
 
     public String toString() {
-        return "FileBucket " + firstKey + ", permits=" + lock.availablePermits();
+        return super.toString() + " " + firstKey + ", permits=" + lock.availablePermits();
     }
 
     @Override

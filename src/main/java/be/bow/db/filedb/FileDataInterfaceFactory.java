@@ -33,7 +33,6 @@ public class FileDataInterfaceFactory extends DataInterfaceFactory {
     @Override
     protected <T extends Object> DataInterface<T> createBaseDataInterface(final String nameOfSubset, final Class<T> objectClass, final Combinator<T> combinator) {
         FileDataInterface<T> result = new FileDataInterface<>(openFilesManager, combinator, objectClass, directory, nameOfSubset);
-        openFilesManager.registerFilesCollection(result);
         memoryManager.registerMemoryGobbler(result);
         synchronized (interfaces) {
             interfaces.add(result);
@@ -42,7 +41,7 @@ public class FileDataInterfaceFactory extends DataInterfaceFactory {
     }
 
     @Override
-    public synchronized void close() {
+    public void close() {
         this.writeCleanFilesListThread.close();
         super.close();
     }

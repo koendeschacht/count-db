@@ -1,16 +1,15 @@
 package be.bow.db.filedb;
 
 import be.bow.util.Pair;
-import org.apache.commons.io.IOUtils;
 
-import java.io.DataInputStream;
+import java.util.Collections;
 import java.util.List;
 
 class FileInfo implements Comparable {
 
     private final long firstKey;
     private int size;
-    private DataInputStream inputStream;
+    private byte[] cachedFileContents;
     private boolean isDirty;
     //This field is only filled in when the file is clean (i.e. not isDirty)
     private List<Pair<Long, Integer>> fileLocations;
@@ -19,10 +18,9 @@ class FileInfo implements Comparable {
         this.firstKey = firstKey;
         this.size = size;
         this.isDirty = size > 0;
-    }
-
-    public DataInputStream getInputStream() {
-        return inputStream;
+        if (size == 0) {
+            fileLocations = Collections.emptyList();
+        }
     }
 
     public long getFirstKey() {
@@ -62,7 +60,7 @@ class FileInfo implements Comparable {
     }
 
     public String toString() {
-        return getFirstKey() + " " + getSize() + " " + isDirty();
+        return super.toString() + " " + getFirstKey() + " " + getSize() + " " + isDirty();
     }
 
     public void increaseSize(long diff) {
@@ -73,18 +71,15 @@ class FileInfo implements Comparable {
         return fileLocations;
     }
 
-    public void setInputStream(DataInputStream inputStream) {
-        this.inputStream = inputStream;
+    public void discardFileContents() {
+        cachedFileContents = null;
     }
 
-    public boolean discardInputStream() {
-        if (inputStream != null) {
-            IOUtils.closeQuietly(inputStream);
-            inputStream = null;
-            return true;
-        } else {
-            return false;
-        }
+    public byte[] getCachedFileContents() {
+        return cachedFileContents;
     }
 
+    public void setCachedFileContents(byte[] cachedFileContents) {
+        this.cachedFileContents = cachedFileContents;
+    }
 }

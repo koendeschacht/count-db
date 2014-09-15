@@ -23,7 +23,6 @@ import java.util.List;
  */
 public class BaseTestDataInterface {
 
-
     @Parameterized.Parameters(name = "{0} {1}")
     public static List<Object[]> getManagers() throws IOException {
         List<Object[]> result = new ArrayList<>();
