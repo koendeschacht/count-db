@@ -1,6 +1,5 @@
 package be.bow.db.data;
 
-import be.bow.util.HashUtils;
 import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -29,7 +28,6 @@ public class LongCountsBloomFilter implements Serializable {
     }
 
     public int getMaxCount(long hash64) {
-        hash64 = HashUtils.randomDistributeHash(hash64);
         int hash1 = (int) hash64;
         int hash2 = (int) (hash64 >>> 32);
         int min = Byte.MAX_VALUE - Byte.MIN_VALUE;
@@ -45,7 +43,6 @@ public class LongCountsBloomFilter implements Serializable {
 
     public synchronized <T> void addCount(long hash64, int count) {
         int currCount = getMaxCount(hash64);
-        hash64 = HashUtils.randomDistributeHash(hash64);
         int newCount = Math.min(count + currCount, Byte.MAX_VALUE - Byte.MIN_VALUE);
         int hash1 = (int) hash64;
         int hash2 = (int) (hash64 >>> 32);

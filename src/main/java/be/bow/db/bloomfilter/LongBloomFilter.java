@@ -1,6 +1,5 @@
 package be.bow.db.bloomfilter;
 
-import be.bow.util.HashUtils;
 import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
 import com.google.common.math.LongMath;
@@ -37,7 +36,6 @@ public class LongBloomFilter implements Serializable {
     }
 
     public boolean mightContain(long hash64) {
-        hash64 = HashUtils.randomDistributeHash(hash64);
         int hash1 = (int) hash64;
         int hash2 = (int) (hash64 >>> 32);
         for (int i = 1; i <= numOfHashFunctions; i++) {
@@ -53,7 +51,6 @@ public class LongBloomFilter implements Serializable {
     }
 
     public <T> boolean put(long hash64) {
-        hash64 = HashUtils.randomDistributeHash(hash64);
         int hash1 = (int) hash64;
         int hash2 = (int) (hash64 >>> 32);
         boolean bitsChanged = false;
