@@ -12,7 +12,7 @@ public class TestBloomFilter {
 
     @Test
     public void testBloomFilterHitRates() {
-        int numOfExamples = 10000;
+        int numOfExamples = 10000000;
         LongBloomFilter bloomFilter = new LongBloomFilter(numOfExamples, 0.05);
         Random random = new Random(1204);
         List<Long> posExamples = new ArrayList<>();
@@ -37,7 +37,7 @@ public class TestBloomFilter {
 
     @Test
     public void testBloomFilterLowNumbers() {
-        int numOfExamples = 10000;
+        int numOfExamples = 1000000;
         LongBloomFilter bloomFilter = new LongBloomFilter(numOfExamples, 0.05);
         for (int i = 0; i < numOfExamples; i++) {
             bloomFilter.put(i);
