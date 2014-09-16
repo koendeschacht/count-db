@@ -34,6 +34,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
         if (value == null) {
             //Never read, read from direct
             value = baseInterface.read(key);
+            memoryManager.waitForSufficientMemory();
             readCache.put(key, value);
         }
         return value;
