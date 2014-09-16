@@ -1,9 +1,11 @@
-package be.bow.db;
+package be.bow.db.cached;
 
 import be.bow.application.memory.MemoryManager;
 import be.bow.cache.Cache;
 import be.bow.cache.CacheableData;
 import be.bow.cache.CachesManager;
+import be.bow.db.DataInterface;
+import be.bow.db.LayeredDataInterface;
 import be.bow.iterator.CloseableIterator;
 import be.bow.util.DataLock;
 import be.bow.util.KeyValue;

@@ -1,4 +1,4 @@
-package be.bow.db;
+package be.bow.db.index;
 
 import java.util.List;
 

@@ -6,6 +6,7 @@ import be.bow.application.status.StatusViewable;
 import be.bow.cache.CachesManager;
 import be.bow.db.bloomfilter.BloomFilterDataInterface;
 import be.bow.db.bloomfilter.LongBloomFilterWithCheckSum;
+import be.bow.db.cached.CachedDataInterface;
 import be.bow.db.combinator.Combinator;
 import be.bow.db.combinator.LongCombinator;
 import be.bow.db.combinator.OverWriteCombinator;

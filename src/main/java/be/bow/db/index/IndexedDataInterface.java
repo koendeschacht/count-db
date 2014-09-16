@@ -1,6 +1,10 @@
-package be.bow.db;
+package be.bow.db.index;
 
 
+import be.bow.db.DataInterface;
+import be.bow.db.DataInterfaceFactory;
+import be.bow.db.DatabaseCachingType;
+import be.bow.db.LayeredDataInterface;
 import be.bow.db.data.LongList;
 import be.bow.db.data.LongListCombinator;
 import be.bow.iterator.CloseableIterator;
@@ -8,6 +12,10 @@ import be.bow.util.KeyValue;
 
 import java.util.ArrayList;
 import java.util.List;
+
+/**
+ * Attempt to add indexes to data interfaces. Not yet finished...
+ */
 
 public class IndexedDataInterface<T> extends LayeredDataInterface<T> {
 
