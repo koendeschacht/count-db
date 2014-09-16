@@ -20,7 +20,6 @@ public class LevelDBDataInterfaceFactory extends DataInterfaceFactory {
         if (!dirFile.exists()) {
             dirFile.mkdirs();
         }
-        JniDBFactory.pushMemoryPool(1024 * 1024);
     }
 
     @Override
@@ -30,7 +29,6 @@ public class LevelDBDataInterfaceFactory extends DataInterfaceFactory {
 
     @Override
     public synchronized void close() {
-        JniDBFactory.popMemoryPool();
         super.close();
     }
 }
