@@ -1,10 +1,11 @@
 package be.bow.db;
 
 import be.bow.application.memory.MemoryManager;
-import be.bow.cache.CacheImportance;
+import be.bow.cache.Cache;
 import be.bow.cache.CacheableData;
 import be.bow.cache.CachesManager;
 import be.bow.iterator.CloseableIterator;
+import be.bow.util.DataLock;
 import be.bow.util.KeyValue;
 
 import java.util.Iterator;
@@ -13,32 +14,32 @@ import java.util.List;
 public class CachedDataInterface<T extends Object> extends LayeredDataInterface<T> implements CacheableData<T> {
 
     private final MemoryManager memoryManager;
-    private final CachesManager cachesManager;
-    private int readCacheInd;
-    private int writeCacheInd;
+    private final Cache<T> readCache;
+    private final Cache<T> writeCache;
+    private final DataLock writeLock;
 
     public CachedDataInterface(CachesManager cachesManager, MemoryManager memoryManager, DataInterface<T> baseInterface) {
         super(baseInterface);
-        this.cachesManager = cachesManager;
         this.memoryManager = memoryManager;
-        this.readCacheInd = cachesManager.createNewCache(this, false);
-        this.writeCacheInd = cachesManager.createNewCache(this, true);
+        this.readCache = cachesManager.createNewCache(this, false, getName() + "_read");
+        this.writeCache = cachesManager.createNewCache(this, true, getName() + "_write");
+        this.writeLock = new DataLock();
     }
 
     @Override
     public T readInt(long key) {
-        T value = cachesManager.get(readCacheInd, key);
+        T value = readCache.get(key);
         if (value == null) {
             //Never read, read from direct
             value = baseInterface.read(key);
-            cachesManager.put(readCacheInd, key, value);
+            readCache.put(key, value);
         }
         return value;
     }
 
     @Override
     public boolean mightContain(long key) {
-        T cachedValue = cachesManager.get(readCacheInd, key);
+        T cachedValue = readCache.get(key);
         if (cachedValue != null) {
             return true;
         } else {
@@ -49,24 +50,24 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     @Override
     public void writeInt(long key, T value) {
         memoryManager.waitForSufficientMemory();
-        cachesManager.lockWrite(writeCacheInd, key);
+        writeLock.lockWrite(key);
         nonSynchronizedWrite(key, value);
-        cachesManager.unlockWrite(writeCacheInd, key);
+        writeLock.unlockWrite(key);
     }
 
     private void nonSynchronizedWrite(long key, T value) {
-        T currentValue = cachesManager.get(writeCacheInd, key);
+        T currentValue = writeCache.get(key);
         boolean combine = value != null; //Current action is not a delete
         combine = combine && currentValue != null; //Key is already in write cache
         if (combine) {
             T combinedValue = getCombinator().combine(currentValue, value);
             if (combinedValue != null) {
-                cachesManager.put(writeCacheInd, key, combinedValue);
+                writeCache.put(key, combinedValue);
             } else {
-                cachesManager.put(writeCacheInd, key, null);
+                writeCache.put(key, null);
             }
         } else {
-            cachesManager.put(writeCacheInd, key, value);
+            writeCache.put(key, value);
         }
     }
 
@@ -82,30 +83,36 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     }
 
     public void flush() {
-        cachesManager.flush(writeCacheInd);
+        flushWriteCache();
         baseInterface.flush();
+    }
+
+    private void flushWriteCache() {
+        writeLock.lockWriteAll();
+        writeCache.flush();
+        writeLock.unlockWriteAll();
     }
 
     @Override
     public void dropAllData() {
-        cachesManager.clear(writeCacheInd);
-        cachesManager.clear(readCacheInd);
+        writeCache.clear();
+        readCache.clear();
         baseInterface.dropAllData();
     }
 
     public long apprSize() {
-        return cachesManager.getCache(writeCacheInd).size() + baseInterface.apprSize();
+        return writeCache.size() + baseInterface.apprSize();
     }
 
     @Override
     public CloseableIterator<Long> keyIterator() {
-        cachesManager.flush(writeCacheInd);
+        flushWriteCache();
         return baseInterface.keyIterator();
     }
 
     @Override
-    public void removedValues(int ind, List<KeyValue<T>> valuesToRemove) {
-        if (ind == writeCacheInd) {
+    public void removedValues(Cache cache, List<KeyValue<T>> valuesToRemove) {
+        if (cache == writeCache) {
             int size = valuesToRemove.size();
             if (size > 0) {
                 baseInterface.write(valuesToRemove.iterator());
@@ -117,15 +124,9 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     public void valuesChanged(long[] keys) {
         super.valuesChanged(keys);
         for (Long key : keys) {
-            cachesManager.remove(readCacheInd, key);
+            readCache.remove(key);
         }
     }
-
-    @Override
-    public CacheImportance getImportance() {
-        return CacheImportance.DEFAULT;
-    }
-
 
 }
 

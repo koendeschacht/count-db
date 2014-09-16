@@ -22,11 +22,14 @@ public abstract class DataInterfaceFactory implements StatusViewable, LateClosea
     private final List<DataInterface> allInterfaces;
 
     private DataInterface<LongBloomFilterWithCheckSum> cachedBloomFilters;
+    private FlushDataInterfacesThread flushDataInterfacesThread;
 
     public DataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager) {
         this.cachesManager = cachesManager;
         this.memoryManager = memoryManager;
         this.allInterfaces = new ArrayList<>();
+        this.flushDataInterfacesThread = new FlushDataInterfacesThread(this, memoryManager);
+        this.flushDataInterfacesThread.start();
     }
 
     protected abstract <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator);
@@ -85,6 +88,7 @@ public abstract class DataInterfaceFactory implements StatusViewable, LateClosea
         if (cachedBloomFilters != null) {
             cachedBloomFilters.close();
         }
+        flushDataInterfacesThread.close();
     }
 
     public void closeAllInterfaces() {

@@ -47,6 +47,7 @@ public class LayeredDataInterface<T> extends DataInterface<T> {
 
     @Override
     public void optimizeForReading() {
+        flush();
         baseInterface.optimizeForReading();
     }
 
