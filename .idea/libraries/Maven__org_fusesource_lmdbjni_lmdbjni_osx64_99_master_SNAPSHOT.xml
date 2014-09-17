@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.fusesource.lmdbjni:lmdbjni-osx64:99-master-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/fusesource/lmdbjni/lmdbjni-osx64/99-master-SNAPSHOT/lmdbjni-osx64-99-master-20130507.184836-2.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/fusesource/lmdbjni/lmdbjni-osx64/99-master-SNAPSHOT/lmdbjni-osx64-99-master-20130507.184836-2-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/fusesource/lmdbjni/lmdbjni-osx64/99-master-SNAPSHOT/lmdbjni-osx64-99-master-20130507.184836-2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
