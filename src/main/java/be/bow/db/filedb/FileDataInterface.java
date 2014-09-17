@@ -3,7 +3,6 @@ package be.bow.db.filedb;
 import be.bow.application.file.OpenFilesManager;
 import be.bow.application.memory.MemoryGobbler;
 import be.bow.db.CoreDataInterface;
-import be.bow.db.DataInterface;
 import be.bow.db.combinator.Combinator;
 import be.bow.iterator.CloseableIterator;
 import be.bow.iterator.IterableUtils;
@@ -52,20 +51,24 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         FileInfo file = bucket.getFiles().get(fileInd);
         bucket.lockRead();
         try {
-            while (file.isDirty()) {
-                bucket.unlockRead();
-                bucket.lockWrite();
-                if (file.isDirty()) {
-                    rewriteFile(bucket, fileInd, file, false, MAX_FILE_SIZE_READ);
-                }
-                bucket.unlockWrite();
-                bucket.lockRead();
-            }
+            makeSureFileIsClean(bucket, fileInd, file);
             return readClean(key, file);
         } catch (Exception exp) {
             throw new RuntimeException("Error in file " + toFile(file).getAbsolutePath(), exp);
         } finally {
             bucket.unlockRead();
+        }
+    }
+
+    private void makeSureFileIsClean(FileBucket bucket, int fileInd, FileInfo file) {
+        while (file.isDirty()) {
+            bucket.unlockRead();
+            bucket.lockWrite();
+            if (file.isDirty()) {
+                rewriteFile(bucket, fileInd, file, false, MAX_FILE_SIZE_READ);
+            }
+            bucket.unlockWrite();
+            bucket.lockRead();
         }
     }
 
@@ -293,11 +296,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         } catch (IOException exp) {
             throw new RuntimeException(exp);
         }
-    }
-
-    @Override
-    public DataInterface getImplementingDataInterface() {
-        return null;
     }
 
     @Override
@@ -831,7 +829,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 return Collections.emptyList();
             }
         } catch (FileNotFoundException e) {
-            throw new RuntimeException("In interface " + getName() + ", tried to read file " + toFile(file).getAbsolutePath() + ", size should be " + file.getSize(), e);
+            throw new RuntimeException("In interface " + getName() + ", tried to read file " + toFile(file).getAbsolutePath(), e);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

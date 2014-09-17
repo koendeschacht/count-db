@@ -55,4 +55,9 @@ public abstract class CoreDataInterface<T> extends DataInterface<T> {
     protected abstract void writeInt0(Iterator<KeyValue<T>> entries);
 
     protected abstract void writeInt0(long key, T value);
+
+    @Override
+    protected DataInterface getImplementingDataInterface() {
+        return null;
+    }
 }

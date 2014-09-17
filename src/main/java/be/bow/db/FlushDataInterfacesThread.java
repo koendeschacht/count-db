@@ -6,6 +6,9 @@ import be.bow.ui.UI;
 import be.bow.util.SafeThread;
 import be.bow.util.Utils;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class FlushDataInterfacesThread extends SafeThread {
 
     public static final long TIME_BETWEEN_FLUSHES = 1000; //Flush data interfaces every second
@@ -23,7 +26,11 @@ public class FlushDataInterfacesThread extends SafeThread {
     public void runInt() {
         while (!isTerminateRequested()) {
             try {
-                for (DataInterface dataInterface : dataInterfaceFactory.getAllInterfaces()) {
+                List<DataInterface> currentInterfaces;
+                synchronized (dataInterfaceFactory.getAllInterfaces()) {
+                    currentInterfaces = new ArrayList<>(dataInterfaceFactory.getAllInterfaces());
+                }
+                for (DataInterface dataInterface : currentInterfaces) {
                     dataInterface.flush();
                 }
             } catch (Throwable t) {

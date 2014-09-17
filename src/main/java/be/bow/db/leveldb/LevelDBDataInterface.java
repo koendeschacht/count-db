@@ -1,7 +1,6 @@
 package be.bow.db.leveldb;
 
 import be.bow.db.CoreDataInterface;
-import be.bow.db.DataInterface;
 import be.bow.db.combinator.Combinator;
 import be.bow.iterator.CloseableIterator;
 import be.bow.util.DataLock;
@@ -173,11 +172,6 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
                 db = null;
             }
         }
-    }
-
-    @Override
-    public DataInterface getImplementingDataInterface() {
-        return null;
     }
 
     @Override

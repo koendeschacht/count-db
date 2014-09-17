@@ -115,11 +115,6 @@ public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T
     }
 
     @Override
-    public DataInterface getImplementingDataInterface() {
-        return null;
-    }
-
-    @Override
     public long apprSize() {
         return values.size();  //no locking needed since it is only the approximate size
     }
