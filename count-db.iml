@@ -55,6 +55,20 @@
     <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
     <orderEntry type="library" name="Maven: commons-lang:commons-lang:2.4" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.springframework:spring-test:4.1.0.RELEASE" level="project" />
+    <orderEntry type="library" name="Maven: org.fusesource.lmdbjni:lmdbjni-all:99-master-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.fusesource.lmdbjni:lmdbjni:99-master-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.fusesource.hawtjni:hawtjni-runtime:1.6" level="project" />
+    <orderEntry type="library" name="Maven: org.fusesource.lmdbjni:lmdbjni-osx64:99-master-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.fusesource.lmdbjni:lmdbjni-linux64:99-master-SNAPSHOT" level="project" />
+    <orderEntry type="module-library">
+      <library name="Maven: extraLibs:kyotocabinet:1.24">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/kyotocabinet-1.24/kyotocabinet.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
 
