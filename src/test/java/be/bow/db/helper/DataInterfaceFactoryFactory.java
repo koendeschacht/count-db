@@ -7,9 +7,12 @@ import be.bow.cache.CachesManager;
 import be.bow.db.DataInterfaceFactory;
 import be.bow.db.DatabaseBackendType;
 import be.bow.db.filedb.FileDataInterfaceFactory;
+import be.bow.db.kyoto.KyotoDataInterfaceFactory;
 import be.bow.db.leveldb.LevelDBDataInterfaceFactory;
+import be.bow.db.lmdb.LMDBDataInterfaceFactory;
 import be.bow.db.memory.InMemoryDataInterfaceFactory;
 import be.bow.db.remote.RemoteDatabaseInterfaceFactory;
+import be.bow.db.rocksdb.RocksDBDataInterfaceFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -38,6 +41,14 @@ public class DataInterfaceFactoryFactory {
                 return new InMemoryDataInterfaceFactory(cachesManager, memoryManager);
             case LEVELDB:
                 return new LevelDBDataInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDataDirectory() + "leveLDB/");
+            case LMDB:
+                return new LMDBDataInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDataDirectory() + "lmDB/");
+            case KYOTO:
+                return new KyotoDataInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDataDirectory() + "kyotoDB/");
+            case ROCKSDB:
+                return new RocksDBDataInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDataDirectory() + "rocksDB/", false);
+            case ROCKSDB_PATCHED:
+                return new RocksDBDataInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDataDirectory() + "rocksDB/", true);
             default:
                 throw new RuntimeException("Unknown backend type " + backendType);
         }

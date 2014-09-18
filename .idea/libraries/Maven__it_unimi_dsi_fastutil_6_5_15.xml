@@ -8,6 +8,7 @@
     </JAVADOC>
     <SOURCES>
       <root url="jar://$MAVEN_REPOSITORY$/it/unimi/dsi/fastutil/6.5.15/fastutil-6.5.15-sources.jar!/" />
+      <root url="jar://$USER_HOME$/external/fastutil-6.5.15-sources.jar!/src" />
     </SOURCES>
   </library>
 </component>

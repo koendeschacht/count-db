@@ -96,6 +96,13 @@
             <scope>system</scope>
             <systemPath>${basedir}/lib/kyotocabinet-1.24/kyotocabinet.jar</systemPath>
         </dependency>
+        <dependency>
+            <groupId>extraLibs</groupId>
+            <artifactId>rocksdb</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/rocksdb/rocksdbjni.jar</systemPath>
+        </dependency>
     </dependencies>
 
 </project>

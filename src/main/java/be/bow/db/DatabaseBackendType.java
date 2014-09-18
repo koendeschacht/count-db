@@ -5,6 +5,6 @@ package be.bow.db;
  */
 public enum DatabaseBackendType {
 
-    FILE, LEVELDB, MEMORY, REMOTE
+    FILE, LEVELDB, MEMORY, REMOTE, LMDB, KYOTO, ROCKSDB, ROCKSDB_PATCHED
 
 }

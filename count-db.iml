@@ -69,6 +69,15 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module-library">
+      <library name="Maven: extraLibs:rocksdb:1.0">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/rocksdb/rocksdbjni.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
 
