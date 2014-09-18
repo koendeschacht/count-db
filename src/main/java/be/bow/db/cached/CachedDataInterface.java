@@ -6,7 +6,6 @@ import be.bow.cache.CacheableData;
 import be.bow.cache.CachesManager;
 import be.bow.db.DataInterface;
 import be.bow.db.LayeredDataInterface;
-import be.bow.iterator.CloseableIterator;
 import be.bow.util.DataLock;
 import be.bow.util.KeyValue;
 
@@ -34,7 +33,6 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
         if (value == null) {
             //Never read, read from direct
             value = baseInterface.read(key);
-            memoryManager.waitForSufficientMemory();
             readCache.put(key, value);
         }
         return value;
@@ -76,6 +74,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
 
     @Override
     public void write(Iterator<KeyValue<T>> entries) {
+        flushWriteCache();
         baseInterface.write(entries);
     }
 
@@ -105,12 +104,6 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
 
     public long apprSize() {
         return writeCache.size() + baseInterface.apprSize();
-    }
-
-    @Override
-    public CloseableIterator<Long> keyIterator() {
-        flushWriteCache();
-        return baseInterface.keyIterator();
     }
 
     @Override
