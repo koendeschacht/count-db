@@ -32,6 +32,9 @@ public class BaseTestDataInterface {
         backendTypes.add(DatabaseBackendType.MEMORY);
         backendTypes.add(DatabaseBackendType.REMOTE);
         backendTypes.add(DatabaseBackendType.FILE);
+        backendTypes.add(DatabaseBackendType.LMDB);
+        backendTypes.add(DatabaseBackendType.KYOTO);
+        backendTypes.add(DatabaseBackendType.ROCKSDB);
 
         for (DatabaseBackendType backendType : backendTypes) {
             result.add(new Object[]{DatabaseCachingType.CACHED_AND_BLOOM, backendType});

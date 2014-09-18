@@ -169,6 +169,7 @@ public class TestDataInterface extends BaseTestDataInterface {
         for (int i = 0; i < numOfExamples; i++) {
             db.increaseCount(Integer.toString(i));
         }
+        db.flush();
         long apprSize = db.apprSize();
         Assert.assertTrue(apprSize > 100);
         Assert.assertTrue(apprSize < 10000);
@@ -219,6 +220,7 @@ public class TestDataInterface extends BaseTestDataInterface {
             db.write(key, key);
             allKeys.add(key);
         }
+        db.flush();
         Collections.sort(allKeys);
         CloseableIterator<Long> keyIterator = db.keyIterator();
         while (keyIterator.hasNext()) {

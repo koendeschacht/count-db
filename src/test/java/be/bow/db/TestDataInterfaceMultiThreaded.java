@@ -26,7 +26,7 @@ public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
 
     @Test
     public void testStrings() {
-        final int numOfThreads = 1;
+        final int numOfThreads = 10;
         final int numOfExamples = 200;
         final int numOfIterations = 10000;
         String nameOfSubset = "testMultiThreaded_" + type;
