@@ -5,10 +5,9 @@ import be.bow.cache.CachesManager;
 import be.bow.db.DataInterface;
 import be.bow.db.DataInterfaceFactory;
 import be.bow.db.combinator.Combinator;
+import be.bow.util.Utils;
 
 import java.io.File;
-import java.lang.reflect.Field;
-import java.util.Arrays;
 
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/17/14.
@@ -19,17 +18,13 @@ public class KyotoDataInterfaceFactory extends DataInterfaceFactory {
 
     public KyotoDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, String directory) {
         super(cachesManager, memoryManager);
+        this.directory = directory;
         File libFile = findLibFile();
         if (libFile == null) {
             throw new RuntimeException("Could not find libkyotocabinet.so.16");
         }
         System.load(libFile.getAbsolutePath());
-        this.directory = directory;
-        try {
-            addLibraryPath(libFile.getParentFile().getAbsolutePath());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        Utils.addLibraryPath(libFile.getParentFile().getAbsolutePath());
     }
 
     private File findLibFile() {
@@ -44,29 +39,6 @@ public class KyotoDataInterfaceFactory extends DataInterfaceFactory {
         return null;
     }
 
-    public static void addLibraryPath(String pathToAdd) throws Exception {
-        try {
-            final Field usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
-            usrPathsField.setAccessible(true);
-
-            //get array of paths
-            final String[] paths = (String[]) usrPathsField.get(null);
-
-            //check if the path to add is already present
-            for (String path : paths) {
-                if (path.equals(pathToAdd)) {
-                    return;
-                }
-            }
-
-            //add the new path
-            final String[] newPaths = Arrays.copyOf(paths, paths.length + 1);
-            newPaths[newPaths.length - 1] = pathToAdd;
-            usrPathsField.set(null, newPaths);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     @Override
     protected <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator) {
