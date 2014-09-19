@@ -22,9 +22,9 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     public CachedDataInterface(CachesManager cachesManager, MemoryManager memoryManager, DataInterface<T> baseInterface) {
         super(baseInterface);
         this.memoryManager = memoryManager;
-        this.readCache = cachesManager.createNewCache(this, false, getName() + "_read");
-        this.writeCache = cachesManager.createNewCache(this, true, getName() + "_write");
-        this.writeLock = new DataLock();
+        this.readCache = cachesManager.createNewCache(this, false, getName() + "_read", baseInterface.getObjectClass());
+        this.writeCache = cachesManager.createNewCache(this, true, getName() + "_write", baseInterface.getObjectClass());
+        this.writeLock = new DataLock(false);
     }
 
     @Override
@@ -107,7 +107,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     }
 
     @Override
-    public void removedValues(Cache cache, List<KeyValue<T>> valuesToRemove) {
+    public void removedValuesFromCache(Cache cache, List<KeyValue<T>> valuesToRemove) {
         if (cache == writeCache) {
             int size = valuesToRemove.size();
             if (size > 0) {
