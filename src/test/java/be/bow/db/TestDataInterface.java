@@ -1,6 +1,5 @@
 package be.bow.db;
 
-import be.bow.db.combinator.DoubleCombinator;
 import be.bow.db.combinator.OverWriteCombinator;
 import be.bow.db.helper.TestObject;
 import be.bow.db.helper.UnitTestContextLoader;
@@ -80,21 +79,6 @@ public class TestDataInterface extends BaseTestDataInterface {
             TestObject obj = dataInterface.read(Integer.toString(i));
             Assert.assertNotNull(obj);
             Assert.assertEquals(i, obj.getValue1());
-        }
-    }
-
-    @Test
-    public void testCounts() throws Exception {
-        long numOfExamples = 200;
-        DataInterface<Long> dataInterface1 = createCountDataInterface("testCounts");
-        dataInterface1.dropAllData();
-        for (int i = 0; i < numOfExamples; i++) {
-            dataInterface1.write((long) i, 2l * i);
-        }
-        dataInterface1.flush();
-        for (int i = 0; i < numOfExamples; i++) {
-            long val = dataInterface1.readCount(i);
-            Assert.assertEquals(2l * i, val);
         }
     }
 
@@ -299,22 +283,6 @@ public class TestDataInterface extends BaseTestDataInterface {
         Assert.assertFalse(db.mightContain("someothervalue2"));
     }
 
-
-    @Test
-    public void testDoubleValues() {
-        final DataInterface<Double> db = dataInterfaceFactory.createDataInterface(type, "testDoubleValues", Double.class, new DoubleCombinator());
-        db.dropAllData();
-        for (int i = 0; i < 1000; i++) {
-            db.write(i, (double) i);
-        }
-        db.write(-1, null);
-        db.flush();
-        for (int i = 0; i < 1000; i++) {
-            Double value = db.read(i);
-            Assert.assertEquals(new Double(i), value);
-        }
-        Assert.assertNull(db.read(-1));
-    }
 
     @Test
     public void testAccents() {

@@ -23,36 +23,54 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     private static final long MAX_FILE_SIZE_READ = 1024 * 1024;
     private static final long BITS_TO_DISCARD_FOR_FILE_BUCKETS = 58;
     private static final int BATCH_SIZE = 1000000;
-    private static final long LONG_NULL = Long.MAX_VALUE;
-    private static final double DOUBLE_NULL = Double.MAX_VALUE;
     private static final String CLEAN_FILES_FILE = "CLEAN_FILES";
+
+    /**
+     * Special values
+     */
+    private static final long LONG_NULL = Long.MAX_VALUE;
+    private static final int INT_NULL = Integer.MAX_VALUE;
+    private static final double DOUBLE_NULL = Double.MAX_VALUE;
+    private static final float FLOAT_NULL = Float.MAX_VALUE;
 
     private final OpenFilesManager openFilesManager;
 
+    private final T nullValue;
     private File directory;
     private FileBucket[] fileBuckets;
 
     private long timeOfLastWrite;
+    private long timeOfLastRead;
     private long timeOfLastWriteOfCleanFilesList;
 
     public FileDataInterface(OpenFilesManager openFilesManager, Combinator<T> combinator, Class<T> objectClass, String directory, String nameOfSubset) {
         super(nameOfSubset, objectClass, combinator);
         this.openFilesManager = openFilesManager;
         this.directory = new File(directory, nameOfSubset);
+        this.nullValue = getNullValueForType(objectClass);
         initializeFileBuckets();
         checkDataDir();
+        timeOfLastRead = 0;
         timeOfLastWrite = timeOfLastWriteOfCleanFilesList = System.currentTimeMillis();
     }
 
     @Override
     public T readInt(long key) {
         FileBucket bucket = getBucket(key);
-        int fileInd = bucket.getFileInd(key);
-        FileInfo file = bucket.getFiles().get(fileInd);
         bucket.lockRead();
+        FileInfo file = bucket.getFile(key);
         try {
-            makeSureFileIsClean(bucket, fileInd, file);
-            return readClean(key, file);
+            if (fileShouldBeRewrittenForReading(file)) {
+                bucket.unlockRead();
+                bucket.lockWrite();
+                file = bucket.getFile(key);
+                rewriteFile(bucket, file, false, MAX_FILE_SIZE_READ);
+                bucket.unlockWrite();
+                bucket.lockRead();
+            }
+            T result = readSingleValue(key, file);
+            timeOfLastRead = System.currentTimeMillis();
+            return result;
         } catch (Exception exp) {
             throw new RuntimeException("Error in file " + toFile(file).getAbsolutePath(), exp);
         } finally {
@@ -60,20 +78,9 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         }
     }
 
-    private void makeSureFileIsClean(FileBucket bucket, int fileInd, FileInfo file) {
-        while (file.isDirty()) {
-            bucket.unlockRead();
-            bucket.lockWrite();
-            if (file.isDirty()) {
-                rewriteFile(bucket, fileInd, file, false, MAX_FILE_SIZE_READ);
-            }
-            bucket.unlockWrite();
-            bucket.lockRead();
-        }
-    }
-
     @Override
     public void writeInt0(long key, T value) {
+        checkNotSpecial(value);
         FileBucket bucket = getBucket(key);
         bucket.lockWrite();
         int fileInd = bucket.getFileInd(key);
@@ -81,12 +88,9 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         try {
             DataOutputStream dos = getOutputStream(file, true);
             long extraSize = writeValue(dos, key, value, getObjectClass());
-            file.increaseSize(extraSize);
-            file.markFileAsDirty();
+            file.increaseSize(extraSize, false);
             dos.close();
-            if (file.getSize() > MAX_FILE_SIZE_WRITE && extraSize < MAX_FILE_SIZE_WRITE) {
-                rewriteFile(bucket, fileInd, file, true, MAX_FILE_SIZE_WRITE / 4);
-            }
+            rewriteFileAfterWriteIfNecessary(bucket, file);
             timeOfLastWrite = System.currentTimeMillis();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -97,12 +101,12 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     @Override
     public void writeInt0(Iterator<KeyValue<T>> entries) {
-        long start = System.currentTimeMillis();
         while (entries.hasNext()) {
             MappedLists<FileBucket, KeyValue<T>> entriesToFileBuckets = new MappedLists<>();
             int numRead = 0;
             while (numRead < BATCH_SIZE && entries.hasNext()) {
                 KeyValue<T> curr = entries.next();
+                checkNotSpecial(curr.getValue());
                 FileBucket fileBucket = getBucket(curr.getKey());
                 entriesToFileBuckets.get(fileBucket).add(curr);
                 numRead++;
@@ -111,7 +115,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 List<KeyValue<T>> values = entriesToFileBuckets.get(bucket);
                 bucket.lockWrite();
                 try {
-                    Set<FileInfo> filesToBeRewritten = new HashSet<>();
                     MappedLists<FileInfo, KeyValue<T>> entriesToFiles = new MappedLists<>();
                     for (KeyValue<T> value : values) {
                         FileInfo file = bucket.getFile(value.getKey());
@@ -122,20 +125,10 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                         DataOutputStream dos = getOutputStream(file, true);
                         for (KeyValue<T> value : valuesForFile) {
                             long extraSize = writeValue(dos, value.getKey(), value.getValue(), getObjectClass());
-                            file.increaseSize(extraSize);
+                            file.increaseSize(extraSize, false);
                         }
-                        file.markFileAsDirty();
                         dos.close();
-                        if (file.getSize() > MAX_FILE_SIZE_WRITE) {
-                            filesToBeRewritten.add(file);
-                        }
-                    }
-                    for (FileInfo file : filesToBeRewritten) {
-                        int fileInd = bucket.getFiles().indexOf(file);
-                        if (fileInd >= 0) {
-                            //check that this file still exists, it could have been merged in meanwhile
-                            rewriteFile(bucket, fileInd, file, true, MAX_FILE_SIZE_WRITE / 4);
-                        }
+                        rewriteFileAfterWriteIfNecessary(bucket, file);
                     }
                 } catch (IOException exp) {
                     throw new RuntimeException(exp);
@@ -144,16 +137,41 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 }
             }
         }
-        totalTimeWrite += System.currentTimeMillis() - start;
         timeOfLastWrite = System.currentTimeMillis();
     }
 
-    /**
-     * This method will only work performantly if the keys are read in an ordered fashion
-     */
+    private void checkNotSpecial(T value) {
+        if (nullValue != null && nullValue.equals(value)) {
+            throw new RuntimeException("Sorry but value " + value + " is a reserved value to indicate null.");
+        }
+    }
+
+    private void rewriteFileAfterWriteIfNecessary(FileBucket bucket, FileInfo file) {
+        boolean needsRewrite;
+        long targetSize;
+        if (shouldFilesBeOptimizedForReads()) {
+            needsRewrite = fileShouldBeRewrittenForReading(file);
+            targetSize = MAX_FILE_SIZE_READ;
+        } else {
+            needsRewrite = file.getSize() > MAX_FILE_SIZE_WRITE;
+            targetSize = MAX_FILE_SIZE_WRITE / 4;
+        }
+        if (needsRewrite) {
+            rewriteFile(bucket, file, true, targetSize);
+        }
+    }
+
+    private boolean shouldFilesBeOptimizedForReads() {
+        return System.currentTimeMillis() - timeOfLastRead < 1000;
+    }
+
+    private boolean fileShouldBeRewrittenForReading(FileInfo file) {
+        return file.getSize() > MAX_FILE_SIZE_READ || file.getSize() - file.getEndOfCleanSection() > MAX_FILE_SIZE_READ / 100;
+    }
 
     @Override
     public CloseableIterator<KeyValue<T>> iterator(final Iterator<Long> keyIterator) {
+        timeOfLastRead = System.currentTimeMillis();
         return IterableUtils.iterator(new SimpleIterator<KeyValue<T>>() {
 
             private FileInfo currentFile;
@@ -185,6 +203,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     @Override
     public CloseableIterator<KeyValue<T>> iterator() {
+        timeOfLastRead = System.currentTimeMillis();
         final CloseableIterator<Pair<FileInfo, FileBucket>> fileIterator = createFileIterator();
         return IterableUtils.iterator(new SimpleIterator<KeyValue<T>>() {
 
@@ -218,6 +237,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     @Override
     public CloseableIterator<Long> keyIterator() {
+        timeOfLastRead = System.currentTimeMillis();
         final CloseableIterator<Pair<FileInfo, FileBucket>> fileIterator = createFileIterator();
         return IterableUtils.iterator(new SimpleIterator<Long>() {
 
@@ -306,12 +326,13 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     @Override
     public void optimizeForReading() {
+        timeOfLastRead = System.currentTimeMillis();
         for (FileBucket fileBucket : fileBuckets) {
             fileBucket.lockWrite();
             for (int fileInd = 0; fileInd < fileBucket.getFiles().size(); fileInd++) {
                 FileInfo file = fileBucket.getFiles().get(fileInd);
                 if (file.isDirty()) {
-                    rewriteFile(fileBucket, fileInd, file, false, MAX_FILE_SIZE_READ);
+                    rewriteFile(fileBucket, file, false, MAX_FILE_SIZE_READ);
                 }
             }
             fileBucket.unlockWrite();
@@ -327,13 +348,13 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     @Override
     public void close() {
+        writeCleanFilesListIfNecessary();
         lockAndUnlockAllBuckets();
     }
 
     @Override
     public void dropAllData() {
         try {
-            //lock all buckets
             writeLockAllBuckets();
             for (FileBucket bucket : fileBuckets) {
                 for (FileInfo file : bucket.getFiles()) {
@@ -344,7 +365,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             writeCleanFilesListNonSynchronized();
             initializeFiles();
             writeUnlockAllBuckets();
-            timeOfLastWrite = System.currentTimeMillis();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -374,8 +394,9 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         }
     }
 
-    private List<Pair<Long, T>> rewriteFile(FileBucket bucket, int fileInd, FileInfo file, boolean inWritePhase, long maxFileSize) {
+    private List<Pair<Long, T>> rewriteFile(FileBucket bucket, FileInfo file, boolean inWritePhase, long maxFileSize) {
         try {
+            int fileInd = bucket.getFiles().indexOf(file);
             List<Pair<Long, T>> values = readValues(file);
             int filesMergedWithThisFile = inWritePhase ? 0 : mergeFileIfTooSmall(bucket, fileInd, file, maxFileSize, values);
             DataOutputStream dos = getOutputStream(file, false);
@@ -403,11 +424,10 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 }
                 fileLocations.add(new Pair<>(key, file.getSize()));
                 dos.write(dataToWrite);
-                file.increaseSize(dataToWrite.length);
+                file.increaseSize(dataToWrite.length, true);
             }
             file.fileIsCleaned(sample(fileLocations, 100));
             dos.close();
-            timeOfLastWrite = System.currentTimeMillis();
             return values;
         } catch (IOException exp) {
             throw new RuntimeException("Unexpected exception while rewrite file " + toFile(file).getAbsolutePath(), exp);
@@ -420,7 +440,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         while (nextFileInd < bucket.getFiles().size() && combinedSize + bucket.getFiles().get(nextFileInd).getSize() < maxFileSize) {
             //Combine the files
             FileInfo nextFile = bucket.getFiles().remove(nextFileInd);
-            values.addAll(readValues(nextFile)); //Standard put of java maps since no identical keys should be present in the two files
+            values.addAll(readValues(nextFile));
             combinedSize += nextFile.getSize();
             deleteFile(nextFile);
             //note that nextFileInd does not need to advance, since we just removed the file at that position
@@ -446,11 +466,32 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 dos.writeDouble(doubleValue);
             }
             return 16;
+        } else if (objectClass == Integer.class) {
+            Integer intValue = (Integer) value;
+            if (intValue == null) {
+                dos.writeInt(INT_NULL);
+            } else {
+                dos.writeInt(intValue);
+            }
+            return 12;
+        } else if (objectClass == Float.class) {
+            Float floatValue = (Float) value;
+            if (floatValue == null) {
+                dos.writeFloat(FLOAT_NULL);
+            } else {
+                dos.writeFloat(floatValue);
+            }
+            return 12;
         } else {
-            byte[] objAsBytes = SerializationUtils.objectToCompressedBytes(value);
-            dos.writeInt(objAsBytes.length);
-            dos.write(objAsBytes);
-            return 8 + 4 + objAsBytes.length;
+            if (value == null) {
+                dos.writeInt(0);
+                return 8 + 4;
+            } else {
+                byte[] objAsBytes = SerializationUtils.objectToCompressedBytes(value);
+                dos.writeInt(objAsBytes.length);
+                dos.write(objAsBytes);
+                return 8 + 4 + objAsBytes.length;
+            }
         }
     }
 
@@ -469,14 +510,32 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             } else {
                 return (T) new Double(readValue);
             }
+        } else if (objectClass == Integer.class) {
+            int readValue = dis.readInt();
+            if (readValue == INT_NULL) {
+                return null;
+            } else {
+                return (T) new Integer(readValue);
+            }
+        } else if (objectClass == Float.class) {
+            float readValue = dis.readFloat();
+            if (readValue == FLOAT_NULL) {
+                return null;
+            } else {
+                return (T) new Float(readValue);
+            }
         } else {
             int length = dis.readInt();
-            byte[] objectAsBytes = new byte[length];
-            int bytesRead = dis.read(objectAsBytes);
-            if (bytesRead < objectAsBytes.length) {
-                throw new RuntimeException("Could not read complete object, expected " + length + " bytes, received " + bytesRead);
+            if (length == 0) {
+                return null;
+            } else {
+                byte[] objectAsBytes = new byte[length];
+                int bytesRead = dis.read(objectAsBytes);
+                if (bytesRead < objectAsBytes.length) {
+                    throw new RuntimeException("Could not read complete object, expected " + length + " bytes, received " + bytesRead);
+                }
+                return SerializationUtils.compressedBytesToObject(objectAsBytes, objectClass);
             }
-            return SerializationUtils.compressedBytesToObject(objectAsBytes, objectClass);
         }
     }
 
@@ -548,7 +607,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             } else {
                 Collections.sort(bucket.getFiles());
                 if (bucket.getFirstKey() != bucket.getFiles().get(0).getFirstKey()) {
-                    throw new RuntimeException("Missing file in " + getName() + " ? Expected file " + bucket.getFirstKey());
+                    throw new RuntimeException("Missing file in " + getName() + " ? Expected file " + new File(directory, Long.toString(bucket.getFirstKey())).getAbsolutePath());
                 }
             }
 
@@ -619,48 +678,71 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         return fileBuckets[ind];
     }
 
-    private T readClean(long keyToRead, FileInfo file) throws IOException {
+    private T readSingleValue(long keyToRead, FileInfo file) throws IOException {
         PositionExposingDataInputStream dis;
         //See whether we can skip a portion of the file?
-        int pos = Collections.binarySearch((List) file.getFileLocations(), keyToRead);
+        int pos = file.getFileLocations() != null ? Collections.binarySearch((List) file.getFileLocations(), keyToRead) : -1;
+        int startPos;
         if (pos == -1) {
-            //Before first key, value can not be in this file
-            return null;
+            //Before first key, value can not be in clean part of file
+            startPos = file.getEndOfCleanSection();
+        } else {
+            if (pos < 0) {
+                pos = -(pos + 1);
+            }
+            if (pos == file.getFileLocations().size() || file.getFileLocations().get(pos).getFirst() > keyToRead) {
+                pos--;
+            }
+            startPos = file.getFileLocations().get(pos).getSecond();
         }
-        if (pos < 0) {
-            pos = -(pos + 1);
-        }
-        if (pos == file.getFileLocations().size() || file.getFileLocations().get(pos).getFirst() > keyToRead) {
-            pos--;
-        }
-        if (file.getFileLocations().get(pos).getFirst() > keyToRead) {
-            throw new RuntimeException("Critical, unexpected state while reading value");
-        }
-        int startPos = file.getFileLocations().get(pos).getSecond();
         dis = getInputStream(file);
         dis.skipBytes(startPos);
-        byte firstByte = (byte) (keyToRead >> 56);
-        while (dis.hasMoreData()) {
+        byte firstByteOfKeyToRead = (byte) (keyToRead >> 56);
+        T value = null;
+        //read clean part
+        while (dis.getPosition() < file.getEndOfCleanSection()) {
             double currentByte = dis.getCurrentByte();
-            if (currentByte < firstByte) {
-                //key too small
-                skipValue(dis);
-            } else if (currentByte == firstByte) {
+            if (currentByte == firstByteOfKeyToRead) {
                 long key = dis.readLong();
                 if (key == keyToRead) {
-                    return readValue(getObjectClass(), dis);
+                    value = readValue(getObjectClass(), dis);
+                    break;
                 } else if (key > keyToRead) {
-                    return null;
+                    break;
                 } else {
                     skipValue(dis);
                 }
-            } else if (currentByte > firstByte) {
+            } else if (currentByte > firstByteOfKeyToRead) {
                 //key too large
-                return null;
+                break;
+            } else if (currentByte < firstByteOfKeyToRead) {
+                //key too small
+                dis.skip(8); //skip key
+                skipValue(dis); //skip value
             }
         }
-        //not found
-        return null;
+        //read dirty part
+        dis.setPosition(file.getEndOfCleanSection());
+        while (dis.getPosition() < file.getSize()) {
+            double currentByte = dis.getCurrentByte();
+            if (currentByte != firstByteOfKeyToRead) {
+                dis.skip(8); //skip key
+                skipValue(dis); //skip value
+            } else {
+                long key = dis.readLong();
+                if (key == keyToRead) {
+                    T newValue = readValue(getObjectClass(), dis);
+                    if (value == null || newValue == null) {
+                        value = newValue;
+                    } else {
+                        value = getCombinator().combine(value, newValue);
+                    }
+                } else {
+                    skipValue(dis);
+                }
+            }
+        }
+        return value;
     }
 
     private PositionExposingDataInputStream getInputStream(FileInfo file) throws IOException {
@@ -686,10 +768,10 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     private void skipValue(DataInputStream dis) throws IOException {
         //Skip some bytes
         Class<T> objectClass = getObjectClass();
-        if (objectClass == Long.class) {
+        if (objectClass == Long.class || objectClass == Double.class) {
             dis.skipBytes(8);
-        } else if (objectClass == Double.class) {
-            dis.skipBytes(8);
+        } else if (objectClass == Integer.class || objectClass == Float.class) {
+            dis.skipBytes(4);
         } else {
             int length = dis.readInt();
             dis.skipBytes(length);
@@ -703,14 +785,10 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     private File toFile(FileInfo fileInfo) {
         if (directory == null) {
-            throw new RuntimeException("Directory is null, probably the datainterface was closed already!");
+            throw new RuntimeException("Directory is null, probably the data interface was closed already!");
         }
         return new File(directory, Long.toString(fileInfo.getFirstKey()));
     }
-
-    /**
-     * This method assumes that the file bucket for the given file is already locked
-     */
 
     private Map<Long, T> readMap(FileBucket bucket, FileInfo file) {
         List<Pair<Long, T>> values = readValuesWithCheck(bucket, file);
@@ -721,47 +799,34 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         return result;
     }
 
-    /**
-     * This method assumes that the file bucket for the given file is already locked
-     */
-
     private List<Pair<Long, T>> readValuesWithCheck(FileBucket bucket, FileInfo file) {
-        while (file.isDirty()) {
+        if (file.isDirty()) {
             bucket.unlockRead();
             bucket.lockWrite();
-            if (file.isDirty()) {
-                List<Pair<Long, T>> result = rewriteFile(bucket, bucket.getFiles().indexOf(file), file, false, MAX_FILE_SIZE_READ);
-                bucket.unlockWrite();
-                bucket.lockRead();
-                return result;
-            } else {
-                bucket.unlockWrite();
-                bucket.lockRead();
-            }
+            List<Pair<Long, T>> result = rewriteFile(bucket, file, false, MAX_FILE_SIZE_READ);
+            bucket.unlockWrite();
+            bucket.lockRead();
+            return result;
         }
         return readValues(file);
     }
-
-    /**
-     * This method assumes that the file bucket for the given file is already locked
-     */
 
     private List<Pair<Long, T>> readValues(FileInfo file) {
         try {
             if (file.getSize() > 0) {
                 PositionExposingDataInputStream dis = getInputStream(file);
-                int expectedNumberOfLongValues = (int) (file.getSize() / (16));
+                int expectedNumberOfLongValues = file.getSize() / 16;
+                List<Pair<Long, T>> result = new ArrayList<>(expectedNumberOfLongValues);
                 if (!file.isDirty()) {
-                    List<Pair<Long, T>> result = new ArrayList<>(expectedNumberOfLongValues);
-                    while (dis.hasMoreData()) {
+                    while (dis.getPosition() < file.getEndOfCleanSection()) {
                         long key = dis.readLong();
                         T value = readValue(getObjectClass(), dis);
                         result.add(new Pair<>(key, value));
                     }
                     return result;
                 } else {
-                    //Read values in buckets
-                    int numberOfBuckets = getObjectClass() == Long.class ? Math.max(1, expectedNumberOfLongValues / 1000) : 100;
+                    //read values in buckets
+                    int numberOfBuckets = Math.max(1, expectedNumberOfLongValues / 1000);
                     List[] buckets = new List[numberOfBuckets];
                     for (int i = 0; i < buckets.length; i++) {
                         buckets[i] = new ArrayList(expectedNumberOfLongValues / numberOfBuckets);
@@ -777,7 +842,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                         }
                         buckets[bucketInd].add(new Pair<>(key, value));
                     }
-                    List<Pair<Long, T>> combinedResult = new ArrayList<>();
                     for (int bucketInd = 0; bucketInd < buckets.length; bucketInd++) {
                         List<Pair<Long, T>> currentBucket = buckets[bucketInd];
                         Collections.sort(currentBucket, new Comparator<Pair<Long, T>>() {
@@ -796,16 +860,8 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                                 if (nextKey == currKey) {
                                     T nextVal = currentBucket.get(j).getSecond();
                                     T combinedVal;
-                                    if (currVal == null) {
-                                        if (nextVal != null) {
-                                            //First value was a delete, keep only second value
-                                            combinedVal = nextVal;
-                                        } else {
-                                            combinedVal = null;
-                                        }
-                                    } else if (nextVal == null) {
-                                        //Second value was a delete, forget first value
-                                        combinedVal = null;
+                                    if (currVal == null || nextVal == null) {
+                                        combinedVal = nextVal;
                                     } else {
                                         //Combine values
                                         combinedVal = getCombinator().combine(currVal, nextVal);
@@ -818,13 +874,13 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                                 }
                             }
                             if (currPair.getSecond() != null) {
-                                combinedResult.add(currPair);
+                                result.add(currPair);
                             }
                         }
                         buckets[bucketInd] = null; //Free some memory
                     }
-                    return combinedResult;
                 }
+                return result;
             } else {
                 return Collections.emptyList();
             }
@@ -836,20 +892,24 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     private CloseableIterator<Pair<FileInfo, FileBucket>> createFileIterator() {
+
         return new CloseableIterator<Pair<FileInfo, FileBucket>>() {
 
-            private int fileInd = -1;
-            private int bucketInd = 0;
+            private Iterator<FileInfo> filesForBucket = null;
+            private int bucketInd = -1;
 
             {
-                findNext();
+                findNextBucket();
             }
 
-            private void findNext() {
-                fileInd++;
-                while (bucketInd < fileBuckets.length && fileInd >= fileBuckets[bucketInd].getFiles().size()) {
+            private void findNextBucket() {
+                bucketInd++;
+                while (bucketInd < fileBuckets.length && !(filesForBucket = new ArrayList<>(fileBuckets[bucketInd].getFiles()).iterator()).hasNext()) {
                     bucketInd++;
-                    fileInd = 0;
+                }
+                if (bucketInd >= fileBuckets.length) {
+                    //did not find non-empty bucket
+                    filesForBucket = null;
                 }
             }
 
@@ -860,15 +920,17 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
             @Override
             public boolean hasNext() {
-                return bucketInd < fileBuckets.length;
+                return filesForBucket != null;
             }
 
             @Override
             public Pair<FileInfo, FileBucket> next() {
                 int currBucket = bucketInd;
-                int currFile = fileInd;
-                findNext();
-                return new Pair<>(fileBuckets[currBucket].getFiles().get(currFile), fileBuckets[currBucket]);
+                FileInfo currFile = filesForBucket.next();
+                if (!filesForBucket.hasNext()) {
+                    findNextBucket();
+                }
+                return new Pair<>(currFile, fileBuckets[currBucket]);
             }
         };
     }
@@ -894,15 +956,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         PositionExposingDataInputStream dis = getInputStream(file);
         while (dis.hasMoreData()) {
             result.add(dis.readLong());
-            //Skip some bytes
-            if (getObjectClass() == Long.class) {
-                dis.skipBytes(8);
-            } else if (getObjectClass() == Double.class) {
-                dis.skipBytes(8);
-            } else {
-                int length = dis.readInt();
-                dis.skipBytes(length);
-            }
+            skipValue(dis);
         }
         return result;
     }
@@ -931,5 +985,17 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         return result;
     }
 
-
+    private static <T> T getNullValueForType(Class<T> objectClass) {
+        if (objectClass == Long.class) {
+            return (T) new Long(Long.MAX_VALUE);
+        } else if (objectClass == Double.class) {
+            return (T) new Double(Double.MAX_VALUE);
+        } else if (objectClass == Float.class) {
+            return (T) new Float(Float.MAX_VALUE);
+        } else if (objectClass == Integer.class) {
+            return (T) new Integer(Integer.MAX_VALUE);
+        } else {
+            return null;
+        }
+    }
 }

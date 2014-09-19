@@ -32,7 +32,7 @@ public class BaseTestDataInterface {
         backendTypes.add(DatabaseBackendType.MEMORY);
         backendTypes.add(DatabaseBackendType.REMOTE);
         backendTypes.add(DatabaseBackendType.FILE);
-        backendTypes.add(DatabaseBackendType.LMDB);
+//        backendTypes.add(DatabaseBackendType.LMDB); --> too slow
         backendTypes.add(DatabaseBackendType.KYOTO);
         backendTypes.add(DatabaseBackendType.ROCKSDB);
 
