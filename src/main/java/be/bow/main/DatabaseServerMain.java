@@ -29,7 +29,7 @@ public class DatabaseServerMain implements MainClass {
             String dataDirectory = args[0];
             int dataInterfacePort = Integer.parseInt(args[1]);
             int virtualFileServerPort = Integer.parseInt(args[2]);
-            ApplicationManager.runSafely(new DatabaseServerMainContextFactory(DatabaseServerMain.class, dataDirectory, dataInterfacePort, virtualFileServerPort));
+            ApplicationManager.runSafely(new DatabaseServerMainContextFactory(new DatabaseServerMain(), dataDirectory, dataInterfacePort, virtualFileServerPort));
         }
     }
 
@@ -90,7 +90,7 @@ public class DatabaseServerMain implements MainClass {
         private final int dataInterfacePort;
         private final int virtualFileServerPort;
 
-        public DatabaseServerMainContextFactory(Class<DatabaseServerMain> databaseServerMainClass, String dataDirectory, int dataInterfacePort, int virtualFileServerPort) {
+        public DatabaseServerMainContextFactory(DatabaseServerMain databaseServerMainClass, String dataDirectory, int dataInterfacePort, int virtualFileServerPort) {
             super(databaseServerMainClass);
             this.dataDirectory = dataDirectory;
             this.dataInterfacePort = dataInterfacePort;
