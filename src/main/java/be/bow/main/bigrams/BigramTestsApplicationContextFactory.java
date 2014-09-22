@@ -7,11 +7,11 @@ import be.bow.web.WebContainerConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /**
-* Created by Koen Deschacht (koendeschacht@gmail.com) on 9/22/14.
-*/
-public class SpeedTestApplicationContextFactory extends BaseApplicationContextFactory {
+ * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/22/14.
+ */
+public class BigramTestsApplicationContextFactory<T extends MainClass> extends BaseApplicationContextFactory {
 
-    public SpeedTestApplicationContextFactory(Class<? extends MainClass> mainClass) {
+    public BigramTestsApplicationContextFactory(T mainClass) {
         super(mainClass);
     }
 

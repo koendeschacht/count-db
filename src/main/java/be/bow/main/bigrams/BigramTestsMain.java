@@ -12,7 +12,6 @@ import be.bow.db.combinator.LongCombinator;
 import be.bow.db.filedb.FileDataInterfaceFactory;
 import be.bow.db.kyoto.KyotoDataInterfaceFactory;
 import be.bow.db.leveldb.LevelDBDataInterfaceFactory;
-import be.bow.db.lmdb.LMDBDataInterfaceFactory;
 import be.bow.db.rocksdb.RocksDBDataInterfaceFactory;
 import be.bow.ui.UI;
 import be.bow.util.NumUtils;
@@ -26,9 +25,6 @@ import java.util.concurrent.CountDownLatch;
 public class BigramTestsMain implements MainClass {
 
     private static final int MILLION_ITEMS_TO_PROCESS = 8;
-
-    private static final File largeTextFile = new File("/home/koen/bow/data/wikipedia/enwiki-latest-pages-articles.xml");
-    //    private static final File largeTextFile = new File("/home/koen/bow/data/wikipedia/nlwiki-20140113-pages-articles.xml");
     private static final File tmpDbDir = new File("/tmp/testDatabaseSpeed");
 
     @Autowired
@@ -38,8 +34,18 @@ public class BigramTestsMain implements MainClass {
     @Autowired
     private MemoryManager memoryManager;
 
+    private final File largeTextFile;
+
+    public BigramTestsMain(File largeTextFile) {
+        this.largeTextFile = largeTextFile;
+    }
+
     public static void main(String[] args) throws IOException, InterruptedException {
-        ApplicationManager.runSafely(new SpeedTestApplicationContextFactory(BigramTestsMain.class));
+        if (args.length != 1) {
+            UI.writeError("Please provide the path to a large text file");
+        } else {
+            ApplicationManager.runSafely(new BigramTestsApplicationContextFactory(new BigramTestsMain(new File(args[0]))));
+        }
     }
 
     public void run() {
@@ -62,7 +68,7 @@ public class BigramTestsMain implements MainClass {
         testBatchWritingAndReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
         testBatchWritingAndReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
         testBatchWritingAndReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", true), DatabaseCachingType.DIRECT);
-        testBatchWritingAndReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT);
+//        testBatchWritingAndReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT);
 
         UI.write("Testing mixed writing / reading for data type " + dataType);
         testMixedWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
@@ -70,7 +76,7 @@ public class BigramTestsMain implements MainClass {
         testMixedWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
         testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
         testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", true), DatabaseCachingType.DIRECT);
-        testMixedWritingReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT);
+//        testMixedWritingReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT);
     }
 
     private static void prepareTmpDir(File tmpDbDir) throws IOException {
