@@ -1,4 +1,4 @@
-package be.bow.main.bigrams;
+package be.bow.main.tests.bigrams;
 
 import be.bow.db.combinator.Combinator;
 

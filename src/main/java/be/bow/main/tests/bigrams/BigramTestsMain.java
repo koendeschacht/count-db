@@ -1,4 +1,4 @@
-package be.bow.main.bigrams;
+package be.bow.main.tests.bigrams;
 
 import be.bow.application.ApplicationManager;
 import be.bow.application.MainClass;
@@ -13,6 +13,7 @@ import be.bow.db.filedb.FileDataInterfaceFactory;
 import be.bow.db.kyoto.KyotoDataInterfaceFactory;
 import be.bow.db.leveldb.LevelDBDataInterfaceFactory;
 import be.bow.db.rocksdb.RocksDBDataInterfaceFactory;
+import be.bow.main.tests.TestsApplicationContextFactory;
 import be.bow.ui.UI;
 import be.bow.util.NumUtils;
 import org.apache.commons.io.FileUtils;
@@ -44,7 +45,7 @@ public class BigramTestsMain implements MainClass {
         if (args.length != 1) {
             UI.writeError("Please provide the path to a large text file");
         } else {
-            ApplicationManager.runSafely(new BigramTestsApplicationContextFactory(new BigramTestsMain(new File(args[0]))));
+            ApplicationManager.runSafely(new TestsApplicationContextFactory(new BigramTestsMain(new File(args[0]))));
         }
     }
 
@@ -53,7 +54,7 @@ public class BigramTestsMain implements MainClass {
             UI.write("Reading " + largeTextFile.getAbsolutePath());
             prepareTmpDir(tmpDbDir);
 
-            runAllTests(DataType.LONG_COUNT);
+//            runAllTests(DataType.LONG_COUNT);
             runAllTests(DataType.SERIALIZED_OBJECT);
 
         } catch (Exception exp) {
@@ -68,7 +69,7 @@ public class BigramTestsMain implements MainClass {
         testBatchWritingAndReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
         testBatchWritingAndReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
         testBatchWritingAndReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", true), DatabaseCachingType.DIRECT);
-//        testBatchWritingAndReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT);
+//        testBatchWritingAndReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT); --> too slow
 
         UI.write("Testing mixed writing / reading for data type " + dataType);
         testMixedWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
@@ -76,7 +77,7 @@ public class BigramTestsMain implements MainClass {
         testMixedWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
         testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
         testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", true), DatabaseCachingType.DIRECT);
-//        testMixedWritingReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT);
+//        testMixedWritingReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT); --> too slow
     }
 
     private static void prepareTmpDir(File tmpDbDir) throws IOException {
@@ -131,11 +132,11 @@ public class BigramTestsMain implements MainClass {
         final MutableLong numberOfItemsRead = new MutableLong(0);
         final MutableLong timeSpendWriting = new MutableLong(0);
         final MutableLong timeSpendReading = new MutableLong(0);
-        final CountDownLatch countDownLatchWrites = new CountDownLatch(numberOfThreads);
+        final CountDownLatch countDownLatch = new CountDownLatch(numberOfThreads);
         for (int i = 0; i < numberOfThreads; i++) {
-            new ReadTextThread(dataType, numberOfItemsWritten, numberOfItemsRead, timeSpendWriting, timeSpendReading, numberOfItems, rdr, dataInterface, countDownLatchWrites, fractionToRead).start();
+            new ReadTextThread(dataType, numberOfItemsWritten, numberOfItemsRead, timeSpendWriting, timeSpendReading, numberOfItems, rdr, dataInterface, countDownLatch, fractionToRead).start();
         }
-        countDownLatchWrites.await();
+        countDownLatch.await();
         dataInterface.flush();
         double readsPerSecond = numberOfItemsRead.longValue() * 1e9 / timeSpendReading.longValue();
         double writesPerSecond = numberOfItemsWritten.longValue() * 1e9 / timeSpendWriting.longValue();

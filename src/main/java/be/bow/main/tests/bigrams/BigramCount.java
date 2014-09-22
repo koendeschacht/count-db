@@ -1,8 +1,8 @@
-package be.bow.main.bigrams;
+package be.bow.main.tests.bigrams;
 
 /**
-* Created by Koen Deschacht (koendeschacht@gmail.com) on 9/22/14.
-*/
+ * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/22/14.
+ */
 public class BigramCount {
     private String firstWord;
     private String secondWord;
@@ -28,5 +28,29 @@ public class BigramCount {
 
     public long getCount() {
         return count;
+    }
+
+
+    //Used for serialization
+
+    public BigramCount() {
+    }
+
+    //Used for serialization
+
+    public void setFirstWord(String firstWord) {
+        this.firstWord = firstWord;
+    }
+
+    //Used for serialization
+
+    public void setSecondWord(String secondWord) {
+        this.secondWord = secondWord;
+    }
+
+    //Used for serialization
+
+    public void setCount(long count) {
+        this.count = count;
     }
 }

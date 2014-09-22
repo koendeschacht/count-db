@@ -1,4 +1,4 @@
-package be.bow.main.bigrams;
+package be.bow.main.tests;
 
 import be.bow.application.BaseApplicationContextFactory;
 import be.bow.application.EnvironmentProperties;
@@ -9,9 +9,9 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/22/14.
  */
-public class BigramTestsApplicationContextFactory<T extends MainClass> extends BaseApplicationContextFactory {
+public class TestsApplicationContextFactory<T extends MainClass> extends BaseApplicationContextFactory {
 
-    public BigramTestsApplicationContextFactory(T mainClass) {
+    public TestsApplicationContextFactory(T mainClass) {
         super(mainClass);
     }
 
