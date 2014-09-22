@@ -1,7 +1,8 @@
-package be.bow.main.test;
+package be.bow.main.bigrams;
 
 import be.bow.db.DataInterface;
 import be.bow.text.WordIterator;
+import be.bow.util.HashUtils;
 import be.bow.util.SafeThread;
 import org.apache.commons.lang3.mutable.MutableLong;
 
@@ -17,7 +18,6 @@ import java.util.concurrent.CountDownLatch;
  */
 class ReadTextThread extends SafeThread {
 
-    private BaseReadWriteBigrams baseReadWriteBigrams;
     private final MutableLong numberOfItemsWritten;
     private final MutableLong numberOfItemsRead;
     private final MutableLong timeSpendWriting;
@@ -25,12 +25,12 @@ class ReadTextThread extends SafeThread {
     private final long numberOfItems;
     private final BufferedReader rdr;
     private final DataInterface dataInterface;
+    private final DataType dataType;
     private CountDownLatch countDownLatch;
     private final double fractionToRead;
 
-    public ReadTextThread(BaseReadWriteBigrams baseReadWriteBigrams, MutableLong numberOfItemsWritten, MutableLong numberOfItemsRead, MutableLong timeSpendWriting, MutableLong timeSpendReading, long numberOfItems, BufferedReader rdr, DataInterface dataInterface, CountDownLatch countDownLatch, double fractionToRead) {
+    public ReadTextThread(DataType dataType, MutableLong numberOfItemsWritten, MutableLong numberOfItemsRead, MutableLong timeSpendWriting, MutableLong timeSpendReading, long numberOfItems, BufferedReader rdr, DataInterface dataInterface, CountDownLatch countDownLatch, double fractionToRead) {
         super("ReadTextThread", false);
-        this.baseReadWriteBigrams = baseReadWriteBigrams;
         this.numberOfItemsWritten = numberOfItemsWritten;
         this.numberOfItemsRead = numberOfItemsRead;
         this.timeSpendReading = timeSpendReading;
@@ -40,6 +40,7 @@ class ReadTextThread extends SafeThread {
         this.dataInterface = dataInterface;
         this.countDownLatch = countDownLatch;
         this.fractionToRead = fractionToRead;
+        this.dataType = dataType;
     }
 
     public void runInt() throws IOException {
@@ -55,28 +56,40 @@ class ReadTextThread extends SafeThread {
             }
             boolean readValuesInThisText = random.nextDouble() < fractionToRead;
             long startTime = System.nanoTime();
-            long numberOfItemsWrittenForThisText = 0;
+            long numOfWordsInText = 0;
             char[] actualTextBuffer = charsRead < textBuffer.length ? Arrays.copyOf(textBuffer, charsRead) : textBuffer;
             WordIterator wordIterator = new WordIterator(actualTextBuffer, Collections.<String>emptySet());
             String prev = null;
             while (wordIterator.hasNext()) {
                 String word = wordIterator.next().toString().toLowerCase();
-                if (readValuesInThisText) {
-                    baseReadWriteBigrams.doRead(prev, word, dataInterface);
-                } else {
-                    baseReadWriteBigrams.doWrite(prev, word, dataInterface);
+                if (prev != null) {
+                    if (readValuesInThisText) {
+                        if (dataType == DataType.LONG_COUNT) {
+                            dataInterface.readCount(prev + " " + word);
+                        } else {
+                            dataInterface.read(HashUtils.hashCode(prev + " " + word));
+                        }
+                    } else {
+                        if (dataType == DataType.LONG_COUNT) {
+                            dataInterface.increaseCount(prev + " " + word);
+                        } else {
+                            dataInterface.write(HashUtils.hashCode(prev + " " + word), new BigramCount(prev, word));
+                        }
+                    }
+                    numOfWordsInText++;
                 }
-                numberOfItemsWrittenForThisText++;
                 prev = word;
             }
             long endTime = System.nanoTime();
             MutableLong itemsWritten = readValuesInThisText ? numberOfItemsRead : numberOfItemsWritten;
             MutableLong timeSpend = readValuesInThisText ? timeSpendReading : timeSpendWriting;
             synchronized (itemsWritten) {
-                itemsWritten.setValue(itemsWritten.longValue() + numberOfItemsWrittenForThisText);
+                itemsWritten.setValue(itemsWritten.longValue() + numOfWordsInText);
                 timeSpend.setValue(timeSpend.longValue() + (endTime - startTime));
             }
         }
+
         countDownLatch.countDown();
     }
+
 }

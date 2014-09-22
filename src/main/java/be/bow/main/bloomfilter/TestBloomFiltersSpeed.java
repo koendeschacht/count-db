@@ -1,4 +1,4 @@
-package be.bow.main.test;
+package be.bow.main.bloomfilter;
 
 import be.bow.db.bloomfilter.LongBloomFilter;
 import be.bow.db.data.LongCountsBloomFilter;
