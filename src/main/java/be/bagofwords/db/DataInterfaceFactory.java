@@ -85,7 +85,7 @@ public abstract class DataInterfaceFactory implements StatusViewable, LateClosea
 
     @Override
     public synchronized void close() {
-        flushDataInterfacesThread.close();
+        flushDataInterfacesThread.terminateAndWait();
         closeAllInterfaces();
     }
 

@@ -3,11 +3,12 @@ package be.bagofwords.main;
 import be.bagofwords.application.ApplicationManager;
 import be.bagofwords.application.BaseRunnableApplicationContextFactory;
 import be.bagofwords.application.MainClass;
-import be.bagofwords.db.application.config.FileDataInterfaceConfiguration;
 import be.bagofwords.db.application.environment.FileCountDBEnvironmentProperties;
 import be.bagofwords.db.application.environment.RemoteCountDBEnvironmentProperties;
+import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer;
 import be.bagofwords.ui.UI;
+import be.bagofwords.virtualfile.local.LocalFileService;
 import be.bagofwords.virtualfile.remote.RemoteFileServer;
 import be.bagofwords.web.WebContainerConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,7 +103,8 @@ public class DatabaseServerMain implements MainClass {
             scan("be.bagofwords");
             bean(WebContainerConfiguration.class);
             singleton("environmentProperties", new DatabaseServerMainEnvironmentProperties(dataDirectory, dataInterfacePort, virtualFileServerPort));
-            bean(FileDataInterfaceConfiguration.class);
+            bean(FileDataInterfaceFactory.class);
+            bean(LocalFileService.class);
             return super.createApplicationContext();
         }
     }

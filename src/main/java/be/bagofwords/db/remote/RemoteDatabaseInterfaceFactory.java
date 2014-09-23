@@ -1,10 +1,10 @@
 package be.bagofwords.db.remote;
 
-import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
-import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.DataInterface;
+import be.bagofwords.db.DataInterfaceFactory;
+import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.SafeThread;
 import be.bagofwords.util.WrappedSocketConnection;
@@ -51,7 +51,7 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
     @Override
     public synchronized void close() {
         if (changedValueListenerThread != null) {
-            changedValueListenerThread.close();
+            changedValueListenerThread.terminateAndWait();
         }
         super.close();
     }

@@ -8,6 +8,7 @@
     </JAVADOC>
     <SOURCES>
       <root url="jar://$MAVEN_REPOSITORY$/be/bagofwords/bow-utils/1.0/bow-utils-1.0-sources.jar!/" />
+      <root url="file://$PROJECT_DIR$/../bow-utils/src/main/java" />
     </SOURCES>
   </library>
 </component>

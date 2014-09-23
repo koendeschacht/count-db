@@ -1,13 +1,15 @@
 package be.bagofwords.db.filedb;
 
-import be.bagofwords.db.DataInterfaceFactory;
-import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.application.file.OpenFilesManager;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.DataInterface;
+import be.bagofwords.db.DataInterfaceFactory;
+import be.bagofwords.db.application.environment.FileCountDBEnvironmentProperties;
+import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.util.SafeThread;
 import be.bagofwords.util.Utils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,6 +21,11 @@ public class FileDataInterfaceFactory extends DataInterfaceFactory {
     private final String directory;
     private final List<FileDataInterface> interfaces;
     private final WriteCleanFilesListThread writeCleanFilesListThread;
+
+    @Autowired
+    public FileDataInterfaceFactory(OpenFilesManager openFilesManager, CachesManager cachesManager, MemoryManager memoryManager, FileCountDBEnvironmentProperties fileCountDBEnvironmentProperties) {
+        this(openFilesManager, cachesManager, memoryManager, fileCountDBEnvironmentProperties.getDataDirectory() + "server/");
+    }
 
     public FileDataInterfaceFactory(OpenFilesManager openFilesManager, CachesManager cachesManager, MemoryManager memoryManager, String directory) {
         super(cachesManager, memoryManager);
@@ -42,14 +49,14 @@ public class FileDataInterfaceFactory extends DataInterfaceFactory {
 
     @Override
     public void close() {
-        this.writeCleanFilesListThread.close();
+        this.writeCleanFilesListThread.terminateAndWait();
         super.close();
     }
 
     private class WriteCleanFilesListThread extends SafeThread {
 
         public WriteCleanFilesListThread() {
-            super("WriteCleanFilesListThread", false);
+            super("WriteCleanFilesListThread", true);
         }
 
         @Override

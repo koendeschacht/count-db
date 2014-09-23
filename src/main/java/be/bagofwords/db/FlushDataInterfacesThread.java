@@ -17,7 +17,7 @@ public class FlushDataInterfacesThread extends SafeThread {
     private final MemoryManager memoryManager;
 
     public FlushDataInterfacesThread(DataInterfaceFactory dataInterfaceFactory, MemoryManager memoryManager) {
-        super("FlushWriteBuffer", false);
+        super("FlushWriteBuffer", true);
         this.dataInterfaceFactory = dataInterfaceFactory;
         this.memoryManager = memoryManager;
     }

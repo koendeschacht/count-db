@@ -1,7 +1,9 @@
 package be.bagofwords.virtualfile.local;
 
+import be.bagofwords.db.application.environment.FileCountDBEnvironmentProperties;
 import be.bagofwords.virtualfile.VirtualFile;
 import be.bagofwords.virtualfile.VirtualFileService;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 
@@ -21,6 +23,11 @@ public class LocalFileService extends VirtualFileService {
                 throw new RuntimeException("Failed to created directory " + this.rootDirectory.getAbsolutePath());
             }
         }
+    }
+
+    @Autowired
+    public LocalFileService(FileCountDBEnvironmentProperties fileCountDBEnvironmentProperties) {
+        this(fileCountDBEnvironmentProperties.getDataDirectory() + "virtualFiles/");
     }
 
     @Override
