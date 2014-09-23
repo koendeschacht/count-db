@@ -21,7 +21,7 @@ The class ``be.bagofwords.main.tests.bigrams.BigramTestsMain`` compares the perf
 
 see [ExampleUsage.java](https://github.com/koendeschacht/count-db/blob/master/src/main/java/be/bagofwords/main/ExampleUsage.java)
 
-```
+``` java
 public class ExampleUsage {
 
     public static void main(String[] args) throws ParseException {
