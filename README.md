@@ -19,26 +19,34 @@ The class ``be.bagofwords.main.tests.bigrams.BigramTestsMain`` compares the perf
 
 ## Usage
 
-Creating databases 
-```
-MemoryManager memoryManager = new MemoryManager() ; //should be unique in application, can be wired through spring
-CachesManager cachesManager = new CachesManager() ; //should be unique in application, can be wired through spring
-OpenFilesManager openFilesManager = new OpenFilesManager() ; //should be unique in application, can be wired through spring
-DataInterfaceFactory dataInterfaceFactory = new FileDataInterfaceFactory(openFilesManager, cachesManager, memoryManager,"/tmp/myData"); 
-DataInterface<Long> myLogDataInterface = dataInterfaceFactory.createCountDataInterface("myCounts");
-DataInterface<UserObject> myUserDataInterface = dataInterfaceFactory.createDataInterface(DatabaseCachingType.CACHED, "myObjects", UserObject.class, new OverWriteCombinator<UserObject>());
-...
-```
+see [ExampleUsage.java](https://github.com/koendeschacht/count-db/blob/master/src/main/java/be/bagofwords/main/ExampleUsage.java)
 
-Writing 
 ```
-myLogDataInterface.increaseCount("user_koen_logged_in");
-myUserDataInterface.write(12939, new UserObject("koen", "deschacht")) ;
-```
+public class ExampleUsage {
 
-Reading
-```
-long numOfLogins = myLogDataInterface.readCount("user_koen_logged_in");
-UserObject koenUser = myUserDataInterface.read(12939) ;
+    public static void main(String[] args) throws ParseException {
+        //create data interface factory that stores all data in /tmp/myData (This factory is wired with spring)
+        DataInterfaceFactory dataInterfaceFactory = new EmbeddedDBContextFactory("/tmp/myData").createApplicationContext().getBean(DataInterfaceFactory.class);
+
+        //create databases
+        DataInterface<Long> myLogDataInterface = dataInterfaceFactory.createCountDataInterface("myLoginCounts");
+        DataInterface<UserObject> myUserDataInterface = dataInterfaceFactory.createDataInterface(DatabaseCachingType.CACHED, "myUsers", UserObject.class, new OverWriteCombinator<UserObject>());
+
+        //write data
+        int userId = 12939;
+        myLogDataInterface.increaseCount("user_" + userId + "_logged_in");
+        myUserDataInterface.write(userId, new UserObject("koen", "deschacht", DateUtils.parseDate("1983-04-12", "yyyy-MM-dd")));
+
+        //flush data
+        myLogDataInterface.flush();
+        myUserDataInterface.flush();
+
+        //read data
+        long numOfLogins = myLogDataInterface.readCount("user_" + userId + "_logged_in");
+        UserObject user = myUserDataInterface.read(userId);
+
+        System.out.println("User " + user.getFirstName() + " " + user.getSecondName() + " logged in " + numOfLogins + " times.");
+    }
+}
 ```
 
