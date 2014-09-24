@@ -1,4 +1,4 @@
-package be.bagofwords.db.rocksdb;
+package be.bagofwords.db.experimental.rocksdb;
 
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.combinator.Combinator;

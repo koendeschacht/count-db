@@ -1,4 +1,4 @@
-package be.bagofwords.db.kyoto;
+package be.bagofwords.db.experimental.kyoto;
 
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.DataInterface;

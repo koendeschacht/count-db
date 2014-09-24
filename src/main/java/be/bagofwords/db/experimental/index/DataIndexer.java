@@ -1,4 +1,4 @@
-package be.bagofwords.db.index;
+package be.bagofwords.db.experimental.index;
 
 import java.util.List;
 

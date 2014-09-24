@@ -1,18 +1,18 @@
 package be.bagofwords.main.tests.bigrams;
 
-import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.application.ApplicationManager;
 import be.bagofwords.application.MainClass;
 import be.bagofwords.application.file.OpenFilesManager;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.DataInterface;
+import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.combinator.LongCombinator;
+import be.bagofwords.db.experimental.kyoto.KyotoDataInterfaceFactory;
+import be.bagofwords.db.experimental.rocksdb.RocksDBDataInterfaceFactory;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
-import be.bagofwords.db.kyoto.KyotoDataInterfaceFactory;
 import be.bagofwords.db.leveldb.LevelDBDataInterfaceFactory;
-import be.bagofwords.db.rocksdb.RocksDBDataInterfaceFactory;
 import be.bagofwords.main.tests.TestsApplicationContextFactory;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.NumUtils;
@@ -69,7 +69,7 @@ public class BigramTestsMain implements MainClass {
         testBatchWritingAndReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
         testBatchWritingAndReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
         testBatchWritingAndReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", true), DatabaseCachingType.DIRECT);
-//        testBatchWritingAndReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT); --> too slow
+        //testBatchWritingAndReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT); --> too slow
 
         UI.write("Testing mixed writing / reading for data type " + dataType);
         testMixedWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
@@ -77,7 +77,7 @@ public class BigramTestsMain implements MainClass {
         testMixedWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
         testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
         testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", true), DatabaseCachingType.DIRECT);
-//        testMixedWritingReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT); --> too slow
+        //testMixedWritingReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT); --> too slow
     }
 
     private static void prepareTmpDir(File tmpDbDir) throws IOException {

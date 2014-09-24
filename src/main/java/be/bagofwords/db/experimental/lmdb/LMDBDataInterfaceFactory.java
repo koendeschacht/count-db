@@ -1,4 +1,4 @@
-package be.bagofwords.db.lmdb;
+package be.bagofwords.db.experimental.lmdb;
 
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.combinator.Combinator;
