@@ -1,14 +1,14 @@
 <component name="libraryTable">
   <library name="Maven: org.fusesource.lmdbjni:lmdbjni-all:99-master-SNAPSHOT">
     <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/org/fusesource/lmdbjni/lmdbjni-all/99-master-SNAPSHOT/lmdbjni-all-99-master-20130507.185246-2.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/fusesource/lmdbjni/lmdbjni-all/99-master-SNAPSHOT/lmdbjni-all-99-master-SNAPSHOT.jar!/" />
     </CLASSES>
     <JAVADOC>
-      <root url="jar://$MAVEN_REPOSITORY$/org/fusesource/lmdbjni/lmdbjni-all/99-master-SNAPSHOT/lmdbjni-all-99-master-20130507.185246-2-javadoc.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/fusesource/lmdbjni/lmdbjni-all/99-master-SNAPSHOT/lmdbjni-all-99-master-SNAPSHOT-javadoc.jar!/" />
     </JAVADOC>
     <SOURCES>
-      <root url="jar://$MAVEN_REPOSITORY$/org/fusesource/lmdbjni/lmdbjni-all/99-master-SNAPSHOT/lmdbjni-all-99-master-20130507.185246-2-sources.jar!/" />
       <root url="file://$USER_HOME$/external/lmdbjni/lmdbjni/src/main/java" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/fusesource/lmdbjni/lmdbjni-all/99-master-SNAPSHOT/lmdbjni-all-99-master-SNAPSHOT-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
