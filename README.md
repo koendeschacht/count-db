@@ -5,11 +5,11 @@ A fast key-value store (written in Java) that is optimized to handle primitive t
 
 ## Use case
 
-You want to use count-db if you need to write and read billions of counts very efficiëntly from a Java program. Use cases are logging large amounts of user data, counting n-grams for [language models](http://en.wikipedia.org/wiki/Language_model) or building an index to search texts.
+You want to use count-db if you need to write and read billions of counts very efficiëntly from a Java program. Use cases are logging large amounts of user data, counting n-grams for [language models](http://en.wikipedia.org/wiki/Language_model) or building an index to search texts. You don't want to use count-db if you require transactions or my-sql style querying.
 
 ## Performance
 
-The class ``be.bagofwords.main.tests.bigrams.BigramTestsMain`` compares the performance of count-db to other key-value stores. It shows that count-db is 25 times as fast as [levelDB](https://github.com/google/leveldb) for writing 1GB of bigram counts and 8 times as fast as levelDB in reading bigram counts from this 1GB of counts.
+``be.bagofwords.main.tests.bigrams.BigramTestsMain`` compares the performance of count-db to 3 other key-value stores: [levelDB](https://github.com/google/leveldb), [kyoto cabinet](http://fallabs.com/kyotocabinet/) and [rocksDB](http://rocksdb.org/).  count-db outperforms all three, it is for example 25 times faster then levelDB when  writing 1GB of bigram counts and 8 times faster then levelDB when reading from this 1GB of counts. All tests were performed on an Intel i7-4770 computer using 6GB of memory, with default settings for all key-value stores.
 
 
 ![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/batch_writes.png)
