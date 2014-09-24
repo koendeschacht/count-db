@@ -9,7 +9,8 @@
     <version>1.0</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
-    <description>A fast key-value store written in Java that outperforms levelDB, kyoto cabinet and rocksDB</description>
+    <description>A fast key-value store written in Java that outperforms levelDB, kyoto cabinet and rocksDB
+    </description>
     <url>https://github.com/koendeschacht/count-db</url>
     <licenses>
         <license>
@@ -29,18 +30,20 @@
         <developerConnection>scm:git:git@github.com:koendeschacht/count-db.git</developerConnection>
         <url>git@github.com:koendeschacht/count-db.git</url>
     </scm>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
-    <repositories>
-        <repository>
-            <id>fusesource.nexus.snapshot</id>
-            <name>FuseSource Community Snapshot Repository</name>
-            <url>http://repo.fusesource.com/nexus/content/groups/public-snapshots</url>
-        </repository>
-    </repositories>
 
     <build>
         <plugins>
@@ -61,13 +64,6 @@
             <groupId>be.bagofwords</groupId>
             <artifactId>bow-utils</artifactId>
             <version>1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.fusesource.leveldbjni</groupId>
-            <artifactId>leveldbjni-all</artifactId>
-            <version>99-master-SNAPSHOT</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/leveldb/leveldbjni-all-99-master-SNAPSHOT.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -107,14 +103,19 @@
             <version>4.1.0.RELEASE</version>
         </dependency>
         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>4.1.0.RELEASE</version>
+        </dependency>
+        <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
             <version>1.9.11</version>
         </dependency>
         <dependency>
-            <groupId>org.fusesource.lmdbjni</groupId>
-            <artifactId>lmdbjni-all</artifactId>
-            <version>99-master-SNAPSHOT</version>
+            <groupId>org.deephacks.lmdbjni</groupId>
+            <artifactId>lmdbjni-linux64</artifactId>
+            <version>0.2.0</version>
         </dependency>
         <dependency>
             <groupId>extraLibs</groupId>
@@ -129,6 +130,13 @@
             <version>1.0</version>
             <scope>system</scope>
             <systemPath>${basedir}/lib/rocksdb/rocksdbjni.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.fusesource.leveldbjni</groupId>
+            <artifactId>leveldbjni-all</artifactId>
+            <version>99-master-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/leveldb/leveldbjni-all-99-master-SNAPSHOT.jar</systemPath>
         </dependency>
     </dependencies>
 
