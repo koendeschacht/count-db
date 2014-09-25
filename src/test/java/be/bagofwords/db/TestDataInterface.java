@@ -177,7 +177,7 @@ public class TestDataInterface extends BaseTestDataInterface {
         }
         db.flush();
         db.read(10);
-        Iterator<KeyValue<Long>> valueIterator = db.iterator(valuesToRead.iterator());
+        CloseableIterator<KeyValue<Long>> valueIterator = db.iterator(valuesToRead.iterator());
         int numOfValuesRead = 0;
         Long prevKey = null;
         while (valueIterator.hasNext()) {
@@ -190,6 +190,7 @@ public class TestDataInterface extends BaseTestDataInterface {
             prevKey = value.getKey();
         }
         Assert.assertEquals(valuesToRead.size(), numOfValuesRead);
+        valueIterator.close();
     }
 
     @Test
