@@ -16,6 +16,15 @@ You want to use count-db if you need to write and read billions of counts very e
 
 ![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/batch_reads.png)
 
+## Maven dependency
+
+``` 
+<dependency>
+    <groupId>be.bagofwords</groupId>
+    <artifactId>count-db</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
 
 ## Usage
 
