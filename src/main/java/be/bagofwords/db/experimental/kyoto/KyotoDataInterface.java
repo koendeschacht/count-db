@@ -61,7 +61,7 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
                 } else {
                     valueToWrite = getCombinator().combine(currentValue, value);
                 }
-                byte[] valueAsBytes = SerializationUtils.objectToBytes(valueToWrite);
+                byte[] valueAsBytes = SerializationUtils.objectToBytes(valueToWrite, getObjectClass());
                 db.set(keyAsBytes, valueAsBytes);
             }
         }
@@ -210,7 +210,7 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
                 valueToWrite = getCombinator().combine(currentValue, value.getValue());
             }
             keysAndValues[ind] = SerializationUtils.longToBytes(value.getKey());
-            keysAndValues[ind + 1] = SerializationUtils.objectToBytes(valueToWrite);
+            keysAndValues[ind + 1] = SerializationUtils.objectToBytes(valueToWrite, getObjectClass());
             ind += 2;
         }
         db.set_bulk(keysAndValues, false);

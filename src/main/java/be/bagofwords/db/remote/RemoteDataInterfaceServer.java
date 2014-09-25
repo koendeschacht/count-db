@@ -306,7 +306,7 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
                     KeyValue next = it.next();
                     Object valueToWrite = next.getValue();
                     long key = next.getKey();
-                    if (key == LONG_END || key == LONG_ERROR || key == LONG_NULL || key == LONG_OK) {
+                    if (key == LONG_END || key == LONG_ERROR || key == LONG_OK) {
                         throw new RuntimeException("Unexpected key " + key + " in dataInterface " + dataInterface.getName());
                     }
                     connection.writeLong(key);

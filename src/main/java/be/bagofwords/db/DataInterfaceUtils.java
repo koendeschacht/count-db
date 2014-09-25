@@ -12,7 +12,7 @@ public class DataInterfaceUtils {
         while (it.hasNext()) {
             KeyValue<T> next = it.next();
             UI.write(next.getKey() + " ");
-            UI.write(SerializationUtils.objectToString(next.getValue(), true));
+            UI.write(SerializationUtils.serializeObject(next.getValue(), true));
         }
         it.close();
         UI.write("Closing connection");

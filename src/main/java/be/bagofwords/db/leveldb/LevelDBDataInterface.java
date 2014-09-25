@@ -69,7 +69,7 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
             } else {
                 valueToWrite = getCombinator().combine(SerializationUtils.bytesToObject(currentValueInBytes, getObjectClass()), value);
             }
-            db.put(keyInBytes, SerializationUtils.objectToBytes(valueToWrite));
+            db.put(keyInBytes, SerializationUtils.objectToBytes(valueToWrite, getObjectClass()));
         }
         dataLock.unlockWrite(key);
     }
@@ -202,7 +202,7 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
             if (valueToWrite == null) {
                 writeBatch.delete(keyInBytes);
             } else {
-                writeBatch.put(keyInBytes, SerializationUtils.objectToBytes(valueToWrite));
+                writeBatch.put(keyInBytes, SerializationUtils.objectToBytes(valueToWrite, getObjectClass()));
             }
             dataLock.unlockWrite(key);
         }

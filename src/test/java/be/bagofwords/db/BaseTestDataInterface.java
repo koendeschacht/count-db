@@ -1,11 +1,11 @@
 package be.bagofwords.db;
 
-import be.bagofwords.db.helper.DataInterfaceFactoryFactory;
 import be.bagofwords.application.file.OpenFilesManager;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.application.environment.RemoteCountDBEnvironmentProperties;
 import be.bagofwords.db.combinator.LongCombinator;
+import be.bagofwords.db.helper.DataInterfaceFactoryFactory;
 import be.bagofwords.db.remote.DatabaseServerDataInterfaceFactory;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer;
 import org.junit.After;
@@ -72,7 +72,8 @@ public class BaseTestDataInterface {
         testContextManager.prepareTestInstance(this);
 
         if (backendType == DatabaseBackendType.REMOTE) {
-            dataInterfaceServerFactory = new DatabaseServerDataInterfaceFactory(openFilesManager, cachesManager, memoryManager, "/tmp/dbServer");
+
+            dataInterfaceServerFactory = new DatabaseServerDataInterfaceFactory(openFilesManager, cachesManager, memoryManager, "/tmp/dbServer_" + System.currentTimeMillis());
             remoteDataInterfaceServer = new RemoteDataInterfaceServer(dataInterfaceServerFactory, properties);
             remoteDataInterfaceServer.start();
         }

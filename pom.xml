@@ -6,7 +6,7 @@
 
     <groupId>be.bagofwords</groupId>
     <artifactId>count-db</artifactId>
-    <version>1.0</version>
+    <version>1.0.0</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>A fast key-value store written in Java that outperforms levelDB, kyoto cabinet and rocksDB

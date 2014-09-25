@@ -25,7 +25,7 @@ import java.util.concurrent.CountDownLatch;
 
 public class BigramTestsMain implements MainClass {
 
-    private static final int MILLION_ITEMS_TO_PROCESS = 8;
+    private static final int MILLION_ITEMS_TO_PROCESS = 1024;
     private static final File tmpDbDir = new File("/tmp/testDatabaseSpeed");
 
     @Autowired

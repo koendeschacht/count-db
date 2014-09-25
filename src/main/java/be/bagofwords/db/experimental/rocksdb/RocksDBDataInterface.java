@@ -66,7 +66,7 @@ public class RocksDBDataInterface<T> extends CoreDataInterface<T> {
                     if (next.getValue() == null) {
                         writeBatch.remove(keyAsBytes);
                     } else {
-                        writeBatch.merge(keyAsBytes, SerializationUtils.objectToBytes(next.getValue()));
+                        writeBatch.merge(keyAsBytes, SerializationUtils.objectToBytes(next.getValue(), getObjectClass()));
                     }
                 }
             } else {
@@ -77,7 +77,7 @@ public class RocksDBDataInterface<T> extends CoreDataInterface<T> {
                     if (combinedValue == null) {
                         writeBatch.remove(keyAsBytes);
                     } else {
-                        writeBatch.put(keyAsBytes, SerializationUtils.objectToBytes(combinedValue));
+                        writeBatch.put(keyAsBytes, SerializationUtils.objectToBytes(combinedValue, getObjectClass()));
                     }
                 }
             }
@@ -98,7 +98,7 @@ public class RocksDBDataInterface<T> extends CoreDataInterface<T> {
             if (combinedValue == null) {
                 db.remove(delayedWriteOptions, keyAsBytes);
             } else {
-                db.put(delayedWriteOptions, keyAsBytes, SerializationUtils.objectToBytes(combinedValue));
+                db.put(delayedWriteOptions, keyAsBytes, SerializationUtils.objectToBytes(combinedValue, getObjectClass()));
             }
         } catch (RocksDBException exp) {
             throw new RuntimeException("Received exception while trying to write a single value to the DB", exp);

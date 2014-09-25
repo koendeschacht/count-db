@@ -1,9 +1,9 @@
 package be.bagofwords.db.filedb;
 
-import be.bagofwords.db.CoreDataInterface;
-import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.application.file.OpenFilesManager;
 import be.bagofwords.application.memory.MemoryGobbler;
+import be.bagofwords.db.CoreDataInterface;
+import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
@@ -35,7 +35,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     private final OpenFilesManager openFilesManager;
 
-    private final T nullValue;
+    private final int sizeOfValues;
     private File directory;
     private FileBucket[] fileBuckets;
 
@@ -47,7 +47,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         super(nameOfSubset, objectClass, combinator);
         this.openFilesManager = openFilesManager;
         this.directory = new File(directory, nameOfSubset);
-        this.nullValue = getNullValueForType(objectClass);
+        this.sizeOfValues = SerializationUtils.getWidth(objectClass);
         initializeFileBuckets();
         checkDataDir();
         timeOfLastRead = 0;
@@ -80,14 +80,13 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     @Override
     public void writeInt0(long key, T value) {
-        checkNotSpecial(value);
         FileBucket bucket = getBucket(key);
         bucket.lockWrite();
         int fileInd = bucket.getFileInd(key);
         FileInfo file = bucket.getFiles().get(fileInd);
         try {
             DataOutputStream dos = getOutputStream(file, true);
-            long extraSize = writeValue(dos, key, value, getObjectClass());
+            long extraSize = writeValue(dos, key, value);
             file.increaseSize(extraSize, false);
             dos.close();
             rewriteFileAfterWriteIfNecessary(bucket, file);
@@ -106,7 +105,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             int numRead = 0;
             while (numRead < BATCH_SIZE && entries.hasNext()) {
                 KeyValue<T> curr = entries.next();
-                checkNotSpecial(curr.getValue());
                 FileBucket fileBucket = getBucket(curr.getKey());
                 entriesToFileBuckets.get(fileBucket).add(curr);
                 numRead++;
@@ -124,7 +122,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                         List<KeyValue<T>> valuesForFile = entriesToFiles.get(file);
                         DataOutputStream dos = getOutputStream(file, true);
                         for (KeyValue<T> value : valuesForFile) {
-                            long extraSize = writeValue(dos, value.getKey(), value.getValue(), getObjectClass());
+                            long extraSize = writeValue(dos, value.getKey(), value.getValue());
                             file.increaseSize(extraSize, false);
                         }
                         dos.close();
@@ -138,12 +136,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             }
         }
         timeOfLastWrite = System.currentTimeMillis();
-    }
-
-    private void checkNotSpecial(T value) {
-        if (nullValue != null && nullValue.equals(value)) {
-            throw new RuntimeException("Sorry but value " + value + " is a reserved value to indicate null.");
-        }
     }
 
     private void rewriteFileAfterWriteIfNecessary(FileBucket bucket, FileInfo file) {
@@ -407,7 +399,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 T value = entry.getSecond();
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 DataOutputStream tmpOutputStream = new DataOutputStream(bos);
-                writeValue(tmpOutputStream, key, value, getObjectClass());
+                writeValue(tmpOutputStream, key, value);
                 byte[] dataToWrite = bos.toByteArray();
                 if (file.getSize() > 0 && file.getSize() + dataToWrite.length > maxFileSize) {
                     //Create new file
@@ -448,95 +440,33 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         return nextFileInd - currentFileInd - 1;
     }
 
-    private static <T> long writeValue(DataOutputStream dos, long key, T value, Class<T> objectClass) throws IOException {
+    private long writeValue(DataOutputStream dos, long key, T value) throws IOException {
         dos.writeLong(key);
-        if (objectClass == Long.class) {
-            Long longValue = (Long) value;
-            if (longValue == null) {
-                dos.writeLong(LONG_NULL);
-            } else {
-                dos.writeLong(longValue);
-            }
-            return 16;
-        } else if (objectClass == Double.class) {
-            Double doubleValue = (Double) value;
-            if (doubleValue == null) {
-                dos.writeDouble(DOUBLE_NULL);
-            } else {
-                dos.writeDouble(doubleValue);
-            }
-            return 16;
-        } else if (objectClass == Integer.class) {
-            Integer intValue = (Integer) value;
-            if (intValue == null) {
-                dos.writeInt(INT_NULL);
-            } else {
-                dos.writeInt(intValue);
-            }
-            return 12;
-        } else if (objectClass == Float.class) {
-            Float floatValue = (Float) value;
-            if (floatValue == null) {
-                dos.writeFloat(FLOAT_NULL);
-            } else {
-                dos.writeFloat(floatValue);
-            }
-            return 12;
+        byte[] objectAsBytes = SerializationUtils.objectToBytesCheckForNull(value, getObjectClass());
+        if (sizeOfValues == -1) {
+            dos.writeInt(objectAsBytes.length);
+            dos.write(objectAsBytes);
+            return 8 + 4 + objectAsBytes.length;
         } else {
-            if (value == null) {
-                dos.writeInt(0);
-                return 8 + 4;
-            } else {
-                byte[] objAsBytes = SerializationUtils.objectToCompressedBytes(value);
-                dos.writeInt(objAsBytes.length);
-                dos.write(objAsBytes);
-                return 8 + 4 + objAsBytes.length;
-            }
+            dos.write(objectAsBytes);
+            return 8 + sizeOfValues;
         }
     }
 
-    private static <T> T readValue(Class<T> objectClass, DataInputStream dis) throws IOException {
-        if (objectClass == Long.class) {
-            long readValue = dis.readLong();
-            if (readValue == LONG_NULL) {
-                return null;
-            } else {
-                return (T) new Long(readValue);
-            }
-        } else if (objectClass == Double.class) {
-            double readValue = dis.readDouble();
-            if (readValue == DOUBLE_NULL) {
-                return null;
-            } else {
-                return (T) new Double(readValue);
-            }
-        } else if (objectClass == Integer.class) {
-            int readValue = dis.readInt();
-            if (readValue == INT_NULL) {
-                return null;
-            } else {
-                return (T) new Integer(readValue);
-            }
-        } else if (objectClass == Float.class) {
-            float readValue = dis.readFloat();
-            if (readValue == FLOAT_NULL) {
-                return null;
-            } else {
-                return (T) new Float(readValue);
-            }
+    private T readValue(DataInputStream dis) throws IOException {
+        byte[] objectAsBytes;
+        int length;
+        if (sizeOfValues == -1) {
+            length = dis.readInt();
         } else {
-            int length = dis.readInt();
-            if (length == 0) {
-                return null;
-            } else {
-                byte[] objectAsBytes = new byte[length];
-                int bytesRead = dis.read(objectAsBytes);
-                if (bytesRead < objectAsBytes.length) {
-                    throw new RuntimeException("Could not read complete object, expected " + length + " bytes, received " + bytesRead);
-                }
-                return SerializationUtils.compressedBytesToObject(objectAsBytes, objectClass);
-            }
+            length = sizeOfValues;
         }
+        objectAsBytes = new byte[length];
+        int bytesRead = dis.read(objectAsBytes);
+        if (bytesRead != objectAsBytes.length) {
+            throw new RuntimeException("Expected to read " + length + " but read " + bytesRead + " bytes");
+        }
+        return SerializationUtils.bytesToObjectCheckForNull(objectAsBytes, getObjectClass());
     }
 
     private void initializeFileBuckets() {
@@ -705,7 +635,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             if (currentByte == firstByteOfKeyToRead) {
                 long key = dis.readLong();
                 if (key == keyToRead) {
-                    value = readValue(getObjectClass(), dis);
+                    value = readValue(dis);
                     break;
                 } else if (key > keyToRead) {
                     break;
@@ -731,7 +661,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             } else {
                 long key = dis.readLong();
                 if (key == keyToRead) {
-                    T newValue = readValue(getObjectClass(), dis);
+                    T newValue = readValue(dis);
                     if (value == null || newValue == null) {
                         value = newValue;
                     } else {
@@ -820,7 +750,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 if (!file.isDirty()) {
                     while (dis.getPosition() < file.getEndOfCleanSection()) {
                         long key = dis.readLong();
-                        T value = readValue(getObjectClass(), dis);
+                        T value = readValue(dis);
                         result.add(new Pair<>(key, value));
                     }
                     return result;
@@ -835,7 +765,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     long density = (1l << BITS_TO_DISCARD_FOR_FILE_BUCKETS) / numberOfBuckets;
                     while (dis.hasMoreData()) {
                         long key = dis.readLong();
-                        T value = readValue(getObjectClass(), dis);
+                        T value = readValue(dis);
                         int bucketInd = (int) ((key - start) / density);
                         if (bucketInd == buckets.length) {
                             bucketInd--; //rounding error?

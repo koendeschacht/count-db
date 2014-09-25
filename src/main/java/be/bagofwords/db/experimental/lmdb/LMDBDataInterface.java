@@ -72,7 +72,7 @@ public class LMDBDataInterface<T> extends CoreDataInterface<T> {
             if (combinedValue == null) {
                 db.delete(transaction, keysAsBytes);
             } else {
-                db.put(transaction, keysAsBytes, SerializationUtils.objectToBytes(combinedValue));
+                db.put(transaction, keysAsBytes, SerializationUtils.objectToBytes(combinedValue, getObjectClass()));
             }
         } catch (Exception exp) {
             throw new RuntimeException("Error while trying to write key " + key + "(=" + Arrays.toString(keysAsBytes) + ") with value " + value, exp);
