@@ -180,11 +180,9 @@ public class RocksDBDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public synchronized void close() {
-        if (db != null) {
-            db.close();
-            db = null;
-        }
+    public synchronized void doClose() {
+        db.close();
+        db = null;
     }
 
     @Override

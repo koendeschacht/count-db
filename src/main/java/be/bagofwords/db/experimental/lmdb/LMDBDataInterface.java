@@ -136,7 +136,7 @@ public class LMDBDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public synchronized void close() {
+    public synchronized void doClose() {
         dataLock.lockWriteAll();
         db.close();
         dataLock.unlockWriteAll();

@@ -25,22 +25,24 @@ public class FlushDataInterfacesThread extends SafeThread {
     @Override
     public void runInt() {
         while (!isTerminateRequested()) {
+            long timeBeforeFlush = System.currentTimeMillis();
             try {
                 List<DataInterface> currentInterfaces;
                 synchronized (dataInterfaceFactory.getAllInterfaces()) {
                     currentInterfaces = new ArrayList<>(dataInterfaceFactory.getAllInterfaces());
                 }
                 for (DataInterface dataInterface : currentInterfaces) {
-                    dataInterface.flush();
+                    dataInterface.flushIfNotClosed();
                 }
             } catch (Throwable t) {
                 UI.writeError("Received exception while flushing write buffers!", t);
             }
-            long timeToSleep = TIME_BETWEEN_FLUSHES;
+            long timeToSleepBetweenFlushes = TIME_BETWEEN_FLUSHES;
             if (memoryManager.getMemoryStatus() == MemoryStatus.CRITICAL) {
-                timeToSleep = TIME_BETWEEN_FLUSHES / 10;
+                timeToSleepBetweenFlushes = 0;
             }
-            Utils.threadSleep(timeToSleep);
+            long actualTimeToSleep = Math.max(0, timeBeforeFlush - System.currentTimeMillis() + timeToSleepBetweenFlushes);
+            Utils.threadSleep(actualTimeToSleep);
         }
     }
 }

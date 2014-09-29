@@ -20,7 +20,7 @@ public class FileDataInterfaceFactory extends DataInterfaceFactory {
     private final OpenFilesManager openFilesManager;
     private final String directory;
     private final List<FileDataInterface> interfaces;
-    private final WriteCleanFilesListThread writeCleanFilesListThread;
+    private final OccastionalActionsThread occastionalActionsThread;
 
     @Autowired
     public FileDataInterfaceFactory(OpenFilesManager openFilesManager, CachesManager cachesManager, MemoryManager memoryManager, FileCountDBEnvironmentProperties fileCountDBEnvironmentProperties) {
@@ -33,13 +33,13 @@ public class FileDataInterfaceFactory extends DataInterfaceFactory {
         this.openFilesManager = openFilesManager;
         this.directory = directory;
         this.interfaces = new ArrayList<>();
-        this.writeCleanFilesListThread = new WriteCleanFilesListThread();
-        this.writeCleanFilesListThread.start();
+        this.occastionalActionsThread = new OccastionalActionsThread();
+        this.occastionalActionsThread.start();
     }
 
     @Override
     protected <T extends Object> DataInterface<T> createBaseDataInterface(final String nameOfSubset, final Class<T> objectClass, final Combinator<T> combinator) {
-        FileDataInterface<T> result = new FileDataInterface<>(openFilesManager, combinator, objectClass, directory, nameOfSubset);
+        FileDataInterface<T> result = new FileDataInterface<>(memoryManager, combinator, objectClass, directory, nameOfSubset);
         memoryManager.registerMemoryGobbler(result);
         synchronized (interfaces) {
             interfaces.add(result);
@@ -49,14 +49,14 @@ public class FileDataInterfaceFactory extends DataInterfaceFactory {
 
     @Override
     public void close() {
-        this.writeCleanFilesListThread.terminateAndWait();
+        this.occastionalActionsThread.terminateAndWait();
         super.close();
     }
 
-    private class WriteCleanFilesListThread extends SafeThread {
+    private class OccastionalActionsThread extends SafeThread {
 
-        public WriteCleanFilesListThread() {
-            super("WriteCleanFilesListThread", true);
+        public OccastionalActionsThread() {
+            super("OccastionalActionsThread", true);
         }
 
         @Override

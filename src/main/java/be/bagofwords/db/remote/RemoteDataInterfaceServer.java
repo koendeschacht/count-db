@@ -91,6 +91,8 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
                 if (dataInterface != null) {
                     if (dataInterface.getCombinator().getClass() != combinator.getClass() || dataInterface.getObjectClass() != objectClass) {
                         writeError(" Data interface " + interfaceName + " was already initialized!");
+                    } else if(dataInterface.wasClosed()) {
+                        writeError(" Data interface " + interfaceName + " was closed!");
                     }
                 } else {
                     dataInterface = dataInterfaceFactory.createDataInterface(DatabaseCachingType.CACHED_AND_BLOOM, interfaceName, objectClass, combinator);

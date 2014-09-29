@@ -161,18 +161,13 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public void close() {
-        synchronized (this) {
-            if (db != null) {
-                //Not yet closed
-                try {
-                    db.close();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                db = null;
-            }
+    protected void doClose() {
+        try {
+            db.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+        db = null;
     }
 
     @Override

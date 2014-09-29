@@ -377,7 +377,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     }
 
     @Override
-    public void close() {
+    protected void doClose() {
         try {
             flush();
         } catch (Exception e) {

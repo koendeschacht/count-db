@@ -1,8 +1,8 @@
 package be.bagofwords.db.experimental.index;
 
 
-import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DataInterface;
+import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.LayeredDataInterface;
 import be.bagofwords.db.data.LongList;
@@ -77,7 +77,7 @@ public class IndexedDataInterface<T> extends LayeredDataInterface<T> {
     }
 
     @Override
-    public void close() {
+    protected void doClose() {
         baseInterface.close();
         indexedDataInterface.close();
     }

@@ -237,12 +237,10 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public void close() {
+    protected void doClose() {
         synchronized (this) {
-            if (db != null) {
-                db.close();
-                db = null;
-            }
+            db.close();
+            db = null;
         }
     }
 

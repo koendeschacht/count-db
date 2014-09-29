@@ -1,29 +1,29 @@
 package be.bagofwords.db.cached;
 
-import be.bagofwords.db.DataInterface;
-import be.bagofwords.db.LayeredDataInterface;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.Cache;
-import be.bagofwords.cache.CacheableData;
 import be.bagofwords.cache.CachesManager;
+import be.bagofwords.db.DataInterface;
+import be.bagofwords.db.LayeredDataInterface;
 import be.bagofwords.util.DataLock;
 import be.bagofwords.util.KeyValue;
 
 import java.util.Iterator;
 import java.util.List;
 
-public class CachedDataInterface<T extends Object> extends LayeredDataInterface<T> implements CacheableData<T> {
+public class CachedDataInterface<T extends Object> extends LayeredDataInterface<T> {
 
     private final MemoryManager memoryManager;
-    private final Cache<T> readCache;
-    private final Cache<T> writeCache;
+    private Cache<T> readCache;
+    private Cache<T> writeCache;
     private final DataLock writeLock;
+    private final String flushLock = new String("LOCK");
 
     public CachedDataInterface(CachesManager cachesManager, MemoryManager memoryManager, DataInterface<T> baseInterface) {
         super(baseInterface);
         this.memoryManager = memoryManager;
-        this.readCache = cachesManager.createNewCache(this, false, getName() + "_read", baseInterface.getObjectClass());
-        this.writeCache = cachesManager.createNewCache(this, true, getName() + "_write", baseInterface.getObjectClass());
+        this.readCache = cachesManager.createNewCache(false, getName() + "_read", baseInterface.getObjectClass());
+        this.writeCache = cachesManager.createNewCache(true, getName() + "_write", baseInterface.getObjectClass());
         this.writeLock = new DataLock(false);
     }
 
@@ -31,7 +31,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     public T readInt(long key) {
         T value = readCache.get(key);
         if (value == null) {
-            //Never read, read from direct
+            //never read, read from direct
             value = baseInterface.read(key);
             readCache.put(key, value);
         }
@@ -79,8 +79,12 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     }
 
     @Override
-    public synchronized void close() {
+    public synchronized void doClose() {
         flush();
+        readCache.clear();
+        readCache = null;
+        writeCache.clear();
+        writeCache = null;
         baseInterface.close();
     }
 
@@ -90,9 +94,16 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     }
 
     private void flushWriteCache() {
-        writeLock.lockWriteAll();
-        writeCache.flush();
-        writeLock.unlockWriteAll();
+        //First lock on flushLock to make sure that flushes (including writing the values) happen in order
+        synchronized (flushLock) {
+            //Lock all write locks to make sure no values are written to the write buffer while we collect them all
+            writeLock.lockWriteAll();
+            List<KeyValue<T>> allValues = writeCache.removeAllValues();
+            writeLock.unlockWriteAll();
+            if (!allValues.isEmpty()) {
+                baseInterface.write(allValues.iterator());
+            }
+        }
     }
 
     @Override
@@ -104,16 +115,6 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
 
     public long apprSize() {
         return writeCache.size() + baseInterface.apprSize();
-    }
-
-    @Override
-    public void removedValuesFromCache(Cache cache, List<KeyValue<T>> valuesToRemove) {
-        if (cache == writeCache) {
-            int size = valuesToRemove.size();
-            if (size > 0) {
-                baseInterface.write(valuesToRemove.iterator());
-            }
-        }
     }
 
     @Override

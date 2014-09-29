@@ -1,7 +1,7 @@
 package be.bagofwords.db.memory;
 
-import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.CoreDataInterface;
+import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.util.DataLock;
@@ -107,7 +107,7 @@ public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T
     }
 
     @Override
-    public void close() {
+    protected void doClose() {
         lock.lockWriteAll();
         values = null;
         lock.unlockWriteAll();

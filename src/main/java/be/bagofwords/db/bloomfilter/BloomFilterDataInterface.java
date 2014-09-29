@@ -27,10 +27,10 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
 
     @Override
     public void optimizeForReading() {
+        baseInterface.optimizeForReading();
         if (bloomFilter == null) {
             createNewBloomFilter();
         }
-        baseInterface.optimizeForReading();
     }
 
     @Override

@@ -10,14 +10,12 @@ class FileInfo implements Comparable {
     private final long firstKey;
     private int size;
     private byte[] cachedFileContents;
-    private int endOfCleanSection;
     //This field is only filled in when the file is clean (i.e. not isDirty)
     private List<Pair<Long, Integer>> fileLocations;
 
     public FileInfo(long firstKey, int size) {
         this.firstKey = firstKey;
         this.size = size;
-        this.endOfCleanSection = 0;
         if (size == 0) {
             fileLocations = Collections.emptyList();
         }
@@ -36,12 +34,11 @@ class FileInfo implements Comparable {
     }
 
     public boolean isDirty() {
-        return endOfCleanSection < size;
+        return fileLocations == null;
     }
 
     public void fileIsCleaned(List<Pair<Long, Integer>> fileLocations) {
         this.fileLocations = fileLocations;
-        this.endOfCleanSection = size;
     }
 
     @Override
@@ -61,8 +58,8 @@ class FileInfo implements Comparable {
 
     public void increaseSize(long diff, boolean cleanWrite) {
         this.size += diff;
-        if (cleanWrite) {
-            this.endOfCleanSection = this.size;
+        if (!cleanWrite) {
+            this.fileLocations = null;
         }
     }
 
@@ -70,8 +67,13 @@ class FileInfo implements Comparable {
         return fileLocations;
     }
 
-    public void discardFileContents() {
-        cachedFileContents = null;
+    public long discardFileContents() {
+        int bytesReleased = 0;
+        if (cachedFileContents != null) {
+            bytesReleased = cachedFileContents.length;
+            cachedFileContents = null;
+        }
+        return bytesReleased;
     }
 
     public byte[] getCachedFileContents() {
@@ -82,7 +84,4 @@ class FileInfo implements Comparable {
         this.cachedFileContents = cachedFileContents;
     }
 
-    public int getEndOfCleanSection() {
-        return endOfCleanSection;
-    }
 }
