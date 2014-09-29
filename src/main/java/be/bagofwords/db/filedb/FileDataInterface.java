@@ -34,13 +34,16 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     private static final double DOUBLE_NULL = Double.MAX_VALUE;
     private static final float FLOAT_NULL = Float.MAX_VALUE;
 
+    private static final int LONG_SIZE = 8;
+    private static final int INT_SIZE = 4;
+
     private final String sizeOfCachedFileContentsLock = new String("LOCK");
     private final int sizeOfValues;
     private File directory;
     private FileBucket[] fileBuckets;
     private MemoryManager memoryManager;
 
-    private final long maxSizeOfCachedFileContents = Runtime.getRuntime().maxMemory() / 2;
+    private final long maxSizeOfCachedFileContents = Runtime.getRuntime().maxMemory() / 3;
 
     private long timeOfLastWrite;
     private long timeOfLastRead;
@@ -468,20 +471,21 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         }
     }
 
-    private T readValue(DataInputStream dis) throws IOException {
+    private ReadValue<T> readValue(byte[] buffer, int position) throws IOException {
         byte[] objectAsBytes;
-        int length;
+        int lengthOfObject;
+        int lenghtOfLengthValue;
         if (sizeOfValues == -1) {
-            length = dis.readInt();
+            lengthOfObject = SerializationUtils.bytesToInt(buffer, position);
+            lenghtOfLengthValue = INT_SIZE;
         } else {
-            length = sizeOfValues;
+            lengthOfObject = sizeOfValues;
+            lenghtOfLengthValue = 0;
         }
-        objectAsBytes = new byte[length];
-        int bytesRead = dis.read(objectAsBytes);
-        if (bytesRead != objectAsBytes.length) {
-            throw new RuntimeException("Expected to read " + length + " but read " + bytesRead + " bytes");
-        }
-        return SerializationUtils.bytesToObjectCheckForNull(objectAsBytes, getObjectClass());
+        objectAsBytes = new byte[lengthOfObject];
+        System.arraycopy(buffer, position + lenghtOfLengthValue, objectAsBytes, 0, lengthOfObject);
+        T value = SerializationUtils.bytesToObjectCheckForNull(objectAsBytes, getObjectClass());
+        return new ReadValue<>(lengthOfObject + lenghtOfLengthValue, value);
     }
 
     private void initializeFileBuckets() {
@@ -626,7 +630,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     private T readSingleValue(long keyToRead, FileInfo file) throws IOException {
-        DataInputStream dis;
         //See whether we can skip a portion of the file?
         int pos = file.getFileLocations() != null ? Collections.binarySearch((List) file.getFileLocations(), keyToRead) : -1;
         int startPos;
@@ -642,44 +645,38 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             }
             startPos = file.getFileLocations().get(pos).getSecond();
         }
-        dis = getInputStream(file);
-        dis.skipBytes(startPos);
+        int endPos = pos + 1 < file.getFileLocations().size() ? file.getFileLocations().get(pos + 1).getSecond() : file.getSize();
+        ReadBuffer readBuffer = getReadBuffer(file, startPos, endPos);
+        startPos -= readBuffer.getOffset();
+        endPos -= readBuffer.getOffset();
         byte firstByteOfKeyToRead = (byte) (keyToRead >> 56);
-        boolean finished = false;
-        T result = null;
-        while (!finished) {
-            byte[] keyAsBytes = new byte[8];
-            try {
-                int bytesRead = dis.read(keyAsBytes);
-                if (bytesRead == -1) {
-                    finished = true;
+        byte[] buffer = readBuffer.getBuffer();
+        int position = startPos;
+        while (position < endPos) {
+            byte currentByte = buffer[position];
+            if (currentByte == firstByteOfKeyToRead) {
+                long key = SerializationUtils.bytesToLong(buffer, position);
+                position += LONG_SIZE;
+                if (key == keyToRead) {
+                    ReadValue<T> readValue = readValue(buffer, position);
+                    return readValue.getValue();
+                } else if (key > keyToRead) {
+                    return null;
+                } else {
+                    position += skipValue(buffer, position);
                 }
-                byte currentByte = keyAsBytes[0];
-                if (currentByte == firstByteOfKeyToRead) {
-                    long key = SerializationUtils.bytesToLong(keyAsBytes);
-                    if (key == keyToRead) {
-                        result = readValue(dis);
-                    } else if (key > keyToRead) {
-                        finished = true;
-                    } else {
-                        skipValue(dis);
-                    }
-                } else if (currentByte > firstByteOfKeyToRead) {
-                    //key too large
-                    finished = true;
-                } else if (currentByte < firstByteOfKeyToRead) {
-                    //key too small
-                    skipValue(dis); //skip value
-                }
-            } catch (EOFException exp) {
-                finished = true;
+            } else if (currentByte > firstByteOfKeyToRead) {
+                //key too large
+                return null;
+            } else if (currentByte < firstByteOfKeyToRead) {
+                //key too small
+                position += skipValue(buffer, position);
             }
         }
-        dis.close();
-        return result;
+        return null;
     }
 
-    private DataInputStream getInputStream(FileInfo file) throws IOException {
+    private ReadBuffer getReadBuffer(FileInfo file, int requestedStartPos, int requestedEndPos) throws IOException {
         byte[] fileContents = file.getCachedFileContents();
         if (fileContents == null) {
             if (memoryManager.getMemoryStatus() == MemoryStatus.FREE && currentSizeOfCachedFileContents < maxSizeOfCachedFileContents) {
@@ -698,29 +695,39 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     }
                     file.setCachedFileContents(fileContents);
                 }
-                return new DataInputStream(new ByteArrayInputStream(fileContents));
+                return new ReadBuffer(fileContents, 0);
             } else {
-                return new DataInputStream(new BufferedInputStream(new FileInputStream(toFile(file))));
+                FileInputStream fis = new FileInputStream(toFile(file));
+                long bytesSkipped = fis.skip(requestedStartPos);
+                if (bytesSkipped != requestedStartPos) {
+                    throw new RuntimeException("Skipped " + bytesSkipped + " bytes, while we expected to skip " + requestedStartPos + " bytes in file " + toFile(file).getAbsolutePath() + " which currently has size " + toFile(file).length());
+                }
+                byte[] buffer = new byte[requestedEndPos - requestedStartPos];
+                int bytesRead = fis.read(buffer);
+                if (bytesRead != buffer.length) {
+                    throw new RuntimeException("Read " + bytesRead + " bytes, while we expected " + file.getSize() + " bytes in file " + toFile(file).getAbsolutePath() + " which currently has size " + toFile(file).length());
+                }
+                IOUtils.closeQuietly(fis);
+                return new ReadBuffer(buffer, requestedStartPos);
             }
         } else {
             if (fileContents.length != file.getSize()) {
                 throw new RuntimeException("Buffer and file size don't match!");
             }
-            return new DataInputStream(new ByteArrayInputStream(fileContents));
+            return new ReadBuffer(fileContents, 0);
         }
-
     }
 
-    private void skipValue(DataInputStream dis) throws IOException {
+    private int skipValue(byte[] buffer, int position) throws IOException {
         //Skip some bytes
         Class<T> objectClass = getObjectClass();
         if (objectClass == Long.class || objectClass == Double.class) {
-            dis.skipBytes(8);
+            return LONG_SIZE;
         } else if (objectClass == Integer.class || objectClass == Float.class) {
-            dis.skipBytes(4);
+            return INT_SIZE;
         } else {
-            int length = dis.readInt();
-            dis.skipBytes(length);
+            int length = SerializationUtils.bytesToInt(buffer, position);
+            return INT_SIZE + length;
         }
     }
 
@@ -759,22 +766,19 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     private List<Pair<Long, T>> readValues(FileInfo file) {
-        DataInputStream dis = null;
         try {
+            byte[] buffer = getReadBuffer(file, 0, file.getSize()).getBuffer();
             if (file.getSize() > 0) {
-                dis = getInputStream(file);
                 int expectedNumberOfLongValues = file.getSize() / 16;
                 List<Pair<Long, T>> result = new ArrayList<>(expectedNumberOfLongValues);
                 if (!file.isDirty()) {
-                    boolean finished = false;
-                    while (!finished) {
-                        try {
-                            long key = dis.readLong();
-                            T value = readValue(dis);
-                            result.add(new Pair<>(key, value));
-                        } catch (EOFException exp) {
-                            finished = true;
-                        }
+                    int position = 0;
+                    while (position < buffer.length) {
+                        long key = SerializationUtils.bytesToLong(buffer, position);
+                        position += LONG_SIZE;
+                        ReadValue<T> readValue = readValue(buffer, position);
+                        position += readValue.getSize();
+                        result.add(new Pair<>(key, readValue.getValue()));
                     }
                     return result;
                 } else {
@@ -786,19 +790,20 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     }
                     long start = file.getFirstKey();
                     long density = (1l << BITS_TO_DISCARD_FOR_FILE_BUCKETS) / numberOfBuckets;
-                    boolean finished = false;
-                    while (!finished) {
-                        try {
-                            long key = dis.readLong();
-                            T value = readValue(dis);
-                            int bucketInd = (int) ((key - start) / density);
-                            if (bucketInd == buckets.length) {
-                                bucketInd--; //rounding error?
-                            }
-                            buckets[bucketInd].add(new Pair<>(key, value));
-                        } catch (EOFException exp) {
-                            finished = true;
+                    int position = 0;
+                    while (position < buffer.length) {
+                        long key = SerializationUtils.bytesToLong(buffer, position);
+                        position += LONG_SIZE;
+                        ReadValue<T> readValue = readValue(buffer, position);
+                        position += readValue.getSize();
+                        int bucketInd = (int) ((key - start) / density);
+                        if (bucketInd == buckets.length) {
+                            bucketInd--; //rounding error?
                         }
+                        if (bucketInd >= buckets.length) {
+                            UI.write("huh?");
+                        }
+                        buckets[bucketInd].add(new Pair<>(key, readValue.getValue()));
                     }
                     for (int bucketInd = 0; bucketInd < buckets.length; bucketInd++) {
                         List<Pair<Long, T>> currentBucket = buckets[bucketInd];
@@ -842,12 +847,8 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             } else {
                 return Collections.emptyList();
             }
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException("In interface " + getName() + ", tried to read file " + toFile(file).getAbsolutePath(), e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } finally {
-            IOUtils.closeQuietly(dis);
+        } catch (IOException ex) {
+            throw new RuntimeException("Unexpected exception while reading values from file " + toFile(file).getAbsolutePath(), ex);
         }
     }
 
@@ -913,17 +914,13 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         if (file.getSize() == 0) {
             return result;
         }
-        DataInputStream dis = getInputStream(file);
-        boolean finished = false;
-        while (!finished) {
-            try {
-                result.add(dis.readLong());
-                skipValue(dis);
-            } catch (EOFException exp) {
-                finished = true;
-            }
+        byte[] buffer = getReadBuffer(file, 0, file.getSize()).getBuffer();
+        int position = 0;
+        while (position < buffer.length) {
+            result.add(SerializationUtils.bytesToLong(buffer, position));
+            position += LONG_SIZE;
+            position += skipValue(buffer, position);
         }
-        dis.close();
         return result;
     }
 
@@ -949,6 +946,42 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             }
         }
         return result;
+    }
+
+    private static class ReadBuffer {
+        private final byte[] buffer;
+        private final int offset;
+
+        private ReadBuffer(byte[] buffer, int offset) {
+            this.buffer = buffer;
+            this.offset = offset;
+        }
+
+        public byte[] getBuffer() {
+            return buffer;
+        }
+
+        public int getOffset() {
+            return offset;
+        }
+    }
+
+    private static class ReadValue<T> {
+        private int size;
+        private T value;
+
+        private ReadValue(int size, T value) {
+            this.size = size;
+            this.value = value;
+        }
+
+        public int getSize() {
+            return size;
+        }
+
+        public T getValue() {
+            return value;
+        }
     }
 
 }
