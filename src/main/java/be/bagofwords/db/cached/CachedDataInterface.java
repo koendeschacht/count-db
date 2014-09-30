@@ -24,7 +24,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
         this.memoryManager = memoryManager;
         this.readCache = cachesManager.createNewCache(false, getName() + "_read", baseInterface.getObjectClass());
         this.writeCache = cachesManager.createNewCache(true, getName() + "_write", baseInterface.getObjectClass());
-        this.writeLock = new DataLock(false);
+        this.writeLock = new DataLock(10000, false);
     }
 
     @Override

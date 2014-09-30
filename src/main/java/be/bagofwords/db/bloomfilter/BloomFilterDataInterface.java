@@ -140,4 +140,10 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
             bloomFilterWasWrittenToDisk = true;
         }
     }
+
+    @Override
+    protected void doClose() {
+        bloomFilter = null;
+        baseInterface.close();
+    }
 }

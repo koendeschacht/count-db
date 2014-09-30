@@ -265,14 +265,16 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     @Override
-    public void freeMemory() {
-        for (FileBucket bucket : fileBuckets) {
-            if (bucket.tryLockRead()) {
-                for (FileInfo fileInfo : bucket.getFiles()) {
-                    long bytesReleased = fileInfo.discardFileContents();
-                    updateSizeOfCachedFileContents(-bytesReleased);
+    public synchronized void freeMemory() {
+        if (!wasClosed()) {
+            for (FileBucket bucket : fileBuckets) {
+                if (bucket.tryLockRead()) {
+                    for (FileInfo fileInfo : bucket.getFiles()) {
+                        long bytesReleased = fileInfo.discardFileContents();
+                        updateSizeOfCachedFileContents(-bytesReleased);
+                    }
+                    bucket.unlockRead();
                 }
-                bucket.unlockRead();
             }
         }
     }
@@ -344,16 +346,10 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     @Override
-    protected void doClose() {
+    protected synchronized void doClose() {
+        lockAndUnlockAllBuckets();
         writeCleanFilesListIfNecessary();
-        for (FileBucket fileBucket : fileBuckets) {
-            fileBucket.lockWrite();
-            for (FileInfo fileInfo : fileBucket.getFiles()) {
-                long bytesReleased = fileInfo.discardFileContents();
-                updateSizeOfCachedFileContents(-bytesReleased);
-            }
-            fileBucket.unlockWrite();
-        }
+        fileBuckets = null;
     }
 
     private void updateSizeOfCachedFileContents(long byteDiff) {
@@ -472,7 +468,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     private ReadValue<T> readValue(byte[] buffer, int position) throws IOException {
-        byte[] objectAsBytes;
         int lengthOfObject;
         int lenghtOfLengthValue;
         if (sizeOfValues == -1) {
@@ -482,9 +477,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             lengthOfObject = sizeOfValues;
             lenghtOfLengthValue = 0;
         }
-        objectAsBytes = new byte[lengthOfObject];
-        System.arraycopy(buffer, position + lenghtOfLengthValue, objectAsBytes, 0, lengthOfObject);
-        T value = SerializationUtils.bytesToObjectCheckForNull(objectAsBytes, getObjectClass());
+        T value = SerializationUtils.bytesToObjectCheckForNull(buffer, position + lenghtOfLengthValue, lengthOfObject, getObjectClass());
         return new ReadValue<>(lengthOfObject + lenghtOfLengthValue, value);
     }
 
@@ -590,7 +583,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         return result;
     }
 
-    public void writeCleanFilesListIfNecessary() {
+    public synchronized void writeCleanFilesListIfNecessary() {
         if (!wasClosed()) {
             //use a local variable to store current value of timeOfLastWrite so we don't have to lock any of the file buckets
             long currentTimeOfLastWrite = timeOfLastWrite;
