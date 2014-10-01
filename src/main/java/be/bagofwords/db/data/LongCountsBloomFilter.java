@@ -1,5 +1,6 @@
 package be.bagofwords.db.data;
 
+import be.bagofwords.util.HashUtils;
 import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -30,6 +31,11 @@ public class LongCountsBloomFilter implements Serializable {
     public int getMaxCount(long hash64) {
         int hash1 = (int) hash64;
         int hash2 = (int) (hash64 >>> 32);
+        if (hash1 == 0 || hash2 == 0) {
+            hash64 = HashUtils.randomDistributeHash(hash64);
+            hash1 = (int) hash64;
+            hash2 = (int) (hash64 >>> 32);
+        }
         int min = Byte.MAX_VALUE - Byte.MIN_VALUE;
         for (int i = 1; i <= numOfHashFunctions; i++) {
             int nextHash = hash1 + i * hash2;
@@ -46,6 +52,11 @@ public class LongCountsBloomFilter implements Serializable {
         int newCount = Math.min(count + currCount, Byte.MAX_VALUE - Byte.MIN_VALUE);
         int hash1 = (int) hash64;
         int hash2 = (int) (hash64 >>> 32);
+        if (hash1 == 0 || hash2 == 0) {
+            hash64 = HashUtils.randomDistributeHash(hash64);
+            hash1 = (int) hash64;
+            hash2 = (int) (hash64 >>> 32);
+        }
         for (int i = 1; i <= numOfHashFunctions; i++) {
             int nextHash = hash1 + i * hash2;
             if (nextHash < 0) {

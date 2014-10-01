@@ -1,5 +1,6 @@
 package be.bagofwords.db.bloomfilter;
 
+import be.bagofwords.util.HashUtils;
 import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
 import com.google.common.math.LongMath;
@@ -38,6 +39,11 @@ public class LongBloomFilter implements Serializable {
     public boolean mightContain(long hash64) {
         int hash1 = (int) hash64;
         int hash2 = (int) (hash64 >>> 32);
+        if (hash1 == 0 || hash2 == 0) {
+            hash64 = HashUtils.randomDistributeHash(hash64);
+            hash1 = (int) hash64;
+            hash2 = (int) (hash64 >>> 32);
+        }
         for (int i = 1; i <= numOfHashFunctions; i++) {
             int nextHash = hash1 + i * hash2;
             if (nextHash < 0) {
@@ -53,6 +59,11 @@ public class LongBloomFilter implements Serializable {
     public <T> boolean put(long hash64) {
         int hash1 = (int) hash64;
         int hash2 = (int) (hash64 >>> 32);
+        if (hash1 == 0 || hash2 == 0) {
+            hash64 = HashUtils.randomDistributeHash(hash64);
+            hash1 = (int) hash64;
+            hash2 = (int) (hash64 >>> 32);
+        }
         boolean bitsChanged = false;
         for (int i = 1; i <= numOfHashFunctions; i++) {
             int nextHash = hash1 + i * hash2;
