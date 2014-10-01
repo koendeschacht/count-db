@@ -40,8 +40,6 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
     private Options createOptions() {
         Options options = new Options();
         options.createIfMissing(true);
-        options.cacheSize(20 * 1024 * 1024);
-        options.writeBufferSize(20 * 1024 * 1024);
         return options;
     }
 
