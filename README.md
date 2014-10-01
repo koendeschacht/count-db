@@ -16,7 +16,9 @@ You want to use count-db if you need to write and read billions of counts very e
 
 ![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/batch_reads.png)
 
-## Maven dependency
+## Usage
+
+Include the following maven dependency in your project
 
 ``` 
 <dependency>
@@ -26,36 +28,54 @@ You want to use count-db if you need to write and read billions of counts very e
 </dependency>
 ```
 
-## Usage
-
-see [ExampleUsage.java](https://github.com/koendeschacht/count-db/blob/master/src/main/java/be/bagofwords/main/ExampleUsage.java)
+Create a data interface and use it:
 
 ``` java
-public class ExampleUsage {
 
-    public static void main(String[] args) throws ParseException {
-        //create data interface factory that stores all data in /tmp/myData (This factory is wired with spring)
-        DataInterfaceFactory dataInterfaceFactory = new EmbeddedDBContextFactory("/tmp/myData").createApplicationContext().getBean(DataInterfaceFactory.class);
+//create data interface factory that stores all data in /tmp/myData (This factory is wired with spring)
+DataInterfaceFactory dataInterfaceFactory = new EmbeddedDBContextFactory("/tmp/myData").createApplicationContext().getBean(DataInterfaceFactory.class);
 
-        //create databases
-        DataInterface<Long> myLogDataInterface = dataInterfaceFactory.createCountDataInterface("myLoginCounts");
-        DataInterface<UserObject> myUserDataInterface = dataInterfaceFactory.createDataInterface(DatabaseCachingType.CACHED, "myUsers", UserObject.class, new OverWriteCombinator<UserObject>());
+//create data interfaces
+DataInterface<Long> myLogDataInterface = dataInterfaceFactory.createCountDataInterface("myLoginCounts");
+DataInterface<UserObject> myUserDataInterface = dataInterfaceFactory.createDataInterface(DatabaseCachingType.CACHED, "myUsers", UserObject.class, new OverWriteCombinator<UserObject>());
 
-        //write data
-        int userId = 12939;
-        myLogDataInterface.increaseCount("user_" + userId + "_logged_in");
-        myUserDataInterface.write(userId, new UserObject("koen", "deschacht", DateUtils.parseDate("1983-04-12", "yyyy-MM-dd")));
+//write data
+long userId = 12939;
+myLogDataInterface.increaseCount("user_" + userId + "_logged_in");
+myUserDataInterface.write(userId, new UserObject("koen", "deschacht", DateUtils.parseDate("1983-04-12", "yyyy-MM-dd")));
 
-        //flush data
-        myLogDataInterface.flush();
-        myUserDataInterface.flush();
+//flush data (necessary to make the written data visible on next read)
+myLogDataInterface.flush();
+myUserDataInterface.flush();
 
-        //read data
-        long numOfLogins = myLogDataInterface.readCount("user_" + userId + "_logged_in");
-        UserObject user = myUserDataInterface.read(userId);
+//read data
+long numOfLogins = myLogDataInterface.readCount("user_" + userId + "_logged_in");
+UserObject user = myUserDataInterface.read(userId);
+System.out.println("User " + user.getFirstName() + " " + user.getSecondName() + " logged in " + numOfLogins + " times.");
 
-        System.out.println("User " + user.getFirstName() + " " + user.getSecondName() + " logged in " + numOfLogins + " times.");
-    }
+//iterate over all data
+CloseableIterator<KeyValue<UserObject>> iterator = myUserDataInterface.iterator();
+while (iterator.hasNext()) {
+    KeyValue<UserObject> curr = iterator.next();
+    UserObject currUser = curr.getValue();
+    long currUserId = curr.getKey();
+    System.out.println("User " + currUser.getFirstName() + " " + currUser.getSecondName() + " with id " + currUserId);
 }
+iterator.close();
+
+//drop all data
+myLogDataInterface.dropAllData();
+myUserDataInterface.dropAllData();
+
+```
+
+For more details, see [ExampleUsage.java](https://github.com/koendeschacht/count-db/blob/master/src/main/java/be/bagofwords/main/ExampleUsage.java).
+
+### Optionally
+
+If you want to use the ``LevelDBDataInterfaceFactory``, you will need to have the snappy compression library installed on your system. For example on Ubunt 14.04 you need to run
+
+```
+sudo apt-get install libsnappy1
 ```
 
