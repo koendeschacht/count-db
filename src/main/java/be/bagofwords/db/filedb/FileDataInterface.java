@@ -656,13 +656,15 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 } else if (key > keyToRead) {
                     return null;
                 } else {
+                    //skip value
                     position += skipValue(buffer, position);
                 }
             } else if (currentByte > firstByteOfKeyToRead) {
-                //key too large
+                //key too large, value not in this file
                 return null;
             } else if (currentByte < firstByteOfKeyToRead) {
-                //key too small
+                //key too small, skip key and value
+                position += LONG_SIZE;
                 position += skipValue(buffer, position);
             }
         }
