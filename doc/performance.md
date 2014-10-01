@@ -84,7 +84,7 @@ The three previous tests all use bigram counts. This data follows a [power law](
 
 ![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/uniform_counts_performance.png)
 
-| uniform counts | leveldb   | count-db  | kyoto     | rocksdb   | rocksdb*  |
-|----------------|-----------|-----------|-----------|-----------|-----------|
-| reads          | 8.32E+005 | 1.04E+007 | 1.93E+006 | 6.29E+005 | 5.90E+005 |
-| writes         | 1.56E+005 | 5.59E+006 | 2.01E+006 | 1.07E+005 | 1.08E+005 |
+| action | leveldb   | count-db  | kyoto     | rocksdb   | rocksdb*  |
+|--------|-----------|-----------|-----------|-----------|-----------|
+| reads  | 8.32E+005 | 1.04E+007 | 1.93E+006 | 6.29E+005 | 5.90E+005 |
+| writes | 1.56E+005 | 5.59E+006 | 2.01E+006 | 1.07E+005 | 1.08E+005 |
