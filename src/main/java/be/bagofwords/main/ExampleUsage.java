@@ -37,7 +37,7 @@ public class ExampleUsage {
         //read data
         long numOfLogins = myLogDataInterface.readCount("user_" + userId + "_logged_in");
         UserObject user = myUserDataInterface.read(userId);
-        System.out.println("User " + user.getFirstName() + " " + user.getSecondName() + " logged in " + numOfLogins + " times.");
+        System.out.println("User " + user.getFirstName() + " " + user.getLastName() + " logged in " + numOfLogins + " times.");
 
         //iterate over all data
         CloseableIterator<KeyValue<UserObject>> iterator = myUserDataInterface.iterator();
@@ -45,7 +45,7 @@ public class ExampleUsage {
             KeyValue<UserObject> curr = iterator.next();
             UserObject currUser = curr.getValue();
             long currUserId = curr.getKey();
-            System.out.println("User " + currUser.getFirstName() + " " + currUser.getSecondName() + " with id " + currUserId);
+            System.out.println("User " + currUser.getFirstName() + " " + currUser.getLastName() + " with id " + currUserId);
         }
         iterator.close();
 
@@ -57,12 +57,12 @@ public class ExampleUsage {
     public static class UserObject {
 
         private String firstName;
-        private String secondName;
+        private String lastName;
         private Date dateOfBirth;
 
-        public UserObject(String firstName, String secondName, Date dateOfBirth) {
+        public UserObject(String firstName, String lastName, Date dateOfBirth) {
             this.firstName = firstName;
-            this.secondName = secondName;
+            this.lastName = lastName;
             this.dateOfBirth = dateOfBirth;
         }
 
@@ -74,12 +74,12 @@ public class ExampleUsage {
             this.firstName = firstName;
         }
 
-        public String getSecondName() {
-            return secondName;
+        public String getLastName() {
+            return lastName;
         }
 
-        public void setSecondName(String secondName) {
-            this.secondName = secondName;
+        public void setLastName(String lastName) {
+            this.lastName = lastName;
         }
 
         public Date getDateOfBirth() {
