@@ -4,11 +4,13 @@ import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
+import be.bagofwords.db.application.environment.RemoteCountDBEnvironmentProperties;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.SafeThread;
 import be.bagofwords.util.WrappedSocketConnection;
 import org.apache.commons.io.IOUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -23,6 +25,11 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
     private final int port;
     private Map<String, DataInterface> dataInterfaceMap;
     private ChangedValueListenerThread changedValueListenerThread;
+
+    @Autowired
+    public RemoteDatabaseInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, RemoteCountDBEnvironmentProperties environmentProperties) {
+        this(cachesManager, memoryManager, environmentProperties.getDatabaseServerAddress(), environmentProperties.getDataInterfaceServerPort());
+    }
 
     public RemoteDatabaseInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, String host, int port) {
         super(cachesManager, memoryManager);
