@@ -5,7 +5,9 @@ All tests are performed on a computer with an intel i7-4770 processor, a SATA 6 
 
 ## Databases
 
-The purpose of this test was to measure performance of different key-value stores *from a java program*, and thus jni bindings are used for [levelDB](https://github.com/fusesource/leveldbjni), [kyoto cabinet](http://fallabs.com/kyotocabinet/javadoc/) and [rocksDB](https://github.com/facebook/rocksdb/wiki/RocksJava-Basics). We used default parameters for all databases. For rocksDB we experimented with using a UInt64AddOperator [merge operator](https://github.com/facebook/rocksdb/wiki/Merge-Operator) when writing long counts. These results are indicated below with an asterix (rocksDB*). Since merge operators are not yet supported in the rocksDB jni binding, we added the following hack to [rocksjni.cc](https://github.com/facebook/rocksdb/blob/master/java/rocksjni/rocksjni.cc)
+The purpose of this test was to measure performance of different key-value stores *from a java program*, and thus jni bindings are used for [levelDB](https://github.com/fusesource/leveldbjni), [kyoto cabinet](http://fallabs.com/kyotocabinet/javadoc/) and [rocksDB](https://github.com/facebook/rocksdb/wiki/RocksJava-Basics). We used default parameters for all databases. 
+
+For rocksDB we experimented with using a UInt64AddOperator [merge operator](https://github.com/facebook/rocksdb/wiki/Merge-Operator) when writing long counts. These results are indicated below with an asterix (rocksDB*). Since merge operators are not yet supported in the rocksDB jni binding, we added the following hack to [rocksjni.cc](https://github.com/facebook/rocksdb/blob/master/java/rocksjni/rocksjni.cc)
 
 ```
 void Java_org_rocksdb_RocksDB_open(
@@ -53,7 +55,7 @@ Note that the test that writes and reads 256M of counts was not finished for kyo
 
 ## Reading and writing bigram counts in parallel
 
-The second test in [BigramTestsMain.java](https://github.com/koendeschacht/count-db/blob/master/src/main/java/be/bagofwords/main/tests/bigrams/BigramTestsMain.java) measures the performance of reading and writing bigram counts in parallel. For this, first a number of bigrams (varying between 1M and 256M) is written to the database. The speed of writing these bigrams is not measured. Consecutively 4 threads are started that write the same number of counts to the database, and in parallel, 4 threads are started that read the same number of bigrams for the database. The performance of these threads is measured:
+The second test in [BigramTestsMain.java](https://github.com/koendeschacht/count-db/blob/master/src/main/java/be/bagofwords/main/tests/bigrams/BigramTestsMain.java) measures the performance of reading and writing bigram counts in parallel. First 128M bigrams is written to the database. The speed of writing these bigrams is not measured. Consecutively 4 threads are started that write the same number of counts to the database, and in parallel, 4 threads are started that read the same number of bigrams for the database. The performance of these threads is measured:
 
 ![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/parallel_performance.png)
 
@@ -62,11 +64,11 @@ The second test in [BigramTestsMain.java](https://github.com/koendeschacht/count
 | read   | 2.17E+005 | 1.26E+006 | 2.52E+005 | 2.51E+005 |
 | write  | 1.33E+005 | 1.26E+006 | 1.21E+005 | 1.22E+005 |
 
-We did not include the test for kyoto cabinet because it took too long.
+We did not include the tests for kyoto cabinet because these took too long.
 
 ## Reading and writing java objects
 
-The third test in [BigramTestsMain.java](https://github.com/koendeschacht/count-db/blob/master/src/main/java/be/bagofwords/main/tests/bigrams/BigramTestsMain.java) measures the performance of reading and writing java objects. This test is identical to *Reading and writing bigram counts* but instead of a count, a java object (with the first word, the second word and the total count) is stored. We only show results here for 128M of bigrams.
+The third test in [BigramTestsMain.java](https://github.com/koendeschacht/count-db/blob/master/src/main/java/be/bagofwords/main/tests/bigrams/BigramTestsMain.java) measures the performance of reading and writing java objects. This test is identical to the first test, but instead of a count, a java object, with the first word, the second word and the total count, is stored. We only show results here for 128M of bigrams.
 
 ![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/java_objects_performance.png)
 
@@ -78,9 +80,9 @@ The third test in [BigramTestsMain.java](https://github.com/koendeschacht/count-
 
 ## Reading and writing uniform counts
 
-The three previous tests all use bigram counts. This data follows a [power law](http://en.wikipedia.org/wiki/Power_law) distribution. Although this type of distribution is observed with many types of real-world data, some data follows a different distribution. As an additional test, in [UniformDataTestsMain.java](https://github.com/koendeschacht/count-db/blob/master/src/main/java/be/bagofwords/main/tests/uniform/UniformDataTestsMain.java), we chosen random values from a uniform distribution between 0 and 1000000. First 128M of counts is written to the database, and then the same number of counts is read.
+The three previous tests all use bigram counts. This data follows a [power law](http://en.wikipedia.org/wiki/Power_law) distribution. Although this type of distribution is observed with many types of real-world data, not all data follows this distribution. As an additional test, in [UniformDataTestsMain.java](https://github.com/koendeschacht/count-db/blob/master/src/main/java/be/bagofwords/main/tests/uniform/UniformDataTestsMain.java), we chosen random values from a uniform distribution between 0 and 1000000. First 128M of counts is written to the database, and then the same number of counts is read.
 
-![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/java_objects_performance.png)
+![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/uniform_counts_performance.png)
 
 | uniform counts | leveldb   | count-db  | kyoto     | rocksdb   | rocksdb*  |
 |----------------|-----------|-----------|-----------|-----------|-----------|
