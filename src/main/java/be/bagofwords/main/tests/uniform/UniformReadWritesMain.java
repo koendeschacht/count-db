@@ -1,18 +1,18 @@
-package be.bagofwords.main.tests.random;
+package be.bagofwords.main.tests.uniform;
 
-import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.application.ApplicationManager;
 import be.bagofwords.application.MainClass;
 import be.bagofwords.application.file.OpenFilesManager;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.DataInterface;
+import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.combinator.LongCombinator;
-import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.experimental.kyoto.KyotoDataInterfaceFactory;
-import be.bagofwords.db.leveldb.LevelDBDataInterfaceFactory;
 import be.bagofwords.db.experimental.rocksdb.RocksDBDataInterfaceFactory;
+import be.bagofwords.db.filedb.FileDataInterfaceFactory;
+import be.bagofwords.db.leveldb.LevelDBDataInterfaceFactory;
 import be.bagofwords.main.tests.TestsApplicationContextFactory;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.NumUtils;
@@ -25,10 +25,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
-public class RandomReadWritesMain implements MainClass {
+public class UniformReadWritesMain implements MainClass {
 
-    private static final int MILLION_ITEMS_TO_PROCESS = 1024;
-    private static final File tmpDbDir = new File("/tmp/testDatabaseSpeed");
+    private static final int MIN_MILLION_ITEMS_TO_PROCESS = 1;
+    private static final int MAX_MILLION_ITEMS_TO_PROCESS = 4;
+
+    private static final File tmpDbDir = new File("/tmp/testRandomCounts");
 
     @Autowired
     private CachesManager cachesManager;
@@ -39,7 +41,7 @@ public class RandomReadWritesMain implements MainClass {
 
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        ApplicationManager.runSafely(new TestsApplicationContextFactory(new RandomReadWritesMain()));
+        ApplicationManager.runSafely(new TestsApplicationContextFactory(new UniformReadWritesMain()));
     }
 
     public void run() {
@@ -59,18 +61,17 @@ public class RandomReadWritesMain implements MainClass {
 
 
     private static void prepareTmpDir(File tmpDbDir) throws IOException {
-        if (!tmpDbDir.exists()) {
-            boolean success = tmpDbDir.mkdirs();
-            if (!success) {
-                throw new RuntimeException("Failed to create db dir " + tmpDbDir.getAbsolutePath());
-            }
-        } else {
+        if (tmpDbDir.exists()) {
             FileUtils.deleteDirectory(tmpDbDir);
+        }
+        boolean success = tmpDbDir.mkdirs();
+        if (!success) {
+            throw new RuntimeException("Failed to create db dir " + tmpDbDir.getAbsolutePath());
         }
     }
 
     private void testWritingReading(DataInterfaceFactory factory, DatabaseCachingType type) throws InterruptedException, FileNotFoundException {
-        for (long items = 1024 * 1024; items <= MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items *= 2) {
+        for (long items = MIN_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items <= MAX_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items *= 2) {
             testBatchWritingAndReading(factory, type, 8, items);
         }
         factory.close();
@@ -81,30 +82,32 @@ public class RandomReadWritesMain implements MainClass {
         dataInterface.dropAllData();
 
         MutableLong numberOfItemsWritten = new MutableLong(0);
-        MutableLong timeSpendWriting = new MutableLong(0);
+        long startOfWrite = System.nanoTime();
         CountDownLatch countDownLatch = new CountDownLatch(numberOfThreads);
         for (int i = 0; i < numberOfThreads; i++) {
-            new RandomReadsWritesThread(numberOfItemsWritten, timeSpendWriting, numberOfItems, dataInterface, countDownLatch, true).start();
+            new RandomReadsWritesThread(numberOfItemsWritten, numberOfItems, dataInterface, countDownLatch, true).start();
         }
         countDownLatch.await();
-        double writesPerSecond = numberOfItemsWritten.longValue() * 1e9 / timeSpendWriting.longValue();
+        dataInterface.flush();
+        long endOfWrite = System.nanoTime();
+        double writesPerSecond = numberOfItemsWritten.longValue() * 1e9 / (endOfWrite - startOfWrite);
 
         countDownLatch = new CountDownLatch(numberOfThreads);
         MutableLong numberOfItemsRead = new MutableLong(0);
-        MutableLong timeSpendReading = new MutableLong(0);
+        long startOfRead = System.nanoTime();
         for (int i = 0; i < numberOfThreads; i++) {
-            new RandomReadsWritesThread(numberOfItemsRead, timeSpendReading, numberOfItems, dataInterface, countDownLatch, false).start();
+            new RandomReadsWritesThread(numberOfItemsRead, numberOfItems, dataInterface, countDownLatch, false).start();
         }
         countDownLatch.await();
-        double readsPerSecond = numberOfItemsRead.longValue() * 1e9 / timeSpendReading.longValue();
+        long endOfRead = System.nanoTime();
+        double readsPerSecond = numberOfItemsRead.longValue() * 1e9 / (endOfRead - startOfRead);
 
         UI.write(factory.getClass().getSimpleName() + " threads " + numberOfThreads + " items " + numberOfItems + " write " + NumUtils.fmt(writesPerSecond) + " read " + NumUtils.fmt(readsPerSecond));
-
         dataInterface.close();
     }
 
     protected DataInterface createDataInterface(DatabaseCachingType cachingType, DataInterfaceFactory factory) {
-        String dataInterfaceName = "readWriteBigrams_" + cachingType + "_" + factory.getClass().getSimpleName();
+        String dataInterfaceName = "readWriteRandom_" + cachingType + "_" + factory.getClass().getSimpleName();
         return factory.createDataInterface(cachingType, dataInterfaceName, Long.class, new LongCombinator());
     }
 

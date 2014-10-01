@@ -1,4 +1,4 @@
-package be.bagofwords.main.tests.random;
+package be.bagofwords.main.tests.uniform;
 
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.util.SafeThread;
@@ -11,19 +11,17 @@ import java.util.concurrent.CountDownLatch;
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/17/14.
  */
-class RandomReadsWritesThread extends SafeThread {
+class UniformReadsWritesThread extends SafeThread {
 
     private final MutableLong numberOfItemsProcessed;
-    private final MutableLong timeSpend;
     private final long numberOfItems;
     private final DataInterface dataInterface;
     private CountDownLatch countDownLatch;
     private final boolean writeValues;
 
-    public RandomReadsWritesThread(MutableLong numberOfItemsProcessed, MutableLong timeSpend, long numberOfItems, DataInterface dataInterface, CountDownLatch countDownLatch, boolean writeValues) {
+    public UniformReadsWritesThread(MutableLong numberOfItemsProcessed, long numberOfItems, DataInterface dataInterface, CountDownLatch countDownLatch, boolean writeValues) {
         super("ReadTextThread", false);
         this.numberOfItemsProcessed = numberOfItemsProcessed;
-        this.timeSpend = timeSpend;
         this.numberOfItems = numberOfItems;
         this.dataInterface = dataInterface;
         this.countDownLatch = countDownLatch;
@@ -33,7 +31,6 @@ class RandomReadsWritesThread extends SafeThread {
     public void runInt() throws IOException {
         Random random = new Random();
         while (numberOfItemsProcessed.longValue() < numberOfItems) {
-            long startTime = System.nanoTime();
             long numberOfItemsPerIteration = numberOfItems / 10000;
             for (int i = 0; i < numberOfItemsPerIteration; i++) {
                 long value = random.nextInt(10000);
@@ -43,10 +40,8 @@ class RandomReadsWritesThread extends SafeThread {
                     dataInterface.readCount(value);
                 }
             }
-            long endTime = System.nanoTime();
             synchronized (numberOfItemsProcessed) {
                 numberOfItemsProcessed.setValue(numberOfItemsProcessed.longValue() + numberOfItemsPerIteration);
-                timeSpend.setValue(timeSpend.longValue() + (endTime - startTime));
             }
         }
 

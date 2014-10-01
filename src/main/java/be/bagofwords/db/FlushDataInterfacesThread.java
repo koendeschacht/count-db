@@ -41,8 +41,10 @@ public class FlushDataInterfacesThread extends SafeThread {
             if (memoryManager.getMemoryStatus() == MemoryStatus.CRITICAL) {
                 timeToSleepBetweenFlushes = 0;
             }
-            long actualTimeToSleep = Math.max(0, timeBeforeFlush - System.currentTimeMillis() + timeToSleepBetweenFlushes);
-            Utils.threadSleep(actualTimeToSleep);
+            long actualTimeToSleep = timeBeforeFlush - System.currentTimeMillis() + timeToSleepBetweenFlushes;
+            if (actualTimeToSleep > 0) {
+                Utils.threadSleep(actualTimeToSleep);
+            }
         }
     }
 }
