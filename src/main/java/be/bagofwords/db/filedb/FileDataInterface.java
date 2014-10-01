@@ -99,8 +99,8 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             dos.close();
             rewriteFileAfterWriteIfNecessary(bucket, file);
             timeOfLastWrite = System.currentTimeMillis();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to write value with key " + key + " to file " + toFile(file).getAbsolutePath(), e);
         } finally {
             bucket.unlockWrite();
         }
@@ -127,17 +127,19 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                         entriesToFiles.get(file).add(value);
                     }
                     for (FileInfo file : entriesToFiles.keySet()) {
-                        List<KeyValue<T>> valuesForFile = entriesToFiles.get(file);
-                        DataOutputStream dos = getOutputStream(file, true);
-                        for (KeyValue<T> value : valuesForFile) {
-                            long extraSize = writeValue(dos, value.getKey(), value.getValue());
-                            file.increaseSize(extraSize, false);
+                        try {
+                            List<KeyValue<T>> valuesForFile = entriesToFiles.get(file);
+                            DataOutputStream dos = getOutputStream(file, true);
+                            for (KeyValue<T> value : valuesForFile) {
+                                long extraSize = writeValue(dos, value.getKey(), value.getValue());
+                                file.increaseSize(extraSize, false);
+                            }
+                            dos.close();
+                            rewriteFileAfterWriteIfNecessary(bucket, file);
+                        } catch (Exception exp) {
+                            throw new RuntimeException("Failed to write multiple values to file " + toFile(file).getAbsolutePath(), exp);
                         }
-                        dos.close();
-                        rewriteFileAfterWriteIfNecessary(bucket, file);
                     }
-                } catch (IOException exp) {
-                    throw new RuntimeException(exp);
                 } finally {
                     bucket.unlockWrite();
                 }
@@ -435,7 +437,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             file.fileIsCleaned(sample(fileLocations, 100));
             dos.close();
             return values;
-        } catch (IOException exp) {
+        } catch (Exception exp) {
             throw new RuntimeException("Unexpected exception while rewrite file " + toFile(file).getAbsolutePath(), exp);
         }
     }
@@ -576,7 +578,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                         finished = true;
                     }
                 }
-            } catch (IOException exp) {
+            } catch (Exception exp) {
                 UI.writeError("Received exception while reading " + cleanFilesFile.getAbsolutePath(), exp);
             }
         }
@@ -597,8 +599,9 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     private void writeCleanFilesListNonSynchronized() {
+        File outputFile = new File(directory, CLEAN_FILES_FILE);
         try {
-            DataOutputStream dos = new DataOutputStream(new FileOutputStream(new File(directory, CLEAN_FILES_FILE)));
+            DataOutputStream dos = new DataOutputStream(new FileOutputStream(outputFile));
             for (FileBucket bucket : fileBuckets) {
                 for (FileInfo fileInfo : bucket.getFiles()) {
                     if (!fileInfo.isDirty() && fileInfo.getSize() > 0) {
@@ -612,8 +615,8 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 }
             }
             dos.close();
-        } catch (IOException exp) {
-            throw new RuntimeException("Received exception while writing list of clean files", exp);
+        } catch (Exception exp) {
+            throw new RuntimeException("Received exception while writing list of clean files to " + outputFile.getAbsolutePath(), exp);
         }
     }
 
@@ -842,7 +845,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             } else {
                 return Collections.emptyList();
             }
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             throw new RuntimeException("Unexpected exception while reading values from file " + toFile(file).getAbsolutePath(), ex);
         }
     }
