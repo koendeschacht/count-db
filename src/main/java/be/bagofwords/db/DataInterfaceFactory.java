@@ -92,8 +92,15 @@ public abstract class DataInterfaceFactory implements StatusViewable, LateClosea
     public void closeAllInterfaces() {
         synchronized (allInterfaces) {
             for (DataInterface dataI : allInterfaces) {
-                dataI.flushIfNotClosed();
-                dataI.close();
+                if (dataI != cachedBloomFilters) {
+                    dataI.flushIfNotClosed();
+                    dataI.close();
+                }
+            }
+            if (cachedBloomFilters != null) {
+                cachedBloomFilters.flushIfNotClosed();
+                cachedBloomFilters.close();
+                cachedBloomFilters = null;
             }
             allInterfaces.clear();
         }
