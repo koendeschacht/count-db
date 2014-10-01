@@ -82,7 +82,7 @@ The third test in [BigramTestsMain.java](https://github.com/koendeschacht/count-
 
 The three previous tests all use bigram counts. This data follows a [power law](http://en.wikipedia.org/wiki/Power_law) distribution. Although this type of distribution is observed with many types of real-world data, not all data follows this distribution. As an additional test, in [UniformDataTestsMain.java](https://github.com/koendeschacht/count-db/blob/master/src/main/java/be/bagofwords/main/tests/uniform/UniformDataTestsMain.java), we chosen random values from a uniform distribution between 0 and 1000000. First 128M of counts is written to the database, and then the same number of counts is read.
 
-![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/java_objects_performance.png)
+![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/uniform_counts_performance.png)
 
 | uniform counts | leveldb   | count-db  | kyoto     | rocksdb   | rocksdb*  |
 |----------------|-----------|-----------|-----------|-----------|-----------|
