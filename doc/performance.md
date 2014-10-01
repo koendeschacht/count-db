@@ -70,10 +70,10 @@ The third test in [BigramTestsMain.java](https://github.com/koendeschacht/count-
 
 ![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/java_objects_performance.png)
 
-| action | leveldb   | count-db  | kyoto     | rocksdb   | rocksdb*  |
-|--------|-----------|-----------|-----------|-----------|-----------|
-| read   | 6.28E+005 | 3.83E+006 | 6.61E+004 | 4.37E+005 | 4.40E+005 |
-| write  | 7.73E+004 | 1.14E+006 | 5.08E+003 | 8.41E+004 | 8.37E+004 |
+| action | leveldb   | count-db  | kyoto     | rocksdb   |
+|--------|-----------|-----------|-----------|-----------|
+| read   | 6.28E+005 | 3.83E+006 | 6.61E+004 | 4.37E+005 |
+| write  | 7.73E+004 | 1.14E+006 | 5.08E+003 | 8.41E+004 |
 
 
 ## Reading and writing uniform counts
