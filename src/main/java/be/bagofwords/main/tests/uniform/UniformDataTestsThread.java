@@ -11,7 +11,7 @@ import java.util.concurrent.CountDownLatch;
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/17/14.
  */
-class UniformReadsWritesThread extends SafeThread {
+class UniformDataTestsThread extends SafeThread {
 
     private final MutableLong numberOfItemsProcessed;
     private final long numberOfItems;
@@ -19,7 +19,7 @@ class UniformReadsWritesThread extends SafeThread {
     private CountDownLatch countDownLatch;
     private final boolean writeValues;
 
-    public UniformReadsWritesThread(MutableLong numberOfItemsProcessed, long numberOfItems, DataInterface dataInterface, CountDownLatch countDownLatch, boolean writeValues) {
+    public UniformDataTestsThread(MutableLong numberOfItemsProcessed, long numberOfItems, DataInterface dataInterface, CountDownLatch countDownLatch, boolean writeValues) {
         super("ReadTextThread", false);
         this.numberOfItemsProcessed = numberOfItemsProcessed;
         this.numberOfItems = numberOfItems;
@@ -33,7 +33,7 @@ class UniformReadsWritesThread extends SafeThread {
         while (numberOfItemsProcessed.longValue() < numberOfItems) {
             long numberOfItemsPerIteration = numberOfItems / 10000;
             for (int i = 0; i < numberOfItemsPerIteration; i++) {
-                long value = random.nextInt(10000);
+                long value = random.nextInt(1000000);
                 if (writeValues) {
                     dataInterface.increaseCount(value);
                 } else {

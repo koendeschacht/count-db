@@ -25,10 +25,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
-public class UniformReadWritesMain implements MainClass {
+public class UniformDataTestsMain implements MainClass {
 
     private static final int MIN_MILLION_ITEMS_TO_PROCESS = 1;
-    private static final int MAX_MILLION_ITEMS_TO_PROCESS = 4;
+    private static final int MAX_MILLION_ITEMS_TO_PROCESS = 4 * 1024;
 
     private static final File tmpDbDir = new File("/tmp/testRandomCounts");
 
@@ -41,7 +41,7 @@ public class UniformReadWritesMain implements MainClass {
 
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        ApplicationManager.runSafely(new TestsApplicationContextFactory(new UniformReadWritesMain()));
+        ApplicationManager.runSafely(new TestsApplicationContextFactory(new UniformDataTestsMain()));
     }
 
     public void run() {
@@ -85,7 +85,7 @@ public class UniformReadWritesMain implements MainClass {
         long startOfWrite = System.nanoTime();
         CountDownLatch countDownLatch = new CountDownLatch(numberOfThreads);
         for (int i = 0; i < numberOfThreads; i++) {
-            new RandomReadsWritesThread(numberOfItemsWritten, numberOfItems, dataInterface, countDownLatch, true).start();
+            new UniformDataTestsThread(numberOfItemsWritten, numberOfItems, dataInterface, countDownLatch, true).start();
         }
         countDownLatch.await();
         dataInterface.flush();
@@ -93,10 +93,11 @@ public class UniformReadWritesMain implements MainClass {
         double writesPerSecond = numberOfItemsWritten.longValue() * 1e9 / (endOfWrite - startOfWrite);
 
         countDownLatch = new CountDownLatch(numberOfThreads);
+        dataInterface.optimizeForReading();
         MutableLong numberOfItemsRead = new MutableLong(0);
         long startOfRead = System.nanoTime();
         for (int i = 0; i < numberOfThreads; i++) {
-            new RandomReadsWritesThread(numberOfItemsRead, numberOfItems, dataInterface, countDownLatch, false).start();
+            new UniformDataTestsThread(numberOfItemsRead, numberOfItems, dataInterface, countDownLatch, false).start();
         }
         countDownLatch.await();
         long endOfRead = System.nanoTime();

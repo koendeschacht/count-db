@@ -9,12 +9,13 @@ You want to use count-db if you need to write and read billions of counts very e
 
 ## Performance
 
-``be.bagofwords.main.tests.bigrams.BigramTestsMain`` compares the performance of count-db to 3 other key-value stores: [levelDB](https://github.com/google/leveldb), [kyoto cabinet](http://fallabs.com/kyotocabinet/) and [rocksDB](http://rocksdb.org/).  count-db outperforms all three, it is for example 25 times faster then levelDB when  writing 1GB of bigram counts and 8 times faster then levelDB when reading from this 1GB of counts. All tests were performed on an Intel i7-4770 computer using 6GB of memory, with default settings for all key-value stores.
+We compared the performance of count-db to 3 other key-value stores: [levelDB](https://github.com/google/leveldb), [kyoto cabinet](http://fallabs.com/kyotocabinet/) and [rocksDB](http://rocksdb.org/).  count-db outperforms all three, it is for example 32 times faster then levelDB when writing 256M bigram counts and 8 times faster then levelDB when reading from these counts. 
 
+![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/write_bigram_counts.png)
 
-![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/batch_writes.png)
+![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/read_bigram_counts.png)
 
-![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/batch_reads.png)
+The full benchmark can be found [here](https://github.com/koendeschacht/count-db/blob/master/doc/performance.md).
 
 ## Usage
 

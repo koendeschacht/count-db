@@ -25,8 +25,10 @@ import java.util.concurrent.CountDownLatch;
 
 public class BigramTestsMain implements MainClass {
 
-    private static final int MILLION_ITEMS_TO_PROCESS = 1024;
-    private static final File tmpDbDir = new File("/tmp/testDatabaseSpeed");
+    private static final long MIN_MILLION_ITEMS_TO_PROCESS = 1;
+    private static final long MAX_MILLION_ITEMS_TO_PROCESS = 4 * 1024;
+
+    private static final File tmpDbDir = new File("/tmp/testBigramCounts");
 
     @Autowired
     private CachesManager cachesManager;
@@ -64,11 +66,11 @@ public class BigramTestsMain implements MainClass {
 
     private void runAllTests(DataType dataType) throws InterruptedException, FileNotFoundException {
         UI.write("Testing batch writing / reading for data type " + dataType);
-        testBatchWritingAndReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
-        testBatchWritingAndReading(dataType, new FileDataInterfaceFactory(openFilesManager, cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
-        testBatchWritingAndReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
-        testBatchWritingAndReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
-        testBatchWritingAndReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", true), DatabaseCachingType.DIRECT);
+        testSeparateWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
+        testSeparateWritingReading(dataType, new FileDataInterfaceFactory(openFilesManager, cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
+        testSeparateWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
+        testSeparateWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
+        testSeparateWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBDPatched", true), DatabaseCachingType.DIRECT);
         //testBatchWritingAndReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT); --> too slow
 
         UI.write("Testing mixed writing / reading for data type " + dataType);
@@ -76,71 +78,103 @@ public class BigramTestsMain implements MainClass {
         testMixedWritingReading(dataType, new FileDataInterfaceFactory(openFilesManager, cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
         testMixedWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
         testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
-        testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", true), DatabaseCachingType.DIRECT);
-        //testMixedWritingReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT); --> too slow
+        testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBDPatched", true), DatabaseCachingType.DIRECT);
+//        testMixedWritingReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT); --> too slow
     }
 
     private static void prepareTmpDir(File tmpDbDir) throws IOException {
-        if (!tmpDbDir.exists()) {
-            boolean success = tmpDbDir.mkdirs();
-            if (!success) {
-                throw new RuntimeException("Failed to create db dir " + tmpDbDir.getAbsolutePath());
-            }
-        } else {
+        if (tmpDbDir.exists()) {
             FileUtils.deleteDirectory(tmpDbDir);
+        }
+        boolean success = tmpDbDir.mkdirs();
+        if (!success) {
+            throw new RuntimeException("Failed to create db dir " + tmpDbDir.getAbsolutePath());
         }
     }
 
-    private void testBatchWritingAndReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType type) throws InterruptedException, FileNotFoundException {
-        for (long items = 1024 * 1024; items <= MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items *= 2) {
-            testBatchWritingAndReading(dataType, factory, type, largeTextFile, 8, items);
+    private void testSeparateWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType type) throws InterruptedException, FileNotFoundException {
+        for (long items = MIN_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items <= MAX_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items *= 2) {
+            testSeparateWritingReading(dataType, factory, type, largeTextFile, 8, items);
         }
         factory.close();
     }
 
-    private void testBatchWritingAndReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType cachingType, File largeTextFile, int numberOfThreads, final long numberOfItems) throws FileNotFoundException, InterruptedException {
+    private void testSeparateWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType cachingType, File largeTextFile, int numberOfThreads, long numberOfItems) throws FileNotFoundException, InterruptedException {
         final DataInterface dataInterface = createDataInterface(dataType, cachingType, factory);
         dataInterface.dropAllData();
         final BufferedReader rdr = new BufferedReader(new FileReader(largeTextFile));
-        double writesPerSecond = readTextWithThreads(dataType, numberOfThreads, numberOfItems, dataInterface, rdr, 0.0).getWritesPerSecond();
+
+        //write data
+        MutableLong numberOfItemsWritten = new MutableLong(0);
+        CountDownLatch writeLatch = new CountDownLatch(numberOfThreads);
+        long startOfWrite = System.nanoTime();
+        for (int i = 0; i < numberOfThreads; i++) {
+            new BigramTestsThread(dataType, numberOfItemsWritten, numberOfItems, rdr, dataInterface, writeLatch, false).start();
+        }
+        writeLatch.await();
+        dataInterface.flush();
+        long endOfWrite = System.nanoTime();
+        double writesPerSecond = numberOfItemsWritten.longValue() * 1e9 / (endOfWrite - startOfWrite);
+
+        //read data (we don't read more then 200M of items, since this is plenty to get an accurate estimate of reading speed)
         dataInterface.optimizeForReading();
-        double readsPerSecond = readTextWithThreads(dataType, numberOfThreads, numberOfItems, dataInterface, rdr, 1.0).getReadsPerSecond();
+        MutableLong numberOfItemsRead = new MutableLong(0);
+        CountDownLatch readLatch = new CountDownLatch(numberOfThreads);
+        long startOfRead = System.nanoTime();
+        for (int i = 0; i < numberOfThreads; i++) {
+            new BigramTestsThread(dataType, numberOfItemsRead, Math.min(200 * 1024 * 1024, numberOfItems), rdr, dataInterface, readLatch, true).start();
+        }
+        readLatch.await();
+        dataInterface.flush();
+        long endOfRead = System.nanoTime();
+        double readsPerSecond = numberOfItemsRead.longValue() * 1e9 / (endOfRead - startOfRead);
+
         dataInterface.close();
         UI.write(factory.getClass().getSimpleName() + " threads " + numberOfThreads + " items " + numberOfItems + " write " + NumUtils.fmt(writesPerSecond) + " read " + NumUtils.fmt(readsPerSecond));
     }
 
     private void testMixedWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType type) throws InterruptedException, FileNotFoundException {
-        for (long items = 1024 * 1024; items <= MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items *= 2) {
+        for (long items = MIN_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items <= MAX_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items *= 2) {
             testMixedWritingReading(dataType, factory, type, largeTextFile, 8, items);
         }
         factory.close();
     }
 
-    private void testMixedWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType cachingType, File largeTextFile, int numberOfThreads, final long numberOfItems) throws FileNotFoundException, InterruptedException {
+    private void testMixedWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType cachingType, File largeTextFile, int numberOfThreads, long numberOfItems) throws FileNotFoundException, InterruptedException {
         final DataInterface dataInterface = createDataInterface(dataType, cachingType, factory);
         dataInterface.dropAllData();
         final BufferedReader rdr = new BufferedReader(new FileReader(largeTextFile));
-        ReadTextResults readTextResults = readTextWithThreads(dataType, numberOfThreads, numberOfItems, dataInterface, rdr, 0.5);
-        double writesPerSecond = readTextResults.getWritesPerSecond();
-        double readsPerSecond = readTextResults.getReadsPerSecond();
+
+        //first fill database by writing data
+        MutableLong numberOfItemsWritten = new MutableLong(0);
+        CountDownLatch writeLatch = new CountDownLatch(numberOfThreads);
+        for (int i = 0; i < numberOfThreads; i++) {
+            new BigramTestsThread(dataType, numberOfItemsWritten, numberOfItems, rdr, dataInterface, writeLatch, false).start();
+        }
+        writeLatch.await();
+        dataInterface.flush();
+
+        //now start threads that will write and read data simultaneously
+        dataInterface.optimizeForReading();
+        MutableLong numberOfItemsRead = new MutableLong(0);
+        numberOfItemsWritten = new MutableLong(0);
+        CountDownLatch readLatch = new CountDownLatch(numberOfThreads / 2);
+        writeLatch = new CountDownLatch(numberOfThreads / 2);
+        long start = System.nanoTime();
+        for (int i = 0; i < numberOfThreads; i++) {
+            boolean isReadThread = i % 2 == 0;
+            new BigramTestsThread(dataType, isReadThread ? numberOfItemsRead : numberOfItemsWritten, Math.min(100 * 1024 * 1024, numberOfItems), rdr, dataInterface, isReadThread ? readLatch : writeLatch, isReadThread).start();
+        }
+        readLatch.await(); //this assumes that reading data is faster than writing data.
+        long endOfRead = System.nanoTime();
+        writeLatch.await();
+        dataInterface.flush();
+        long endOfWrite = System.nanoTime();
+        double readsPerSecond = numberOfItemsRead.longValue() * 1e9 / (endOfRead - start);
+        double writesPerSecond = numberOfItemsWritten.longValue() * 1e9 / (endOfWrite - start);
+
         dataInterface.close();
         UI.write(factory.getClass().getSimpleName() + " threads " + numberOfThreads + " items " + numberOfItems + " write " + NumUtils.fmt(writesPerSecond) + " read " + NumUtils.fmt(readsPerSecond));
-    }
-
-    private ReadTextResults readTextWithThreads(DataType dataType, int numberOfThreads, long numberOfItems, DataInterface dataInterface, BufferedReader rdr, double fractionToRead) throws InterruptedException {
-        final MutableLong numberOfItemsWritten = new MutableLong(0);
-        final MutableLong numberOfItemsRead = new MutableLong(0);
-        final MutableLong timeSpendWriting = new MutableLong(0);
-        final MutableLong timeSpendReading = new MutableLong(0);
-        final CountDownLatch countDownLatch = new CountDownLatch(numberOfThreads);
-        for (int i = 0; i < numberOfThreads; i++) {
-            new ReadTextThread(dataType, numberOfItemsWritten, numberOfItemsRead, timeSpendWriting, timeSpendReading, numberOfItems, rdr, dataInterface, countDownLatch, fractionToRead).start();
-        }
-        countDownLatch.await();
-        dataInterface.flush();
-        double readsPerSecond = numberOfItemsRead.longValue() * 1e9 / timeSpendReading.longValue();
-        double writesPerSecond = numberOfItemsWritten.longValue() * 1e9 / timeSpendWriting.longValue();
-        return new ReadTextResults(readsPerSecond, writesPerSecond);
     }
 
     protected DataInterface createDataInterface(DataType dataType, DatabaseCachingType cachingType, DataInterfaceFactory factory) {
