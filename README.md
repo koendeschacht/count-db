@@ -9,7 +9,7 @@ You want to use count-db if you need to write and read billions of counts very e
 
 ## Performance
 
-We compared the performance of count-db to 3 other key-value stores: [levelDB](https://github.com/google/leveldb), [kyoto cabinet](http://fallabs.com/kyotocabinet/) and [rocksDB](http://rocksdb.org/).  count-db outperforms all three, it is for example 32 times faster then levelDB when writing 256M bigram counts and 8 times faster then levelDB when reading from these counts. 
+We compared the performance of count-db to 3 other key-value stores: [levelDB](https://github.com/google/leveldb), [kyoto cabinet](http://fallabs.com/kyotocabinet/) and [rocksDB](http://rocksdb.org/).  count-db outperforms all three, it is for example 32 times faster than levelDB when writing 256M bigram counts and 8 times faster than levelDB when reading from these counts. 
 
 ![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/write_bigram_counts.png)
 
