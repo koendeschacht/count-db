@@ -35,7 +35,23 @@ void Java_org_rocksdb_RocksDB_open(
 
 The first test in [BigramTestsMain.java](https://github.com/koendeschacht/count-db/blob/master/src/main/java/be/bagofwords/main/tests/bigrams/BigramTestsMain.java) reads the database dump of the English wikipedia and counts all bigrams. First a number (varying between 1M and 256M) of bigrams is written to the database, and then the same number of bigrams is read from this database. 
 
+### Writing
+
 ![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/write_bigram_counts.png)
+
+| million counts | levelDB   | count-db  | kyoto cabinet | rocksdb   | rocksdb*  |
+|----------------|-----------|-----------|---------------|-----------|-----------|
+| 1              | 1.95E+005 | 1.16E+006 | 1.66E+006     | 1.38E+005 | 1.35E+005 |
+| 2              | 2.03E+005 | 2.10E+006 | 1.65E+006     | 1.43E+005 | 1.47E+005 |
+| 4              | 1.97E+005 | 3.32E+006 | 1.67E+006     | 1.38E+005 | 1.44E+005 |
+| 8              | 1.84E+005 | 3.92E+006 | 1.63E+006     | 1.44E+005 | 1.47E+005 |
+| 16             | 1.68E+005 | 5.18E+006 | 1.09E+005     | 1.48E+005 | 1.49E+005 |
+| 32             | 1.60E+005 | 5.47E+006 | 4.10E+004     | 1.52E+005 | 1.51E+005 |
+| 64             | 1.56E+005 | 5.58E+006 | 2.77E+004     | 1.53E+005 | 1.53E+005 |
+| 128            | 1.47E+005 | 3.62E+006 | 2.10E+004     | 1.51E+005 | 1.52E+005 |
+| 256            | 1.49E+005 | 4.90E+006 |               | 1.56E+005 | 1.58E+005 |
+
+### Reading
 
 ![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/read_bigram_counts.png)
 
