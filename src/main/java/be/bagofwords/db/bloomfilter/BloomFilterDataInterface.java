@@ -86,24 +86,27 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
     public void valuesChanged(long[] keys) {
         super.valuesChanged(keys);
         modifyBloomFilterLock.lock();
-        if (bloomFilter != null) {
-            if (keys.length > 0) {
-                bloomFilterWasWrittenToDisk = false;
-            }
-            for (Long key : keys) {
-                bloomFilter.put(key);
-            }
-            if (bloomFilter.expectedFpp() > MAX_FPP) {
-                if (System.currentTimeMillis() - timeOfLastRead < 1000) {
-                    //read in last second, create a new bloom filter
-                    createNewBloomFilterNonSynchronized();
-                } else {
-                    //no reads in last second, let's drop the bloom filter for now
-                    bloomFilter = null;
+        try {
+            if (bloomFilter != null) {
+                if (keys.length > 0) {
+                    bloomFilterWasWrittenToDisk = false;
+                }
+                for (Long key : keys) {
+                    bloomFilter.put(key);
+                }
+                if (bloomFilter.expectedFpp() > MAX_FPP) {
+                    if (System.currentTimeMillis() - timeOfLastRead < 1000) {
+                        //read in last second, create a new bloom filter
+                        createNewBloomFilterNonSynchronized();
+                    } else {
+                        //no reads in last second, let's drop the bloom filter for now
+                        bloomFilter = null;
+                    }
                 }
             }
+        } finally {
+            modifyBloomFilterLock.unlock();
         }
-        modifyBloomFilterLock.unlock();
     }
 
     private void createNewBloomFilterNonSynchronized() {
@@ -144,6 +147,5 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
     @Override
     protected void doClose() {
         bloomFilter = null;
-        baseInterface.close();
     }
 }
