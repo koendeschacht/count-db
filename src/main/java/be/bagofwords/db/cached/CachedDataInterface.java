@@ -1,27 +1,27 @@
 package be.bagofwords.db.cached;
 
-import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.Cache;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.DataInterface;
+import be.bagofwords.db.FlushDataInterfacesThread;
 import be.bagofwords.db.LayeredDataInterface;
 import be.bagofwords.util.DataLock;
 import be.bagofwords.util.KeyValue;
+import be.bagofwords.util.Utils;
 
 import java.util.Iterator;
 import java.util.List;
 
 public class CachedDataInterface<T extends Object> extends LayeredDataInterface<T> {
 
-    private final MemoryManager memoryManager;
     private Cache<T> readCache;
     private Cache<T> writeCache;
     private final DataLock writeLock;
     private final String flushLock = new String("LOCK");
+    private long timeOfLastFlush;
 
-    public CachedDataInterface(CachesManager cachesManager, MemoryManager memoryManager, DataInterface<T> baseInterface) {
+    public CachedDataInterface(CachesManager cachesManager, DataInterface<T> baseInterface) {
         super(baseInterface);
-        this.memoryManager = memoryManager;
         this.readCache = cachesManager.createNewCache(false, getName() + "_read", baseInterface.getObjectClass());
         this.writeCache = cachesManager.createNewCache(true, getName() + "_write", baseInterface.getObjectClass());
         this.writeLock = new DataLock(10000, false);
@@ -50,10 +50,26 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
 
     @Override
     public void writeInt(long key, T value) {
-        memoryManager.waitForSufficientMemory();
+        waitForSlowFlushes();
         writeLock.lockWrite(key);
-        nonSynchronizedWrite(key, value);
-        writeLock.unlockWrite(key);
+        try {
+            nonSynchronizedWrite(key, value);
+        } finally {
+            writeLock.unlockWrite(key);
+        }
+    }
+
+    /**
+     * When writing large amounts of data (especially when this is performed with multiple threads), the flushes of the
+     * write cache might not be able to keep up. If flushes start taking really long (5 times normal time between flushes)
+     * we momentarily pause writes to this cache.
+     */
+
+    private void waitForSlowFlushes() {
+        long now = System.currentTimeMillis();
+        while (now - timeOfLastFlush > FlushDataInterfacesThread.TIME_BETWEEN_FLUSHES * 5) {
+            Utils.threadSleep(10);
+        }
     }
 
     private void nonSynchronizedWrite(long key, T value) {
@@ -80,12 +96,16 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
 
     @Override
     public synchronized void doClose() {
-        flush();
-        readCache.clear();
-        readCache = null;
-        writeCache.clear();
-        writeCache = null;
-        baseInterface.close();
+        try {
+            flush();
+        } finally {
+            //even if the flush failed, we remove our data structures
+            readCache.clear();
+            readCache = null;
+            writeCache.clear();
+            writeCache = null;
+            baseInterface.close();
+        }
     }
 
     public void flush() {
@@ -103,6 +123,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
             if (!allValues.isEmpty()) {
                 baseInterface.write(allValues.iterator());
             }
+            timeOfLastFlush = System.currentTimeMillis();
         }
     }
 

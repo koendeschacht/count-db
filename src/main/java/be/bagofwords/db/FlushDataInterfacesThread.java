@@ -26,16 +26,23 @@ public class FlushDataInterfacesThread extends SafeThread {
     public void runInt() {
         while (!isTerminateRequested()) {
             long timeBeforeFlush = System.currentTimeMillis();
-            try {
-                List<DataInterface> currentInterfaces;
-                synchronized (dataInterfaceFactory.getAllInterfaces()) {
-                    currentInterfaces = new ArrayList<>(dataInterfaceFactory.getAllInterfaces());
-                }
-                for (DataInterface dataInterface : currentInterfaces) {
+            List<DataInterface> currentInterfaces;
+            synchronized (dataInterfaceFactory.getAllInterfaces()) {
+                currentInterfaces = new ArrayList<>(dataInterfaceFactory.getAllInterfaces());
+            }
+            for (DataInterface dataInterface : currentInterfaces) {
+                try {
                     dataInterface.flushIfNotClosed();
+                } catch (Throwable t) {
+                    UI.writeError("Received exception while flushing write buffer for data interface " + dataInterface.getName() + ". Will close this interface.", t);
+                    //we probably lost some data in the flush, to make sure that other threads know about the problems with
+                    //this data interface, we close it.
+                    try {
+                        dataInterface.close();
+                    } catch (Throwable t2) {
+                        UI.writeError("Failed to close " + dataInterface.getName(), t2);
+                    }
                 }
-            } catch (Throwable t) {
-                UI.writeError("Received exception while flushing write buffers!", t);
             }
             long timeToSleepBetweenFlushes = TIME_BETWEEN_FLUSHES;
             if (memoryManager.getMemoryStatus() == MemoryStatus.CRITICAL) {
