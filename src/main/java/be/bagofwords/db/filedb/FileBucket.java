@@ -1,5 +1,7 @@
 package be.bagofwords.db.filedb;
 
+import be.bagofwords.ui.UI;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -29,6 +31,15 @@ public class FileBucket implements Comparable<FileBucket> {
         int pos = Collections.binarySearch((List) files, key);
         if (pos < 0) {
             pos = -(pos + 2);
+        }
+        if (pos == -1) {
+            UI.write("ARRAY INDEX OUT OF BOUNDS!!!!");
+            UI.write("Was looking for key " + key);
+            UI.write("In bucket starting with key " + getFirstKey());
+            UI.write("In files ");
+            for (FileInfo file : files) {
+                UI.write("   " + file.getFirstKey());
+            }
         }
         return pos;
     }

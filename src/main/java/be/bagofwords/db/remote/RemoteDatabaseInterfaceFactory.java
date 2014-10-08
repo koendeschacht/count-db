@@ -56,11 +56,11 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
     }
 
     @Override
-    public synchronized void close() {
+    public synchronized void terminate() {
         if (changedValueListenerThread != null) {
-            changedValueListenerThread.terminateAndWait();
+            changedValueListenerThread.terminate();
         }
-        super.close();
+        super.terminate();
     }
 
     private class ChangedValueListenerThread extends SafeThread {

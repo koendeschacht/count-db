@@ -74,7 +74,7 @@ public class UniformDataTestsMain implements MainClass {
         for (long items = MIN_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items <= MAX_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items *= 2) {
             testBatchWritingAndReading(factory, type, 8, items);
         }
-        factory.close();
+        factory.terminate();
     }
 
     private void testBatchWritingAndReading(DataInterfaceFactory factory, DatabaseCachingType cachingType, int numberOfThreads, final long numberOfItems) throws FileNotFoundException, InterruptedException {

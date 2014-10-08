@@ -48,9 +48,9 @@ public class FileDataInterfaceFactory extends DataInterfaceFactory {
     }
 
     @Override
-    public void close() {
-        this.occastionalActionsThread.terminateAndWait();
-        super.close();
+    public void terminate() {
+        this.occastionalActionsThread.terminate();
+        super.terminate();
     }
 
     private class OccastionalActionsThread extends SafeThread {
@@ -63,7 +63,7 @@ public class FileDataInterfaceFactory extends DataInterfaceFactory {
         protected void runInt() throws Exception {
             while (!isTerminateRequested()) {
                 for (int i = 0; i < interfaces.size(); i++) {
-                    interfaces.get(i).writeCleanFilesListIfNecessary();
+                    interfaces.get(i).doOccasionalAction();
                 }
                 Utils.threadSleep(1000);
             }

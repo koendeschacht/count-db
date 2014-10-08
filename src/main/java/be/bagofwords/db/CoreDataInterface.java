@@ -9,8 +9,11 @@ import java.util.List;
 
 public abstract class CoreDataInterface<T> extends DataInterface<T> {
 
+    private boolean wasClosed;
+
     public CoreDataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
         super(name, objectClass, combinator);
+        this.wasClosed = false;
     }
 
     @Override
@@ -60,4 +63,19 @@ public abstract class CoreDataInterface<T> extends DataInterface<T> {
     protected DataInterface getImplementingDataInterface() {
         return null;
     }
+
+    @Override
+    public boolean wasClosed() {
+        return wasClosed;
+    }
+
+    @Override
+    public void close() {
+        if (!wasClosed()) {
+            doClose();
+            wasClosed = true;
+        }
+    }
+
+    protected abstract void doClose();
 }

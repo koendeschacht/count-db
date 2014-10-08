@@ -1,25 +1,24 @@
 package be.bagofwords.main.tests;
 
-import be.bagofwords.application.BaseApplicationContextFactory;
 import be.bagofwords.application.BaseRunnableApplicationContextFactory;
-import be.bagofwords.application.EnvironmentProperties;
 import be.bagofwords.application.MainClass;
+import be.bagofwords.application.status.RemoteRegisterUrlsServerProperties;
 import be.bagofwords.web.WebContainerConfiguration;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/22/14.
  */
-public class TestsApplicationContextFactory<T extends MainClass> extends BaseRunnableApplicationContextFactory {
+public class TestsApplicationContextFactory extends BaseRunnableApplicationContextFactory {
 
-    public TestsApplicationContextFactory(T mainClass) {
+    public TestsApplicationContextFactory(MainClass mainClass) {
         super(mainClass);
     }
 
     @Override
     public AnnotationConfigApplicationContext createApplicationContext() {
         scan("be.bagofwords");
-        singleton("environmentProperties", new EnvironmentProperties() {
+        singleton("environmentProperties", new RemoteRegisterUrlsServerProperties() {
             @Override
             public boolean saveThreadSamplesToFile() {
                 return true;
@@ -28,6 +27,21 @@ public class TestsApplicationContextFactory<T extends MainClass> extends BaseRun
             @Override
             public String getThreadSampleLocation() {
                 return "./perf";
+            }
+
+            @Override
+            public String getApplicationUrlRoot() {
+                return "localhost";
+            }
+
+            @Override
+            public String getDatabaseServerAddress() {
+                return "localhost";
+            }
+
+            @Override
+            public int getRegisterUrlServerPort() {
+                return 1210;
             }
         });
         bean(WebContainerConfiguration.class);

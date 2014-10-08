@@ -27,6 +27,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     private final int port;
     private final List<Connection> connections;
     private final ExecutorService executorService;
+    private boolean wasClosed;
 
     public RemoteDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, String host, int port) {
         super(name, objectClass, combinator);
@@ -34,6 +35,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
         this.port = port;
         this.connections = new ArrayList<>();
         executorService = Executors.newFixedThreadPool(10);
+        wasClosed = false;
     }
 
     private Connection selectConnection() throws IOException {
@@ -237,7 +239,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
             connection.flush();
             return createNewKeyValueIterator(connection);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to iterate over values from " + host + ":" + port, e);
         }
     }
 
@@ -377,19 +379,27 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     }
 
     @Override
-    protected void doClose() {
-        try {
-            flush();
-        } catch (Exception e) {
-            UI.writeError("Error while trying to flush data before close", e);
-        }
-        synchronized (connections) {
-            for (Connection connection : connections) {
-                IOUtils.closeQuietly(connection);
+    public void close() {
+        if (!wasClosed()) {
+            try {
+                flush();
+            } catch (Exception e) {
+                UI.writeError("Error while trying to flush data before close", e);
             }
-            connections.clear();
+            synchronized (connections) {
+                for (Connection connection : connections) {
+                    IOUtils.closeQuietly(connection);
+                }
+                connections.clear();
+            }
+            executorService.shutdownNow();
+            wasClosed = true;
         }
-        executorService.shutdownNow();
+    }
+
+    @Override
+    public boolean wasClosed() {
+        return wasClosed;
     }
 
     @Override

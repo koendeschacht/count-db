@@ -1,10 +1,10 @@
 package be.bagofwords.db.leveldb;
 
-import be.bagofwords.db.DataInterfaceFactory;
-import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.DataInterface;
+import be.bagofwords.db.DataInterfaceFactory;
+import be.bagofwords.db.combinator.Combinator;
 
 import java.io.File;
 
@@ -26,8 +26,4 @@ public class LevelDBDataInterfaceFactory extends DataInterfaceFactory {
         return new LevelDBDataInterface<>(directory, nameOfSubset, objectClass, combinator);
     }
 
-    @Override
-    public synchronized void close() {
-        super.close();
-    }
 }

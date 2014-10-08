@@ -20,6 +20,11 @@ public class UnitTestEnvironmentProperties implements FileCountDBEnvironmentProp
     }
 
     @Override
+    public String getApplicationUrlRoot() {
+        return "localhost";
+    }
+
+    @Override
     public String getDataDirectory() {
         return dataDirectory;
     }

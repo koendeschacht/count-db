@@ -25,7 +25,6 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
     protected long totalTimeRead;
     protected long totalTimeWrite;
     private final List<ChangedValuesListener> listeners;
-    private boolean wasClosed;
 
     protected DataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
         if (StringUtils.isEmpty(name)) {
@@ -161,8 +160,6 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
 
     public abstract void flush();
 
-    protected abstract void doClose();
-
     public abstract long apprSize();
 
     public Combinator<T> getCombinator() {
@@ -264,12 +261,9 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         }
     }
 
-    public final synchronized void close() {
-        if (!wasClosed) {
-            doClose();
-            wasClosed = true;
-        }
-    }
+    public abstract void close();
+
+    public abstract boolean wasClosed();
 
     public long getNumberOfWrites() {
         return numberOfWrites;
@@ -298,12 +292,8 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         }
     }
 
-    public boolean wasClosed() {
-        return wasClosed;
-    }
-
     public synchronized void flushIfNotClosed() {
-        if (!wasClosed) {
+        if (!wasClosed()) {
             flush();
         }
     }

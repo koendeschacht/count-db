@@ -96,7 +96,7 @@ public class BigramTestsMain implements MainClass {
         for (long items = MIN_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items <= MAX_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items *= 2) {
             testSeparateWritingReading(dataType, factory, type, largeTextFile, 8, items);
         }
-        factory.close();
+        factory.terminate();
     }
 
     private void testSeparateWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType cachingType, File largeTextFile, int numberOfThreads, long numberOfItems) throws FileNotFoundException, InterruptedException {
@@ -137,7 +137,7 @@ public class BigramTestsMain implements MainClass {
         for (long items = MIN_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items <= MAX_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items *= 2) {
             testMixedWritingReading(dataType, factory, type, largeTextFile, 8, items);
         }
-        factory.close();
+        factory.terminate();
     }
 
     private void testMixedWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType cachingType, File largeTextFile, int numberOfThreads, long numberOfItems) throws FileNotFoundException, InterruptedException {

@@ -81,11 +81,10 @@ public class BaseTestDataInterface {
 
     @After
     public void closeFactory() {
-        dataInterfaceFactory.close();
+        dataInterfaceFactory.terminate();
         if (remoteDataInterfaceServer != null) {
-            remoteDataInterfaceServer.close();
-            remoteDataInterfaceServer.waitForFinish();
-            dataInterfaceServerFactory.close();
+            remoteDataInterfaceServer.terminate();
+            dataInterfaceServerFactory.terminate();
         }
     }
 

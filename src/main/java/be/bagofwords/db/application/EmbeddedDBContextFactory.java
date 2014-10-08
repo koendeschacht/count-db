@@ -32,6 +32,11 @@ public class EmbeddedDBContextFactory extends BaseApplicationContextFactory {
             }
 
             @Override
+            public String getApplicationUrlRoot() {
+                return "localhost";
+            }
+
+            @Override
             public String getDataDirectory() {
                 return dataDirectory;
             }

@@ -2,10 +2,14 @@ package be.bagofwords.main;
 
 import be.bagofwords.application.ApplicationManager;
 import be.bagofwords.application.BaseRunnableApplicationContextFactory;
+import be.bagofwords.application.EnvironmentProperties;
 import be.bagofwords.application.MainClass;
+import be.bagofwords.application.status.ListUrlsController;
+import be.bagofwords.application.status.RegisterUrlsClient;
+import be.bagofwords.application.status.RemoteRegisterUrlsServerProperties;
 import be.bagofwords.db.application.environment.FileCountDBEnvironmentProperties;
 import be.bagofwords.db.application.environment.RemoteCountDBEnvironmentProperties;
-import be.bagofwords.db.filedb.FileDataInterfaceFactory;
+import be.bagofwords.db.remote.DatabaseServerDataInterfaceFactory;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer;
 import be.bagofwords.ui.UI;
 import be.bagofwords.virtualfile.local.LocalFileService;
@@ -22,15 +26,18 @@ public class DatabaseServerMain implements MainClass {
     private RemoteDataInterfaceServer remoteDataInterfaceServer;
     @Autowired
     private RemoteFileServer remoteFileServer;
+    @Autowired
+    private ListUrlsController listUrlsController;
 
     public static void main(String[] args) throws IOException {
-        if (args.length != 3) {
-            UI.writeError("Expected exactly 3 arguments, the directory to store the data files (e.g. /home/some_user/data/), the port of the data interface server (e.g. 1208) and the port of the virtual file server (e.g. 1209)");
+        if (args.length != 4) {
+            UI.writeError("Expected exactly 4 arguments, the directory to store the data files (e.g. /home/some_user/data/), the url of this server (e.g. www.myawesomeserver.com) the port of the data interface server (e.g. 1208) and the port of the virtual file server (e.g. 1209)");
         } else {
             String dataDirectory = args[0];
-            int dataInterfacePort = Integer.parseInt(args[1]);
-            int virtualFileServerPort = Integer.parseInt(args[2]);
-            ApplicationManager.runSafely(new DatabaseServerMainContextFactory(new DatabaseServerMain(), dataDirectory, dataInterfacePort, virtualFileServerPort));
+            String serverUrl = args[1];
+            int dataInterfacePort = Integer.parseInt(args[2]);
+            int virtualFileServerPort = Integer.parseInt(args[3]);
+            ApplicationManager.runSafely(new DatabaseServerMainContextFactory(new DatabaseServerMain(), dataDirectory, serverUrl, dataInterfacePort, virtualFileServerPort));
         }
     }
 
@@ -42,14 +49,16 @@ public class DatabaseServerMain implements MainClass {
         remoteFileServer.waitForFinish();
     }
 
-    public static class DatabaseServerMainEnvironmentProperties implements FileCountDBEnvironmentProperties, RemoteCountDBEnvironmentProperties {
+    public static class DatabaseServerMainEnvironmentProperties implements FileCountDBEnvironmentProperties, RemoteCountDBEnvironmentProperties, RemoteRegisterUrlsServerProperties {
 
-        private String dataDirectory;
+        private final String dataDirectory;
+        private final String serverUrl;
         private final int dataInterfacePort;
         private final int virtualFileServerPort;
 
-        public DatabaseServerMainEnvironmentProperties(String dataDirectory, int dataInterfacePort, int virtualFileServerPort) {
+        public DatabaseServerMainEnvironmentProperties(String dataDirectory, String serverUrl, int dataInterfacePort, int virtualFileServerPort) {
             this.dataDirectory = dataDirectory;
+            this.serverUrl = serverUrl;
             this.dataInterfacePort = dataInterfacePort;
             this.virtualFileServerPort = virtualFileServerPort;
         }
@@ -75,6 +84,11 @@ public class DatabaseServerMain implements MainClass {
         }
 
         @Override
+        public int getRegisterUrlServerPort() {
+            return 1210;
+        }
+
+        @Override
         public int getDataInterfaceServerPort() {
             return dataInterfacePort;
         }
@@ -83,28 +97,31 @@ public class DatabaseServerMain implements MainClass {
         public int getVirtualFileServerPort() {
             return virtualFileServerPort;
         }
+
+        @Override
+        public String getApplicationUrlRoot() {
+            return serverUrl;
+        }
     }
 
     public static class DatabaseServerMainContextFactory extends BaseRunnableApplicationContextFactory {
 
-        private String dataDirectory;
-        private final int dataInterfacePort;
-        private final int virtualFileServerPort;
+        private final EnvironmentProperties environmentProperties;
 
-        public DatabaseServerMainContextFactory(DatabaseServerMain databaseServerMainClass, String dataDirectory, int dataInterfacePort, int virtualFileServerPort) {
+        public DatabaseServerMainContextFactory(DatabaseServerMain databaseServerMainClass, String dataDirectory, String serverUrl, int dataInterfacePort, int virtualFileServerPort) {
             super(databaseServerMainClass);
-            this.dataDirectory = dataDirectory;
-            this.dataInterfacePort = dataInterfacePort;
-            this.virtualFileServerPort = virtualFileServerPort;
+            this.environmentProperties = new DatabaseServerMainEnvironmentProperties(dataDirectory, serverUrl, dataInterfacePort, virtualFileServerPort);
         }
 
         @Override
         public AnnotationConfigApplicationContext createApplicationContext() {
             scan("be.bagofwords");
             bean(WebContainerConfiguration.class);
-            singleton("environmentProperties", new DatabaseServerMainEnvironmentProperties(dataDirectory, dataInterfacePort, virtualFileServerPort));
-            bean(FileDataInterfaceFactory.class);
+            singleton("environmentProperties", environmentProperties);
+            bean(DatabaseServerDataInterfaceFactory.class);
             bean(LocalFileService.class);
+            //Register urls with central url list
+            bean(RegisterUrlsClient.class);
             return super.createApplicationContext();
         }
     }

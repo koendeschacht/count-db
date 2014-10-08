@@ -62,7 +62,7 @@ public abstract class DataInterfaceFactory implements StatusViewable, LateClosea
     }
 
     protected <T extends Object> DataInterface<T> cached(DataInterface<T> baseDataInterface) {
-        return new CachedDataInterface<>(cachesManager, memoryManager, baseDataInterface);
+        return new CachedDataInterface<>(cachesManager, baseDataInterface);
     }
 
     protected <T extends Object> DataInterface<T> bloom(DataInterface<T> dataInterface) {
@@ -72,7 +72,7 @@ public abstract class DataInterfaceFactory implements StatusViewable, LateClosea
 
     private void checkInitialisationCachedBloomFilters() {
         if (cachedBloomFilters == null) {
-            cachedBloomFilters = cached(createBaseDataInterface("system/bloomFilter", LongBloomFilterWithCheckSum.class, new OverWriteCombinator<LongBloomFilterWithCheckSum>()));
+            cachedBloomFilters = createBaseDataInterface("system/bloomFilter", LongBloomFilterWithCheckSum.class, new OverWriteCombinator<LongBloomFilterWithCheckSum>());
             synchronized (allInterfaces) {
                 allInterfaces.add(cachedBloomFilters);
             }
@@ -84,8 +84,8 @@ public abstract class DataInterfaceFactory implements StatusViewable, LateClosea
     }
 
     @Override
-    public synchronized void close() {
-        flushDataInterfacesThread.terminateAndWait();
+    public synchronized void terminate() {
+        flushDataInterfacesThread.terminate();
         closeAllInterfaces();
     }
 

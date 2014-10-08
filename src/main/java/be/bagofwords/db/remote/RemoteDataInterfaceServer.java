@@ -42,7 +42,9 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
         if (action == Action.CONNECT_TO_INTERFACE) {
             return new DataInterfaceSocketRequestHandler(connection);
         } else if (action == Action.LISTEN_TO_CHANGES) {
-            listenToChangesConnections.add(connection);
+            synchronized (listenToChangesConnections) {
+                listenToChangesConnections.add(connection);
+            }
             return null;
         } else {
             throw new RuntimeException("Unknown action " + action);
@@ -50,22 +52,24 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
     }
 
     private void valuesChangedForInterface(String interfaceName, long[] keys) {
-        for (int i = 0; i < listenToChangesConnections.size(); i++) {
-            WrappedSocketConnection connection = listenToChangesConnections.get(i);
-            try {
-                connection.writeString(interfaceName);
-                connection.writeInt(keys.length);
-                for (Long key : keys) {
-                    connection.writeLong(key);
+        synchronized (listenToChangesConnections) {
+            for (int i = 0; i < listenToChangesConnections.size(); i++) {
+                WrappedSocketConnection connection = listenToChangesConnections.get(i);
+                try {
+                    connection.writeString(interfaceName);
+                    connection.writeInt(keys.length);
+                    for (Long key : keys) {
+                        connection.writeLong(key);
+                    }
+                    connection.flush();
+                    long response = connection.readLong();
+                    if (response != LONG_OK) {
+                        throw new RuntimeException("Unexpected response " + response + " from " + connection.getInetAddress());
+                    }
+                } catch (IOException exp) {
+                    IOUtils.closeQuietly(connection);
+                    listenToChangesConnections.remove(i--);
                 }
-                connection.flush();
-                long response = connection.readLong();
-                if (response != LONG_OK) {
-                    throw new RuntimeException("Unexpected response " + response + " from " + connection.getInetAddress());
-                }
-            } catch (IOException exp) {
-                IOUtils.closeQuietly(connection);
-                listenToChangesConnections.remove(i--);
             }
         }
     }
@@ -91,7 +95,7 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
                 if (dataInterface != null) {
                     if (dataInterface.getCombinator().getClass() != combinator.getClass() || dataInterface.getObjectClass() != objectClass) {
                         writeError(" Data interface " + interfaceName + " was already initialized!");
-                    } else if(dataInterface.wasClosed()) {
+                    } else if (dataInterface.wasClosed()) {
                         writeError(" Data interface " + interfaceName + " was closed!");
                     }
                 } else {
@@ -133,7 +137,7 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
         private boolean handleRequest() throws Exception {
             Action action = readNextAction();
             if (action == Action.CLOSE_CONNECTION) {
-                close();
+                requestTermination();
             } else {
                 if (action == Action.EXACT_SIZE) {
                     handleExactSize();
@@ -343,6 +347,11 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
         private Class readClass() throws IOException, ClassNotFoundException {
             String className = connection.readString();
             return Class.forName(className);
+        }
+
+        @Override
+        public void doTerminate() {
+            IOUtils.closeQuietly(connection);
         }
     }
 

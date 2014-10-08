@@ -5,7 +5,7 @@ import be.bagofwords.util.KeyValue;
 
 import java.util.Iterator;
 
-public class LayeredDataInterface<T> extends DataInterface<T> {
+public abstract class LayeredDataInterface<T> extends DataInterface<T> {
 
     protected DataInterface<T> baseInterface;
 
@@ -38,11 +38,6 @@ public class LayeredDataInterface<T> extends DataInterface<T> {
     @Override
     public void flush() {
         baseInterface.flush();
-    }
-
-    @Override
-    protected void doClose() {
-        baseInterface.close();
     }
 
     @Override
@@ -85,4 +80,23 @@ public class LayeredDataInterface<T> extends DataInterface<T> {
     public void valuesChanged(long[] keys) {
         notifyListenersOfChangedValues(keys); //pass on to listeners
     }
+
+    @Override
+    public void close() {
+        if (!wasClosed()) {
+            try {
+                doClose();
+            } finally {
+                //even if the doClose() method failed, we still try to close the base interface
+                baseInterface.close();
+            }
+        }
+    }
+
+    @Override
+    public boolean wasClosed() {
+        return baseInterface.wasClosed();
+    }
+
+    protected abstract void doClose();
 }

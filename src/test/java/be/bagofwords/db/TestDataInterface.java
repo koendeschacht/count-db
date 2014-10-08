@@ -297,6 +297,18 @@ public class TestDataInterface extends BaseTestDataInterface {
         Assert.assertEquals(valuesWithAccents, dataInterface.read(keyWithAccents));
     }
 
+    @Test
+    public void testFlushIfNotClosed() {
+        DataInterface<Long> dataInterface = createCountDataInterface("testFlushIfNotClosed");
+        dataInterface.flushIfNotClosed();
+        DataInterface<Long> implementingDataInterface = dataInterface.getImplementingDataInterface();
+        if (implementingDataInterface == null) {
+            implementingDataInterface = dataInterface;
+        }
+        implementingDataInterface.close();
+        dataInterface.flushIfNotClosed();
+    }
+
     private void writeRandomObjects(DataInterface<TestObject> dataInterface, int numOfExamples, Random random) throws Exception {
         for (int i = 0; i < numOfExamples; i++) {
             dataInterface.write(Integer.toString(random.nextInt(10000)), createRandomObject(random));

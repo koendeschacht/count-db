@@ -1,10 +1,10 @@
 package be.bagofwords.db.experimental.lmdb;
 
-import be.bagofwords.db.DataInterfaceFactory;
-import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.DataInterface;
+import be.bagofwords.db.DataInterfaceFactory;
+import be.bagofwords.db.combinator.Combinator;
 import org.fusesource.lmdbjni.Env;
 
 import java.io.File;
@@ -40,8 +40,8 @@ public class LMDBDataInterfaceFactory extends DataInterfaceFactory {
     }
 
     @Override
-    public synchronized void close() {
-        super.close();
+    public synchronized void terminate() {
+        super.terminate();
         env.close();
     }
 }
