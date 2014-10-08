@@ -50,7 +50,7 @@ public class RemoteFile implements VirtualFile {
     @Override
     public OutputStream createOutputStream() {
         try {
-            WrappedSocketConnection connection = new WrappedSocketConnection(host, 1220);
+            WrappedSocketConnection connection = new WrappedSocketConnection(host, port);
             connection.writeByte((byte) RemoteFileServer.Action.OUTPUT_STREAM.ordinal());
             connection.writeString(relPath.getPath());
             connection.flush();
@@ -70,7 +70,7 @@ public class RemoteFile implements VirtualFile {
     public boolean exists() {
         WrappedSocketConnection connection = null;
         try {
-            connection = new WrappedSocketConnection(host, 1220);
+            connection = new WrappedSocketConnection(host, port);
             connection.writeByte((byte) RemoteFileServer.Action.EXISTS.ordinal());
             connection.writeString(relPath.getPath());
             connection.flush();
