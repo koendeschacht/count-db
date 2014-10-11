@@ -1,6 +1,5 @@
 package be.bagofwords.db;
 
-import be.bagofwords.application.file.OpenFilesManager;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.application.environment.RemoteCountDBEnvironmentProperties;
@@ -49,8 +48,6 @@ public class BaseTestDataInterface {
     @Autowired
     private MemoryManager memoryManager;
     @Autowired
-    private OpenFilesManager openFilesManager;
-    @Autowired
     private RemoteCountDBEnvironmentProperties properties;
 
     private DatabaseBackendType backendType;
@@ -73,7 +70,7 @@ public class BaseTestDataInterface {
 
         if (backendType == DatabaseBackendType.REMOTE) {
 
-            dataInterfaceServerFactory = new DatabaseServerDataInterfaceFactory(openFilesManager, cachesManager, memoryManager, "/tmp/dbServer_" + System.currentTimeMillis());
+            dataInterfaceServerFactory = new DatabaseServerDataInterfaceFactory(cachesManager, memoryManager, "/tmp/dbServer_" + System.currentTimeMillis());
             remoteDataInterfaceServer = new RemoteDataInterfaceServer(dataInterfaceServerFactory, properties);
             remoteDataInterfaceServer.start();
         }

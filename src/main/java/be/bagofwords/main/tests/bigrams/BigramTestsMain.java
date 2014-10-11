@@ -2,7 +2,6 @@ package be.bagofwords.main.tests.bigrams;
 
 import be.bagofwords.application.ApplicationManager;
 import be.bagofwords.application.MainClass;
-import be.bagofwords.application.file.OpenFilesManager;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.DataInterface;
@@ -32,8 +31,6 @@ public class BigramTestsMain implements MainClass {
 
     @Autowired
     private CachesManager cachesManager;
-    @Autowired
-    private OpenFilesManager openFilesManager;
     @Autowired
     private MemoryManager memoryManager;
 
@@ -67,7 +64,7 @@ public class BigramTestsMain implements MainClass {
     private void runAllTests(DataType dataType) throws InterruptedException, FileNotFoundException {
         UI.write("Testing batch writing / reading for data type " + dataType);
         testSeparateWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
-        testSeparateWritingReading(dataType, new FileDataInterfaceFactory(openFilesManager, cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
+        testSeparateWritingReading(dataType, new FileDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
         testSeparateWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
         testSeparateWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
         testSeparateWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBDPatched", true), DatabaseCachingType.DIRECT);
@@ -75,7 +72,7 @@ public class BigramTestsMain implements MainClass {
 
         UI.write("Testing mixed writing / reading for data type " + dataType);
         testMixedWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
-        testMixedWritingReading(dataType, new FileDataInterfaceFactory(openFilesManager, cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
+        testMixedWritingReading(dataType, new FileDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
         testMixedWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
         testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
         testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBDPatched", true), DatabaseCachingType.DIRECT);

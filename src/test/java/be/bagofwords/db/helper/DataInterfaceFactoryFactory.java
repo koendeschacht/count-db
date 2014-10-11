@@ -1,18 +1,17 @@
 package be.bagofwords.db.helper;
 
-import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.application.annotations.BowComponent;
-import be.bagofwords.application.file.OpenFilesManager;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
+import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseBackendType;
-import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.experimental.kyoto.KyotoDataInterfaceFactory;
-import be.bagofwords.db.leveldb.LevelDBDataInterfaceFactory;
 import be.bagofwords.db.experimental.lmdb.LMDBDataInterfaceFactory;
+import be.bagofwords.db.experimental.rocksdb.RocksDBDataInterfaceFactory;
+import be.bagofwords.db.filedb.FileDataInterfaceFactory;
+import be.bagofwords.db.leveldb.LevelDBDataInterfaceFactory;
 import be.bagofwords.db.memory.InMemoryDataInterfaceFactory;
 import be.bagofwords.db.remote.RemoteDatabaseInterfaceFactory;
-import be.bagofwords.db.experimental.rocksdb.RocksDBDataInterfaceFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -27,14 +26,12 @@ public class DataInterfaceFactoryFactory {
     @Autowired
     private MemoryManager memoryManager;
     @Autowired
-    private OpenFilesManager openFilesManager;
-    @Autowired
     private UnitTestEnvironmentProperties environmentProperties;
 
     public DataInterfaceFactory createFactory(DatabaseBackendType backendType) {
         switch (backendType) {
             case FILE:
-                return new FileDataInterfaceFactory(openFilesManager, cachesManager, memoryManager, environmentProperties.getDataDirectory() + "server/");
+                return new FileDataInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDataDirectory() + "server/");
             case REMOTE:
                 return new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDatabaseServerAddress(), environmentProperties.getDataInterfaceServerPort());
             case MEMORY:

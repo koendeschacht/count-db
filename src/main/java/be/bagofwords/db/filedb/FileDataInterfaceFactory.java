@@ -1,6 +1,5 @@
 package be.bagofwords.db.filedb;
 
-import be.bagofwords.application.file.OpenFilesManager;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.DataInterface;
@@ -17,20 +16,18 @@ import java.util.List;
 public class FileDataInterfaceFactory extends DataInterfaceFactory {
 
     private final MemoryManager memoryManager;
-    private final OpenFilesManager openFilesManager;
     private final String directory;
     private final List<FileDataInterface> interfaces;
     private final OccastionalActionsThread occastionalActionsThread;
 
     @Autowired
-    public FileDataInterfaceFactory(OpenFilesManager openFilesManager, CachesManager cachesManager, MemoryManager memoryManager, FileCountDBEnvironmentProperties fileCountDBEnvironmentProperties) {
-        this(openFilesManager, cachesManager, memoryManager, fileCountDBEnvironmentProperties.getDataDirectory() + "server/");
+    public FileDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, FileCountDBEnvironmentProperties fileCountDBEnvironmentProperties) {
+        this(cachesManager, memoryManager, fileCountDBEnvironmentProperties.getDataDirectory() + "server/");
     }
 
-    public FileDataInterfaceFactory(OpenFilesManager openFilesManager, CachesManager cachesManager, MemoryManager memoryManager, String directory) {
+    public FileDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, String directory) {
         super(cachesManager, memoryManager);
         this.memoryManager = memoryManager;
-        this.openFilesManager = openFilesManager;
         this.directory = directory;
         this.interfaces = new ArrayList<>();
         this.occastionalActionsThread = new OccastionalActionsThread();
@@ -49,7 +46,7 @@ public class FileDataInterfaceFactory extends DataInterfaceFactory {
 
     @Override
     public void terminate() {
-        this.occastionalActionsThread.terminate();
+        this.occastionalActionsThread.terminateAndWaitForFinish();
         super.terminate();
     }
 

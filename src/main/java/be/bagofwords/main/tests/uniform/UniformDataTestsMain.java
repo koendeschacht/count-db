@@ -2,7 +2,6 @@ package be.bagofwords.main.tests.uniform;
 
 import be.bagofwords.application.ApplicationManager;
 import be.bagofwords.application.MainClass;
-import be.bagofwords.application.file.OpenFilesManager;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.DataInterface;
@@ -35,8 +34,6 @@ public class UniformDataTestsMain implements MainClass {
     @Autowired
     private CachesManager cachesManager;
     @Autowired
-    private OpenFilesManager openFilesManager;
-    @Autowired
     private MemoryManager memoryManager;
 
 
@@ -49,7 +46,7 @@ public class UniformDataTestsMain implements MainClass {
             prepareTmpDir(tmpDbDir);
 
             testWritingReading(new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
-            testWritingReading(new FileDataInterfaceFactory(openFilesManager, cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
+            testWritingReading(new FileDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
             testWritingReading(new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
             testWritingReading(new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
             testWritingReading(new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", true), DatabaseCachingType.DIRECT);

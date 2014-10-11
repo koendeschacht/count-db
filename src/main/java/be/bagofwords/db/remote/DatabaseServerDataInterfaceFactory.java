@@ -1,6 +1,5 @@
 package be.bagofwords.db.remote;
 
-import be.bagofwords.application.file.OpenFilesManager;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.DataInterface;
@@ -11,12 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class DatabaseServerDataInterfaceFactory extends FileDataInterfaceFactory {
 
     @Autowired
-    public DatabaseServerDataInterfaceFactory(OpenFilesManager openFilesManager, CachesManager cachesManager, MemoryManager memoryManager, FileCountDBEnvironmentProperties fileCountDBEnvironmentProperties) {
-        super(openFilesManager, cachesManager, memoryManager, fileCountDBEnvironmentProperties);
+    public DatabaseServerDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, FileCountDBEnvironmentProperties fileCountDBEnvironmentProperties) {
+        super(cachesManager, memoryManager, fileCountDBEnvironmentProperties);
     }
 
-    public DatabaseServerDataInterfaceFactory(OpenFilesManager openFilesManager, CachesManager cachesManager, MemoryManager memoryManager, String directory) {
-        super(openFilesManager, cachesManager, memoryManager, directory);
+    public DatabaseServerDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, String directory) {
+        super(cachesManager, memoryManager, directory);
     }
 
     @Override

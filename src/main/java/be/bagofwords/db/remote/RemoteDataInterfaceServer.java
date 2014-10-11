@@ -137,7 +137,7 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
         private boolean handleRequest() throws Exception {
             Action action = readNextAction();
             if (action == Action.CLOSE_CONNECTION) {
-                requestTermination();
+                terminate();
             } else {
                 if (action == Action.EXACT_SIZE) {
                     handleExactSize();
