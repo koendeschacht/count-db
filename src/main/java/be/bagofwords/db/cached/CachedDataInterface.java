@@ -29,20 +29,26 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
 
     @Override
     public T readInt(long key) {
-        T value = readCache.get(key);
-        if (value == null) {
+        KeyValue<T> cachedValue = readCache.get(key);
+        if (cachedValue == null) {
             //never read, read from direct
-            value = baseInterface.read(key);
+            T value = baseInterface.read(key);
             readCache.put(key, value);
+            return value;
+        } else {
+            return cachedValue.getValue();
         }
-        return value;
     }
 
     @Override
     public boolean mightContain(long key) {
-        T cachedValue = readCache.get(key);
+        KeyValue<T> cachedValue = readCache.get(key);
         if (cachedValue != null) {
-            return true;
+            if (cachedValue.getValue() == null) {
+                return false;
+            } else {
+                return true;
+            }
         } else {
             return baseInterface.mightContain(key);
         }
@@ -73,18 +79,17 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     }
 
     private void nonSynchronizedWrite(long key, T value) {
-        T currentValue = writeCache.get(key);
-        boolean combine = value != null; //Current action is not a delete
-        combine = combine && currentValue != null; //Key is already in write cache
-        if (combine) {
-            T combinedValue = getCombinator().combine(currentValue, value);
-            if (combinedValue != null) {
+        KeyValue<T> cachedValue = writeCache.get(key);
+        if (cachedValue == null) {
+            //first write of this key
+            writeCache.put(key, value);
+        } else {
+            if (value != null && cachedValue.getValue() != null) {
+                T combinedValue = getCombinator().combine(cachedValue.getValue(), value);
                 writeCache.put(key, combinedValue);
             } else {
-                writeCache.put(key, null);
+                writeCache.put(key, value);
             }
-        } else {
-            writeCache.put(key, value);
         }
     }
 
