@@ -87,10 +87,11 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             while (file.isDirty()) {
                 bucket.unlockRead();
                 bucket.lockWrite();
-                file = bucket.getFile(key);
+                file = bucket.getFile(key); //necessary!
                 rewriteFile(bucket, file, false, MAX_FILE_SIZE_READ);
                 bucket.unlockWrite();
                 bucket.lockRead();
+                file = bucket.getFile(key); //necessary!
             }
             T result = readSingleValue(key, file);
             timeOfLastRead = System.currentTimeMillis();
