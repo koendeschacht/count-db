@@ -79,7 +79,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     @Override
-    public T readInt(long key) {
+    public T read(long key) {
         FileBucket bucket = getBucket(key);
         bucket.lockRead();
         FileInfo file = bucket.getFile(key);

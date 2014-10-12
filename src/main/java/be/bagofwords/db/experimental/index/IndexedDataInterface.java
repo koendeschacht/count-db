@@ -29,7 +29,7 @@ public class IndexedDataInterface<T> extends LayeredDataInterface<T> {
     }
 
     @Override
-    protected void writeInt(long key, T value) {
+    public void write(long key, T value) {
         baseInterface.write(key, value);
         for (long indexKey : indexer.convertToIndexes(value)) {
             indexedDataInterface.write(indexKey, new LongList(key));

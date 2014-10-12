@@ -28,7 +28,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     }
 
     @Override
-    public T readInt(long key) {
+    public T read(long key) {
         KeyValue<T> cachedValue = readCache.get(key);
         if (cachedValue == null) {
             //never read, read from direct
@@ -55,7 +55,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     }
 
     @Override
-    public void writeInt(long key, T value) {
+    public void write(long key, T value) {
         waitForSlowFlushes();
         writeLock.lockWrite(key);
         try {

@@ -99,7 +99,7 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
                         writeError(" Data interface " + interfaceName + " was closed!");
                     }
                 } else {
-                    dataInterface = dataInterfaceFactory.createDataInterface(DatabaseCachingType.CACHED_AND_BLOOM, interfaceName, objectClass, combinator);
+                    dataInterface = dataInterfaceFactory.createDataInterface(DatabaseCachingType.CACHED, interfaceName, objectClass, combinator);
                     dataInterface.registerListener(new ChangedValuesListener() {
                         @Override
                         public void valuesChanged(long[] keys) {

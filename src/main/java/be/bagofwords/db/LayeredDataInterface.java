@@ -16,12 +16,12 @@ public abstract class LayeredDataInterface<T> extends DataInterface<T> {
     }
 
     @Override
-    protected T readInt(long key) {
+    public T read(long key) {
         return baseInterface.read(key);
     }
 
     @Override
-    protected void writeInt(long key, T value) {
+    public void write(long key, T value) {
         baseInterface.write(key, value);
     }
 

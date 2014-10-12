@@ -17,8 +17,7 @@ public class FileDataInterfaceFactory extends DataInterfaceFactory {
 
     private final MemoryManager memoryManager;
     private final String directory;
-    private final List<FileDataInterface> interfaces;
-    private final OccastionalActionsThread occastionalActionsThread;
+    private final OccasionalActionsThread occasionalActionsThread;
 
     @Autowired
     public FileDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, FileCountDBEnvironmentProperties fileCountDBEnvironmentProperties) {
@@ -29,38 +28,47 @@ public class FileDataInterfaceFactory extends DataInterfaceFactory {
         super(cachesManager, memoryManager);
         this.memoryManager = memoryManager;
         this.directory = directory;
-        this.interfaces = new ArrayList<>();
-        this.occastionalActionsThread = new OccastionalActionsThread();
-        this.occastionalActionsThread.start();
+        this.occasionalActionsThread = new OccasionalActionsThread();
+        this.occasionalActionsThread.start();
     }
 
     @Override
     protected <T extends Object> DataInterface<T> createBaseDataInterface(final String nameOfSubset, final Class<T> objectClass, final Combinator<T> combinator) {
         FileDataInterface<T> result = new FileDataInterface<>(memoryManager, combinator, objectClass, directory, nameOfSubset);
         memoryManager.registerMemoryGobbler(result);
-        synchronized (interfaces) {
-            interfaces.add(result);
-        }
+        occasionalActionsThread.addInterface(result);
         return result;
     }
 
     @Override
     public void terminate() {
-        this.occastionalActionsThread.terminateAndWaitForFinish();
+        this.occasionalActionsThread.terminateAndWaitForFinish();
         super.terminate();
     }
 
-    private class OccastionalActionsThread extends SafeThread {
+    private class OccasionalActionsThread extends SafeThread {
 
-        public OccastionalActionsThread() {
+
+        private final List<FileDataInterface> interfaces;
+
+        public OccasionalActionsThread() {
             super("OccastionalActionsThread", true);
+            interfaces = new ArrayList<>();
+        }
+
+        public void addInterface(FileDataInterface newInterface) {
+            synchronized (interfaces) {
+                interfaces.add(newInterface);
+            }
         }
 
         @Override
         protected void runInt() throws Exception {
             while (!isTerminateRequested()) {
-                for (int i = 0; i < interfaces.size(); i++) {
-                    interfaces.get(i).doOccasionalAction();
+                synchronized (interfaces) {
+                    for (int i = 0; i < interfaces.size(); i++) {
+                        interfaces.get(i).doOccasionalAction();
+                    }
                 }
                 Utils.threadSleep(1000);
             }

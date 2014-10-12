@@ -4,8 +4,9 @@ import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.application.environment.RemoteCountDBEnvironmentProperties;
 import be.bagofwords.db.combinator.LongCombinator;
+import be.bagofwords.db.filedb.FileDataInterface;
+import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.helper.DataInterfaceFactoryFactory;
-import be.bagofwords.db.remote.DatabaseServerDataInterfaceFactory;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer;
 import org.junit.After;
 import org.junit.Before;
@@ -55,7 +56,7 @@ public class BaseTestDataInterface {
     protected DataInterfaceFactory dataInterfaceFactory;
 
     private RemoteDataInterfaceServer remoteDataInterfaceServer; //only created for remote backend
-    private DatabaseServerDataInterfaceFactory dataInterfaceServerFactory; //only created for remote backend
+    private FileDataInterfaceFactory dataInterfaceServerFactory; //only created for remote backend
 
     public BaseTestDataInterface(DatabaseCachingType type, DatabaseBackendType backendType) throws Exception {
         this.backendType = backendType;
@@ -70,7 +71,7 @@ public class BaseTestDataInterface {
 
         if (backendType == DatabaseBackendType.REMOTE) {
 
-            dataInterfaceServerFactory = new DatabaseServerDataInterfaceFactory(cachesManager, memoryManager, "/tmp/dbServer_" + System.currentTimeMillis());
+            dataInterfaceServerFactory = new FileDataInterfaceFactory(cachesManager, memoryManager, "/tmp/dbServer_" + System.currentTimeMillis());
             remoteDataInterfaceServer = new RemoteDataInterfaceServer(dataInterfaceServerFactory, properties);
             remoteDataInterfaceServer.start();
         }

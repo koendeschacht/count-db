@@ -79,7 +79,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     }
 
     @Override
-    protected T readInt(long key) {
+    public T read(long key) {
         Connection connection = null;
         try {
             connection = selectConnection();
@@ -157,7 +157,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     }
 
     @Override
-    protected void writeInt(long key, T value) {
+    public void write(long key, T value) {
         Connection connection = null;
         try {
             connection = selectConnection();

@@ -118,7 +118,7 @@ public class LMDBDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    protected T readInt(long key) {
+    public T read(long key) {
         byte[] resultAsBytes = db.get(SerializationUtils.longToBytes(key));
         return SerializationUtils.bytesToObject(resultAsBytes, getObjectClass());
     }

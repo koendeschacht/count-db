@@ -149,7 +149,7 @@ public class RocksDBDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    protected T readInt(long key) {
+    public T read(long key) {
         writeLock.lockRead(key);
         try {
             T result = SerializationUtils.bytesToObject(db.get(SerializationUtils.longToBytes(key)), getObjectClass());

@@ -9,7 +9,7 @@ import be.bagofwords.application.status.RegisterUrlsClient;
 import be.bagofwords.application.status.RemoteRegisterUrlsServerProperties;
 import be.bagofwords.db.application.environment.FileCountDBEnvironmentProperties;
 import be.bagofwords.db.application.environment.RemoteCountDBEnvironmentProperties;
-import be.bagofwords.db.remote.DatabaseServerDataInterfaceFactory;
+import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer;
 import be.bagofwords.ui.UI;
 import be.bagofwords.virtualfile.local.LocalFileService;
@@ -118,7 +118,7 @@ public class DatabaseServerMain implements MainClass {
             scan("be.bagofwords");
             bean(WebContainerConfiguration.class);
             singleton("environmentProperties", environmentProperties);
-            bean(DatabaseServerDataInterfaceFactory.class);
+            bean(FileDataInterfaceFactory.class);
             bean(LocalFileService.class);
             //Register urls with central url list
             bean(RegisterUrlsClient.class);

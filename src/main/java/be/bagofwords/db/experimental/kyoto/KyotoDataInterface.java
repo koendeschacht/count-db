@@ -39,13 +39,13 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    protected T readInt(long key) {
+    public T read(long key) {
         byte[] bytes = db.get(SerializationUtils.longToBytes(key));
         return SerializationUtils.bytesToObject(bytes, getObjectClass());
     }
 
     @Override
-    protected void writeInt0(long key, T value) {
+    public void writeInt0(long key, T value) {
         byte[] keyAsBytes = SerializationUtils.longToBytes(key);
         if (value == null) {
             db.remove(keyAsBytes);

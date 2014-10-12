@@ -22,7 +22,7 @@ public abstract class CoreDataInterface<T> extends DataInterface<T> {
     }
 
     @Override
-    protected void writeInt(long key, T value) {
+    public void write(long key, T value) {
         writeInt0(key, value);
         notifyListenersOfChangedValues(new long[]{key});
     }

@@ -20,10 +20,6 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
     private final Combinator<T> combinator;
     private final Class<T> objectClass;
     private final String name;
-    protected long numberOfWrites;
-    protected long numberOfReads;
-    protected long totalTimeRead;
-    protected long totalTimeWrite;
     private final List<ChangedValuesListener> listeners;
 
     protected DataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
@@ -36,13 +32,7 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         listeners = new ArrayList<>();
     }
 
-    public T read(long key) {
-        numberOfReads++;
-        long start = System.currentTimeMillis();
-        T value = readInt(key);
-        totalTimeRead += System.currentTimeMillis() - start;
-        return value;
-    }
+    public abstract T read(long key) ;
 
     public T read(String key) {
         return read(HashUtils.hashCode(key));
@@ -152,10 +142,6 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
 
     public abstract void optimizeForReading();
 
-    protected abstract T readInt(long key);
-
-    protected abstract void writeInt(long key, T value);
-
     public abstract void dropAllData();
 
     public abstract void flush();
@@ -181,12 +167,7 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         write(HashUtils.hashCode(key), value);
     }
 
-    public void write(long key, T value) {
-        numberOfWrites++;
-        long start = System.currentTimeMillis();
-        writeInt(key, value);
-        totalTimeWrite += System.currentTimeMillis() - start;
-    }
+    public abstract void write(long key, T value) ;
 
     public void increaseCount(String key, Long value) {
         write(key, (T) value);
@@ -264,22 +245,6 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
     public abstract void close();
 
     public abstract boolean wasClosed();
-
-    public long getNumberOfWrites() {
-        return numberOfWrites;
-    }
-
-    public long getNumberOfReads() {
-        return numberOfReads;
-    }
-
-    public long getTotalTimeRead() {
-        return totalTimeRead;
-    }
-
-    public long getTotalTimeWrite() {
-        return totalTimeWrite;
-    }
 
     @Override
     public synchronized void registerListener(ChangedValuesListener listener) {

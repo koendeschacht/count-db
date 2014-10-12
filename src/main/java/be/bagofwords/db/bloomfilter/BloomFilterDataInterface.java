@@ -34,7 +34,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
     }
 
     @Override
-    public T readInt(long key) {
+    public T read(long key) {
         timeOfLastRead = System.currentTimeMillis();
         LongBloomFilterWithCheckSum currentBloomFilter = bloomFilter;
         if (currentBloomFilter == null && modifyBloomFilterLock.tryLock()) {
@@ -88,9 +88,6 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
         modifyBloomFilterLock.lock();
         try {
             if (bloomFilter != null) {
-                if (keys.length > 0) {
-                    bloomFilterWasWrittenToDisk = false;
-                }
                 for (Long key : keys) {
                     bloomFilter.put(key);
                 }
@@ -103,6 +100,9 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
                         bloomFilter = null;
                     }
                 }
+            }
+            if (keys.length > 0) {
+                bloomFilterWasWrittenToDisk = false;
             }
         } finally {
             modifyBloomFilterLock.unlock();

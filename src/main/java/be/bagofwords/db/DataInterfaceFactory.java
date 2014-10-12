@@ -2,7 +2,6 @@ package be.bagofwords.db;
 
 import be.bagofwords.application.LateCloseableComponent;
 import be.bagofwords.application.memory.MemoryManager;
-import be.bagofwords.application.status.StatusViewable;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.bloomfilter.BloomFilterDataInterface;
 import be.bagofwords.db.bloomfilter.LongBloomFilterWithCheckSum;
@@ -12,14 +11,11 @@ import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.combinator.OverWriteCombinator;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
-public abstract class DataInterfaceFactory implements StatusViewable, LateCloseableComponent {
+public abstract class DataInterfaceFactory implements LateCloseableComponent {
 
     private final CachesManager cachesManager;
-    private MemoryManager memoryManager;
     private final List<DataInterface> allInterfaces;
 
     private DataInterface<LongBloomFilterWithCheckSum> cachedBloomFilters;
@@ -27,7 +23,6 @@ public abstract class DataInterfaceFactory implements StatusViewable, LateClosea
 
     public DataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager) {
         this.cachesManager = cachesManager;
-        this.memoryManager = memoryManager;
         this.allInterfaces = new ArrayList<>();
         this.flushDataInterfacesThread = new FlushDataInterfacesThread(this, memoryManager);
         this.flushDataInterfacesThread.start();
@@ -109,34 +104,6 @@ public abstract class DataInterfaceFactory implements StatusViewable, LateClosea
     @Override
     public String toString() {
         return getClass().getSimpleName();
-    }
-
-    @Override
-    public void printHtmlStatus(StringBuilder sb) {
-        sb.append("<h1>Data interfaces</h1>");
-        List<DataInterface> interfaces = new ArrayList<>(getAllInterfaces());
-        Collections.sort(interfaces, new Comparator<DataInterface>() {
-            @Override
-            public int compare(DataInterface o1, DataInterface o2) {
-                long max1 = Math.max(o1.getTotalTimeRead(), o1.getTotalTimeWrite());
-                long max2 = Math.max(o2.getTotalTimeRead(), o2.getTotalTimeWrite());
-                return -Double.compare(max1, max2); //Highest first
-            }
-        });
-        for (DataInterface dataInterface : interfaces) {
-            printDataInterfaceUsage("&nbsp;&nbsp;&nbsp;", sb, dataInterface);
-        }
-    }
-
-    protected void printDataInterfaceUsage(String indentation, StringBuilder sb, DataInterface dataInterface) {
-        if (dataInterface.getNumberOfReads() + dataInterface.getNumberOfWrites() > 0 || dataInterface.getTotalTimeRead() > 0 || dataInterface.getTotalTimeWrite() > 0) {
-            sb.append(indentation + dataInterface.getClass().getSimpleName() + " " + dataInterface.getName() + " reads=" + dataInterface.getNumberOfReads() + " readTime=" + dataInterface.getTotalTimeRead() + " writes=" + dataInterface.getNumberOfWrites() + " writeTime=" + dataInterface.getTotalTimeWrite());
-            sb.append("<br>");
-            DataInterface implementingDataInterface = dataInterface.getImplementingDataInterface();
-            if (implementingDataInterface != null) {
-                printDataInterfaceUsage(indentation + indentation, sb, implementingDataInterface);
-            }
-        }
     }
 
 }

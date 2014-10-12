@@ -49,7 +49,7 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    protected T readInt(long key) {
+    public T read(long key) {
         return SerializationUtils.bytesToObject(db.get(SerializationUtils.longToBytes(key)), getObjectClass());
     }
 
@@ -176,7 +176,6 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
 
     @Override
     public void writeInt0(Iterator<KeyValue<T>> entries) {
-        long start = System.currentTimeMillis();
         WriteBatch writeBatch = db.createWriteBatch();
         while (entries.hasNext()) {
             KeyValue<T> entry = entries.next();
@@ -205,6 +204,5 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        totalTimeWrite += System.currentTimeMillis() - start;
     }
 }

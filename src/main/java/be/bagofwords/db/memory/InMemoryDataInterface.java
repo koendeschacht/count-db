@@ -22,7 +22,7 @@ public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T
     }
 
     @Override
-    protected T readInt(long key) {
+    public T read(long key) {
         return values.get(key);
     }
 
