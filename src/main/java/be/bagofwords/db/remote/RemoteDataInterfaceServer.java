@@ -349,15 +349,11 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
             return Class.forName(className);
         }
 
-        @Override
-        public void doTerminate() {
-            IOUtils.closeQuietly(connection);
-        }
     }
 
 
     public static enum Action {
-        READVALUE, WRITEVALUE, READVALUES, READKEYS, WRITEVALUES, DROPALLDATA, CLOSE_CONNECTION, FLUSH, READALLVALUES, APPROXIMATE_SIZE, MIGHT_CONTAIN, EXACT_SIZE, LISTEN_TO_CHANGES, CONNECT_TO_INTERFACE, OPTMIZE_FOR_READING
+        READVALUE, WRITEVALUE, READVALUES, READKEYS, WRITEVALUES, DROPALLDATA, CLOSE_CONNECTION, FLUSH, READALLVALUES, APPROXIMATE_SIZE, MIGHT_CONTAIN, EXACT_SIZE, LISTEN_TO_CHANGES, CONNECT_TO_INTERFACE, OPTMIZE_FOR_READING, GET_STACK_TRACES
     }
 
     @Override

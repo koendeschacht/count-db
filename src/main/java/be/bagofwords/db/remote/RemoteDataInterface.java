@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,6 +28,8 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     private final int port;
     private final List<Connection> connections;
     private final ExecutorService executorService;
+    private final Random actionIdGenerator;
+
     private boolean wasClosed;
 
     public RemoteDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, String host, int port) {
@@ -34,8 +37,9 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
         this.host = host;
         this.port = port;
         this.connections = new ArrayList<>();
-        executorService = Executors.newFixedThreadPool(10);
-        wasClosed = false;
+        this.executorService = Executors.newFixedThreadPool(10);
+        this.wasClosed = false;
+        this.actionIdGenerator = new Random();
     }
 
     private Connection selectConnection() throws IOException {
@@ -408,9 +412,9 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     }
 
     private void doAction(Action action, Connection connection) throws IOException {
+        connection.setCurrentAction(actionIdGenerator.nextLong(), Thread.currentThread());
         connection.writeByte((byte) action.ordinal());
     }
-
 
     private void doSimpleAction(Action action) {
         Connection connection = null;
@@ -454,6 +458,8 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     private class Connection extends WrappedSocketConnection {
 
         private boolean isTaken;
+        private long currentAction;
+        private Thread currentThread;
 
         private Connection(String host, int port) throws IOException {
             this(host, port, false);
@@ -465,7 +471,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
         }
 
         private void initializeSubset() throws IOException {
-            writeByte((byte) Action.CONNECT_TO_INTERFACE.ordinal());
+            doAction(Action.CONNECT_TO_INTERFACE, this);
             writeString(getName());
             writeString(getObjectClass().getCanonicalName());
             writeString(getCombinator().getClass().getCanonicalName());
@@ -487,6 +493,21 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
         public void release() {
             isTaken = false;
+            currentAction = 0;
+            currentThread = null;
+        }
+
+        public long getCurrentAction() {
+            return currentAction;
+        }
+
+        public Thread getCurrentThread() {
+            return currentThread;
+        }
+
+        public void setCurrentAction(long actionId, Thread currentThread) {
+            this.currentAction = actionId;
+            this.currentThread = currentThread;
         }
 
         public void close() throws IOException {

@@ -25,6 +25,7 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
     private final int port;
     private Map<String, DataInterface> dataInterfaceMap;
     private ChangedValueListenerThread changedValueListenerThread;
+    private GetStackTracesThread getStackTracesThread;
 
     @Autowired
     public RemoteDatabaseInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, RemoteCountDBEnvironmentProperties environmentProperties) {
@@ -101,6 +102,35 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
 
         @Override
         protected void doTerminate() {
+            IOUtils.closeQuietly(connection);
+        }
+    }
+
+    private class GetStackTracesThread extends SafeThread {
+        private WrappedSocketConnection connection;
+
+        public GetStackTracesThread() throws IOException {
+            super("GetStackTracesThread", false);
+            connection = new WrappedSocketConnection(host, port);
+        }
+
+        @Override
+        protected void runInt() throws Exception {
+            connection.writeByte((byte) RemoteDataInterfaceServer.Action.GET_STACK_TRACES.ordinal());
+            connection.flush();
+            try {
+                while (!isTerminateRequested()) {
+                    String interfaceName = connection.readString();
+                    long actionId = connection.readLong();
+                    //TODO
+                    connection.writeLong(LONG_OK);
+                    connection.flush();
+                }
+            } catch (SocketException exp) {
+                if (!exp.getMessage().equals("Socket closed")) {
+                    UI.writeError("Error in ChangedValueListener", exp);
+                }
+            }
             IOUtils.closeQuietly(connection);
         }
     }
