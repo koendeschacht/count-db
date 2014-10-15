@@ -14,7 +14,7 @@ import be.bagofwords.db.remote.RemoteDataInterfaceServer;
 import be.bagofwords.ui.UI;
 import be.bagofwords.virtualfile.local.LocalFileService;
 import be.bagofwords.virtualfile.remote.RemoteFileServer;
-import be.bagofwords.web.WebContainerConfiguration;
+import be.bagofwords.web.WebContainer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
@@ -116,7 +116,7 @@ public class DatabaseServerMain implements MainClass {
         @Override
         public AnnotationConfigApplicationContext createApplicationContext() {
             scan("be.bagofwords");
-            bean(WebContainerConfiguration.class);
+            singleton("webContainer", new WebContainer(getApplicationName()));
             singleton("environmentProperties", environmentProperties);
             bean(FileDataInterfaceFactory.class);
             bean(LocalFileService.class);

@@ -140,6 +140,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
         baseInterface.flush();
         if (!bloomFilterWasWrittenToDisk) {
             bloomFilterDataInterface.write(getName(), bloomFilter);
+            bloomFilterDataInterface.flush();
             bloomFilterWasWrittenToDisk = true;
         }
     }

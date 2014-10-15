@@ -3,7 +3,7 @@ package be.bagofwords.main.tests;
 import be.bagofwords.application.BaseRunnableApplicationContextFactory;
 import be.bagofwords.application.MainClass;
 import be.bagofwords.application.status.RemoteRegisterUrlsServerProperties;
-import be.bagofwords.web.WebContainerConfiguration;
+import be.bagofwords.web.WebContainer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /**
@@ -44,7 +44,7 @@ public class TestsApplicationContextFactory extends BaseRunnableApplicationConte
                 return 1210;
             }
         });
-        bean(WebContainerConfiguration.class);
+        singleton("webContainer", new WebContainer(getApplicationName()));
         return super.createApplicationContext();
     }
 

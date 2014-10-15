@@ -16,7 +16,13 @@ public class LocalFile implements VirtualFile {
     @Override
     public VirtualFile getFile(String relativePath) {
         File newFile = new File(file, relativePath);
-        newFile.getParentFile().mkdirs(); //Ignore result, might exist already
+        File parentFile = newFile.getParentFile();
+        if (!parentFile.exists()) {
+            boolean success = parentFile.mkdirs();
+            if (!success) {
+                throw new RuntimeException("Failed to create directory " + parentFile.getAbsolutePath());
+            }
+        }
         return new LocalFile(newFile);
     }
 

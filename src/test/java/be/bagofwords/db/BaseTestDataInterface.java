@@ -4,7 +4,6 @@ import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.application.environment.RemoteCountDBEnvironmentProperties;
 import be.bagofwords.db.combinator.LongCombinator;
-import be.bagofwords.db.filedb.FileDataInterface;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.helper.DataInterfaceFactoryFactory;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer;

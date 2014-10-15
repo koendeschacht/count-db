@@ -1,12 +1,12 @@
 package be.bagofwords.virtualfile.remote;
 
-import be.bagofwords.db.application.environment.RemoteCountDBEnvironmentProperties;
-import be.bagofwords.virtualfile.VirtualFile;
-import be.bagofwords.virtualfile.VirtualFileService;
 import be.bagofwords.application.BaseServer;
 import be.bagofwords.application.annotations.BowComponent;
+import be.bagofwords.db.application.environment.RemoteCountDBEnvironmentProperties;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.WrappedSocketConnection;
+import be.bagofwords.virtualfile.VirtualFile;
+import be.bagofwords.virtualfile.VirtualFileService;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -86,7 +86,8 @@ public class RemoteFileServer extends BaseServer {
                     connection.flush();
                 }
             } catch (Exception exp) {
-                //try to send error message to client (only works if the client happens to be checking for LONG_ERROR
+                UI.writeError("Unexpected exception while trying to handle request in RemoteFileServer, will try to send error message to client.", exp);
+                //try to send error message to client (only works if the client happens to be checking for LONG_ERROR)
                 connection.writeLong(LONG_ERROR);
                 connection.writeString(exp.getMessage());
                 connection.flush();
