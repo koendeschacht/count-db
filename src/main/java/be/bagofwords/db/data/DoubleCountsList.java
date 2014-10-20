@@ -10,26 +10,26 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class CountsList extends ArrayList<Pair<Long, Long>> implements Compactable {
+public class DoubleCountsList extends ArrayList<Pair<Long, Double>> implements Compactable {
 
-    public CountsList() {
+    public DoubleCountsList() {
         super();
     }
 
-    public CountsList(CountsList list) {
+    public DoubleCountsList(DoubleCountsList list) {
         super(list);
     }
 
-    public CountsList(long key, int count) {
+    public DoubleCountsList(long key, int count) {
         this();
         addCount(key, count);
     }
 
-    public CountsList(int initialSize) {
+    public DoubleCountsList(int initialSize) {
         super(initialSize);
     }
 
-    public synchronized long getCount(long key) {
+    public synchronized double getCount(long key) {
         int ind = Collections.binarySearch((List) this, key);
         if (ind >= 0) {
             return get(ind).getSecond();
@@ -38,21 +38,21 @@ public class CountsList extends ArrayList<Pair<Long, Long>> implements Compactab
         }
     }
 
-    public synchronized void addCount(long key, long count) {
+    public synchronized void addCount(long key, double count) {
         add(new Pair<>(key, count));
     }
 
     @JsonIgnore
-    public synchronized long getTotal() {
-        long total = 0;
-        for (Pair<Long, Long> value : this) {
+    public synchronized double getTotal() {
+        double total = 0;
+        for (Pair<Long, Double> value : this) {
             total += value.getSecond();
         }
         return total;
     }
 
-    public synchronized CountsList clone() {
-        return new CountsList(this);
+    public synchronized DoubleCountsList clone() {
+        return new DoubleCountsList(this);
     }
 
     @Override
@@ -60,12 +60,12 @@ public class CountsList extends ArrayList<Pair<Long, Long>> implements Compactab
         if (!isCompacted()) {
             synchronized (this) {
                 if (!isCompacted()) {
-                    List<Pair<Long, Long>> oldCounts = new ArrayList<>(this);
+                    List<Pair<Long, Double>> oldCounts = new ArrayList<>(this);
                     clear();
                     Collections.sort(oldCounts);
                     for (int i = 0; i < oldCounts.size(); ) {
-                        Pair<Long, Long> curr = oldCounts.get(i);
-                        long combinedCount = curr.getSecond();
+                        Pair<Long, Double> curr = oldCounts.get(i);
+                        double combinedCount = curr.getSecond();
                         i++;
                         while (i < oldCounts.size() && oldCounts.get(i).getFirst().equals(curr.getFirst())) {
                             combinedCount += oldCounts.get(i++).getSecond();
@@ -88,7 +88,7 @@ public class CountsList extends ArrayList<Pair<Long, Long>> implements Compactab
 
     public synchronized int hashCode() {
         int result = HashUtils.startHash;
-        for (Pair<Long, Long> value : this) {
+        for (Pair<Long, Double> value : this) {
             result = result * HashUtils.addHash + value.getFirst().intValue();
             result = result * HashUtils.addHash + value.getSecond().hashCode();
         }
@@ -112,19 +112,19 @@ public class CountsList extends ArrayList<Pair<Long, Long>> implements Compactab
     }
 
     public List<Long> getSortedKeys() {
-        List<Pair<Long, Long>> sortedValues = new ArrayList<>(this);
-        Collections.sort(sortedValues, new Comparator<Pair<Long, Long>>() {
+        List<Pair<Long, Double>> sortedValues = new ArrayList<>(this);
+        Collections.sort(sortedValues, new Comparator<Pair<Long, Double>>() {
             @Override
-            public int compare(Pair<Long, Long> val1, Pair<Long, Long> val2) {
+            public int compare(Pair<Long, Double> val1, Pair<Long, Double> val2) {
                 if (val1.getSecond().equals(val2.getSecond())) {
                     return Long.compare(val1.getFirst(), val2.getFirst());
                 } else {
-                    return -Long.compare(val1.getSecond(), val2.getSecond()); //largest first
+                    return -Double.compare(val1.getSecond(), val2.getSecond()); //largest first
                 }
             }
         });
         List<Long> result = new ArrayList<>();
-        for (Pair<Long, Long> value : sortedValues) {
+        for (Pair<Long, Double> value : sortedValues) {
             result.add(value.getFirst());
         }
         return result;
