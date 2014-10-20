@@ -61,6 +61,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
         try {
             baseInterface.dropAllData();
             createNewBloomFilterNonSynchronized();
+            writeBloomFilterToDisk();
         } finally {
             modifyBloomFilterLock.unlock();
         }
@@ -125,6 +126,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
         }
         it.close();
         currentKeyForNewBloomFilterCreation = Long.MAX_VALUE;
+        bloomFilterWasWrittenToDisk = false;
         long taken = (System.currentTimeMillis() - start);
 //        UI.write("Created bloomfilter " + getName() + " in " + taken + " ms for " + numOfKeys + " keys, size is " + bloomFilter.getBits().size() / (8 * 1024) + " kbytes.");
     }
@@ -139,14 +141,18 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
     public void flush() {
         baseInterface.flush();
         if (!bloomFilterWasWrittenToDisk) {
-            bloomFilterDataInterface.write(getName(), bloomFilter);
-            bloomFilterDataInterface.flush();
-            bloomFilterWasWrittenToDisk = true;
+            writeBloomFilterToDisk();
         }
     }
 
+    private void writeBloomFilterToDisk() {
+        bloomFilterDataInterface.write(getName(), bloomFilter);
+        bloomFilterDataInterface.flush();
+        bloomFilterWasWrittenToDisk = true;
+    }
+
     @Override
-    protected void doClose() {
+    protected void doCloseImpl() {
         bloomFilter = null;
     }
 }

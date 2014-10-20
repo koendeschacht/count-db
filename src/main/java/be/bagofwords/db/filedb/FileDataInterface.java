@@ -28,14 +28,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     private static final String CLEAN_FILES_FILE = "CLEAN_FILES";
     private static final String LOCK_FILE = "LOCK";
 
-    /**
-     * Special values
-     */
-    private static final long LONG_NULL = Long.MAX_VALUE;
-    private static final int INT_NULL = Integer.MAX_VALUE;
-    private static final double DOUBLE_NULL = Double.MAX_VALUE;
-    private static final float FLOAT_NULL = Float.MAX_VALUE;
-
     private static final int LONG_SIZE = 8;
     private static final int INT_SIZE = 4;
 
@@ -285,17 +277,20 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     @Override
     public synchronized void freeMemory() {
-        if (!wasClosed()) {
-            for (FileBucket bucket : fileBuckets) {
-                if (bucket.tryLockRead()) {
-                    for (FileInfo fileInfo : bucket.getFiles()) {
-                        long bytesReleased = fileInfo.discardFileContents();
-                        updateSizeOfCachedFileContents(-bytesReleased);
+        doActionIfNotClosed(new ActionIfNotClosed() {
+            @Override
+            public void doAction() {
+                for (FileBucket bucket : fileBuckets) {
+                    if (bucket.tryLockRead()) {
+                        for (FileInfo fileInfo : bucket.getFiles()) {
+                            long bytesReleased = fileInfo.discardFileContents();
+                            updateSizeOfCachedFileContents(-bytesReleased);
+                        }
+                        bucket.unlockRead();
                     }
-                    bucket.unlockRead();
                 }
             }
-        }
+        });
     }
 
     @Override
@@ -935,11 +930,16 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         return result;
     }
 
+    @Override
     public void doOccasionalAction() {
-        if (!wasClosed()) {
-            writeCleanFilesListIfNecessary();
-            checkLock();
-        }
+        super.doOccasionalAction();
+        doActionIfNotClosed(new ActionIfNotClosed() {
+            @Override
+            public void doAction() {
+                writeCleanFilesListIfNecessary();
+                checkLock();
+            }
+        });
     }
 
     private void checkLock() {

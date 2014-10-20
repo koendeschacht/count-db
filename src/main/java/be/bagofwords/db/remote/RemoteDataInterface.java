@@ -27,7 +27,6 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     private final int port;
     private final List<Connection> connections;
     private final ExecutorService executorService;
-    private boolean wasClosed;
 
     public RemoteDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, String host, int port) {
         super(name, objectClass, combinator);
@@ -35,7 +34,6 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
         this.port = port;
         this.connections = new ArrayList<>();
         executorService = Executors.newFixedThreadPool(10);
-        wasClosed = false;
     }
 
     private Connection selectConnection() throws IOException {
@@ -182,7 +180,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     public void write(Iterator<KeyValue<T>> entries) {
         Connection connection = null;
         try {
-            connection = selectConnection();
+            connection = new Connection(host, port, true);
             doAction(Action.WRITEVALUES, connection);
             while (entries.hasNext()) {
                 KeyValue<T> entry = entries.next();
@@ -193,14 +191,12 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
             connection.flush();
             long response = connection.readLong();
             if (response != LONG_OK) {
-                dropConnection(connection);
                 throw new RuntimeException("Unexpected error while reading approximate size " + connection.readString());
-            } else {
-                releaseConnection(connection);
             }
         } catch (Exception e) {
-            dropConnection(connection);
             throw new RuntimeException(e);
+        } finally {
+            IOUtils.closeQuietly(connection);
         }
     }
 
@@ -379,27 +375,14 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     }
 
     @Override
-    public void close() {
-        if (!wasClosed()) {
-            try {
-                flush();
-            } catch (Exception e) {
-                UI.writeError("Error while trying to flush data before close", e);
+    protected void doClose() {
+        synchronized (connections) {
+            for (Connection connection : connections) {
+                IOUtils.closeQuietly(connection);
             }
-            synchronized (connections) {
-                for (Connection connection : connections) {
-                    IOUtils.closeQuietly(connection);
-                }
-                connections.clear();
-            }
-            executorService.shutdownNow();
-            wasClosed = true;
+            connections.clear();
         }
-    }
-
-    @Override
-    public boolean wasClosed() {
-        return wasClosed;
+        executorService.shutdownNow();
     }
 
     @Override

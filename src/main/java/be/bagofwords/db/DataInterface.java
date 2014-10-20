@@ -7,6 +7,7 @@ import be.bagofwords.iterator.DataIterable;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
 import be.bagofwords.text.SimpleString;
+import be.bagofwords.ui.UI;
 import be.bagofwords.util.HashUtils;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.StringUtils;
@@ -22,6 +23,9 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
     private final String name;
     private final List<ChangedValuesListener> listeners;
 
+    private final Object closeLock = new Object();
+    private boolean wasClosed;
+
     protected DataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
         if (StringUtils.isEmpty(name)) {
             throw new IllegalArgumentException("Name can not be null or empty");
@@ -29,10 +33,10 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         this.name = name;
         this.objectClass = objectClass;
         this.combinator = combinator;
-        listeners = new ArrayList<>();
+        this.listeners = new ArrayList<>();
     }
 
-    public abstract T read(long key) ;
+    public abstract T read(long key);
 
     public T read(String key) {
         return read(HashUtils.hashCode(key));
@@ -167,7 +171,7 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         write(HashUtils.hashCode(key), value);
     }
 
-    public abstract void write(long key, T value) ;
+    public abstract void write(long key, T value);
 
     public void increaseCount(String key, Long value) {
         write(key, (T) value);
@@ -242,9 +246,22 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         }
     }
 
-    public abstract void close();
+    public final void close() {
+        doActionIfNotClosed(new ActionIfNotClosed() {
+                                @Override
+                                public void doAction() {
+                                    doClose();
+                                    wasClosed = true;
+                                }
+                            }
+        );
+    }
 
-    public abstract boolean wasClosed();
+    protected abstract void doClose();
+
+    public final boolean wasClosed() {
+        return wasClosed;
+    }
 
     @Override
     public synchronized void registerListener(ChangedValuesListener listener) {
@@ -257,9 +274,36 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         }
     }
 
-    public synchronized void flushIfNotClosed() {
-        if (!wasClosed()) {
-            flush();
+    public void doOccasionalAction() {
+        doActionIfNotClosed(new ActionIfNotClosed() {
+            @Override
+            public void doAction() {
+                flush();
+            }
+        });
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        doActionIfNotClosed(new ActionIfNotClosed() {
+            @Override
+            public void doAction() {
+                UI.write("Closing data interface " + getName() + " because it is about to be garbage collected.");
+                close();
+            }
+        });
+        super.finalize();
+    }
+
+    public void doActionIfNotClosed(ActionIfNotClosed action) {
+        synchronized (closeLock) {
+            if (!wasClosed()) {
+                action.doAction();
+            }
         }
+    }
+
+    public interface ActionIfNotClosed {
+        public void doAction();
     }
 }

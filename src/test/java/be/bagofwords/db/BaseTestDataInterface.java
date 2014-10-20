@@ -69,7 +69,6 @@ public class BaseTestDataInterface {
         testContextManager.prepareTestInstance(this);
 
         if (backendType == DatabaseBackendType.REMOTE) {
-
             dataInterfaceServerFactory = new FileDataInterfaceFactory(cachesManager, memoryManager, "/tmp/dbServer_" + System.currentTimeMillis());
             remoteDataInterfaceServer = new RemoteDataInterfaceServer(dataInterfaceServerFactory, properties);
             remoteDataInterfaceServer.start();

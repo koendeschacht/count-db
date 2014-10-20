@@ -3,7 +3,7 @@ package be.bagofwords.db.cached;
 import be.bagofwords.cache.Cache;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.DataInterface;
-import be.bagofwords.db.FlushDataInterfacesThread;
+import be.bagofwords.db.DataInterfaceFactoryOccasionalActionsThread;
 import be.bagofwords.db.LayeredDataInterface;
 import be.bagofwords.util.DataLock;
 import be.bagofwords.util.KeyValue;
@@ -25,6 +25,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
         this.readCache = cachesManager.createNewCache(false, getName() + "_read", baseInterface.getObjectClass());
         this.writeCache = cachesManager.createNewCache(true, getName() + "_write", baseInterface.getObjectClass());
         this.writeLock = new DataLock(10000, false);
+        this.timeOfLastFlush = System.currentTimeMillis();
     }
 
     @Override
@@ -73,7 +74,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
 
     private void waitForSlowFlushes() {
         long now = System.currentTimeMillis();
-        while (now - timeOfLastFlush > FlushDataInterfacesThread.TIME_BETWEEN_FLUSHES * 5) {
+        while (now - timeOfLastFlush > DataInterfaceFactoryOccasionalActionsThread.TIME_BETWEEN_FLUSHES * 5) {
             Utils.threadSleep(10);
         }
     }
@@ -100,7 +101,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     }
 
     @Override
-    public synchronized void doClose() {
+    public synchronized void doCloseImpl() {
         try {
             flush();
         } finally {

@@ -77,7 +77,7 @@ public class IndexedDataInterface<T> extends LayeredDataInterface<T> {
     }
 
     @Override
-    protected void doClose() {
+    protected void doCloseImpl() {
         indexedDataInterface.close();
     }
 

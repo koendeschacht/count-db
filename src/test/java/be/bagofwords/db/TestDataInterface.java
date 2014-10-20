@@ -299,14 +299,20 @@ public class TestDataInterface extends BaseTestDataInterface {
 
     @Test
     public void testFlushIfNotClosed() {
-        DataInterface<Long> dataInterface = createCountDataInterface("testFlushIfNotClosed");
-        dataInterface.flushIfNotClosed();
-        DataInterface<Long> implementingDataInterface = dataInterface.getImplementingDataInterface();
-        if (implementingDataInterface == null) {
-            implementingDataInterface = dataInterface;
-        }
-        implementingDataInterface.close();
-        dataInterface.flushIfNotClosed();
+        final DataInterface<Long> dataInterface = createCountDataInterface("testFlushIfNotClosed");
+        dataInterface.doActionIfNotClosed(new DataInterface.ActionIfNotClosed() {
+            @Override
+            public void doAction() {
+                dataInterface.flush();
+            }
+        });
+        dataInterface.close();
+        dataInterface.doActionIfNotClosed(new DataInterface.ActionIfNotClosed() {
+            @Override
+            public void doAction() {
+                dataInterface.flush();
+            }
+        });
     }
 
     private void writeRandomObjects(DataInterface<TestObject> dataInterface, int numOfExamples, Random random) throws Exception {

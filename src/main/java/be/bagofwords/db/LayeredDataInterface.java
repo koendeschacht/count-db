@@ -81,22 +81,14 @@ public abstract class LayeredDataInterface<T> extends DataInterface<T> {
         notifyListenersOfChangedValues(keys); //pass on to listeners
     }
 
-    @Override
-    public void close() {
-        if (!wasClosed()) {
-            try {
-                doClose();
-            } finally {
-                //even if the doClose() method failed, we still try to close the base interface
-                baseInterface.close();
-            }
+    protected final void doClose() {
+        try {
+            doCloseImpl();
+        } finally {
+            //even if the doClose() method failed, we still try to close the base interface
+            baseInterface.close();
         }
     }
 
-    @Override
-    public boolean wasClosed() {
-        return baseInterface.wasClosed();
-    }
-
-    protected abstract void doClose();
+    protected abstract void doCloseImpl();
 }

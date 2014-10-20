@@ -28,6 +28,7 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
 
     private final DataInterfaceFactory dataInterfaceFactory;
     private final List<WrappedSocketConnection> listenToChangesConnections;
+    private final Object createNewInterfaceLock = new Object();
 
     @Autowired
     public RemoteDataInterfaceServer(DataInterfaceFactory dataInterfaceFactory, RemoteCountDBEnvironmentProperties properties) throws IOException {
@@ -90,8 +91,8 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
             Class objectClass = readClass();
             Class combinatorClass = readClass();
             Combinator combinator = (Combinator) ReflectionUtils.createObject(combinatorClass);
-            synchronized (dataInterfaceFactory.getAllInterfaces()) {
-                dataInterface = findInterface(dataInterfaceFactory.getAllInterfaces(), interfaceName);
+            synchronized (createNewInterfaceLock) {
+                dataInterface = findInterface(interfaceName);
                 if (dataInterface != null) {
                     if (dataInterface.getCombinator().getClass() != combinator.getClass() || dataInterface.getObjectClass() != objectClass) {
                         writeError(" Data interface " + interfaceName + " was already initialized!");
@@ -113,10 +114,15 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
             connection.flush();
         }
 
-        private DataInterface findInterface(List<DataInterface> allInterfaces, String interfaceName) {
-            for (DataInterface dataInterface : allInterfaces) {
-                if (dataInterface.getName().equals(interfaceName)) {
-                    return dataInterface;
+        private DataInterface findInterface(String interfaceName) {
+            synchronized (dataInterfaceFactory.getAllInterfaces()) {
+                for (DataInterfaceFactory.DataInterfaceReference reference : dataInterfaceFactory.getAllInterfaces()) {
+                    if (reference.getSubsetName().equals(interfaceName)) {
+                        DataInterface dataInterface = reference.get();
+                        if (dataInterface != null) {
+                            return dataInterface;
+                        }
+                    }
                 }
             }
             return null;
@@ -357,7 +363,9 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
 
 
     public static enum Action {
-        READVALUE, WRITEVALUE, READVALUES, READKEYS, WRITEVALUES, DROPALLDATA, CLOSE_CONNECTION, FLUSH, READALLVALUES, APPROXIMATE_SIZE, MIGHT_CONTAIN, EXACT_SIZE, LISTEN_TO_CHANGES, CONNECT_TO_INTERFACE, OPTMIZE_FOR_READING
+        READVALUE, WRITEVALUE, READVALUES, READKEYS, WRITEVALUES, DROPALLDATA, CLOSE_CONNECTION, FLUSH,
+        READALLVALUES, APPROXIMATE_SIZE, MIGHT_CONTAIN, EXACT_SIZE, LISTEN_TO_CHANGES, CONNECT_TO_INTERFACE, OPTMIZE_FOR_READING,
+        CLONE_DATA,
     }
 
     @Override
