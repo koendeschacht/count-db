@@ -9,23 +9,28 @@ import be.bagofwords.db.cached.CachedDataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.combinator.OverWriteCombinator;
+import be.bagofwords.ui.UI;
 
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class DataInterfaceFactory implements LateCloseableComponent {
 
     private final CachesManager cachesManager;
-    private final List<DataInterface> allInterfaces;
+    private final List<DataInterfaceReference> allInterfaces;
+    private final ReferenceQueue<DataInterface> allInterfacesReferenceQueue;
 
     private DataInterface<LongBloomFilterWithCheckSum> cachedBloomFilters;
-    private FlushDataInterfacesThread flushDataInterfacesThread;
+    private DataInterfaceFactoryOccasionalActionsThread occasionalActionsThread;
 
     public DataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager) {
         this.cachesManager = cachesManager;
         this.allInterfaces = new ArrayList<>();
-        this.flushDataInterfacesThread = new FlushDataInterfacesThread(this, memoryManager);
-        this.flushDataInterfacesThread.start();
+        this.allInterfacesReferenceQueue = new ReferenceQueue<>();
+        this.occasionalActionsThread = new DataInterfaceFactoryOccasionalActionsThread(this, memoryManager);
+        this.occasionalActionsThread.start();
     }
 
     protected abstract <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator);
@@ -43,6 +48,7 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
     }
 
     public <T extends Object> DataInterface<T> createDataInterface(final DatabaseCachingType type, final String subset, final Class<T> objectClass, final Combinator<T> combinator) {
+        UI.write("Creating data interface " + subset);
         DataInterface<T> result = createBaseDataInterface(subset, objectClass, combinator);
         if (type.useCache()) {
             result = cached(result);
@@ -51,7 +57,7 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
             result = bloom(result);
         }
         synchronized (allInterfaces) {
-            allInterfaces.add(result);
+            allInterfaces.add(new DataInterfaceReference(result, allInterfacesReferenceQueue));
         }
         return result;
     }
@@ -69,41 +75,77 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
         if (cachedBloomFilters == null) {
             cachedBloomFilters = createBaseDataInterface("system/bloomFilter", LongBloomFilterWithCheckSum.class, new OverWriteCombinator<LongBloomFilterWithCheckSum>());
             synchronized (allInterfaces) {
-                allInterfaces.add(cachedBloomFilters);
+                allInterfaces.add(new DataInterfaceReference(cachedBloomFilters, allInterfacesReferenceQueue));
             }
         }
     }
 
-    public List<DataInterface> getAllInterfaces() {
+    public List<DataInterfaceReference> getAllInterfaces() {
         return allInterfaces;
     }
 
     @Override
     public synchronized void terminate() {
-        flushDataInterfacesThread.terminateAndWaitForFinish();
+        occasionalActionsThread.terminateAndWaitForFinish();
         closeAllInterfaces();
     }
 
     public void closeAllInterfaces() {
         synchronized (allInterfaces) {
-            for (DataInterface dataI : allInterfaces) {
-                if (dataI != cachedBloomFilters) {
-                    dataI.flushIfNotClosed();
-                    dataI.close();
+            for (WeakReference<DataInterface> referenceToDI : allInterfaces) {
+                final DataInterface dataInterface = referenceToDI.get();
+                if (dataInterface != null && dataInterface != cachedBloomFilters) {
+                    dataInterface.doActionIfNotClosed(new DataInterface.ActionIfNotClosed() {
+                        @Override
+                        public void doAction() {
+                            dataInterface.flush();
+                            dataInterface.close();
+                        }
+                    });
                 }
             }
             if (cachedBloomFilters != null) {
-                cachedBloomFilters.flushIfNotClosed();
-                cachedBloomFilters.close();
+                cachedBloomFilters.doActionIfNotClosed(new DataInterface.ActionIfNotClosed() {
+                    @Override
+                    public void doAction() {
+                        cachedBloomFilters.flush();
+                        cachedBloomFilters.close();
+                    }
+                });
                 cachedBloomFilters = null;
             }
             allInterfaces.clear();
         }
+
     }
 
     @Override
     public String toString() {
         return getClass().getSimpleName();
+    }
+
+    public void cleanupClosedInterfaces() {
+        DataInterfaceReference reference = (DataInterfaceReference) allInterfacesReferenceQueue.poll();
+        while (reference != null) {
+            synchronized (allInterfaces) {
+                allInterfaces.remove(reference);
+            }
+            reference = (DataInterfaceReference) allInterfacesReferenceQueue.poll();
+        }
+    }
+
+    public static class DataInterfaceReference extends WeakReference<DataInterface> {
+
+        private String subsetName;
+
+        public DataInterfaceReference(DataInterface referent, ReferenceQueue<DataInterface> referenceQueue) {
+            super(referent, referenceQueue);
+            this.subsetName = referent.getName();
+        }
+
+        public String getSubsetName() {
+            return subsetName;
+        }
     }
 
 }
