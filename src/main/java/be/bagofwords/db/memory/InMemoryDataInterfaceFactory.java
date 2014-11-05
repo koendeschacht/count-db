@@ -13,7 +13,7 @@ public class InMemoryDataInterfaceFactory extends DataInterfaceFactory {
     }
 
     @Override
-    protected <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator) {
+    public <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator) {
         return new InMemoryDataInterface<>(nameOfSubset, objectClass, combinator);
     }
 }

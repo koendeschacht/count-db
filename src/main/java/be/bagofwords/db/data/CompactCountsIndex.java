@@ -1,10 +1,9 @@
 package be.bagofwords.db.data;
 
-import be.bagofwords.util.Compactable;
 import be.bagofwords.util.Pair;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
-public class CompactCountsIndex implements Compactable {
+public class CompactCountsIndex {
 
     public static final double FPP = 0.01;
 
@@ -129,10 +128,10 @@ public class CompactCountsIndex implements Compactable {
             }
             result = new CompactCountsIndex(this.getMaxCounts(), mergedCounts, this.getNumberOfCounts() + second.getNumberOfCounts());
         }
+        result.compact();
         return result;
     }
 
-    @Override
     public void compact() {
         if (isSparse()) {
             getCachedKeys().compact();

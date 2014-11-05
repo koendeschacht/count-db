@@ -175,18 +175,15 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public void writeInt0(Iterator<KeyValue<T>> entries) {
+    public synchronized void writeInt0(Iterator<KeyValue<T>> entries) {
         WriteBatch writeBatch = db.createWriteBatch();
         while (entries.hasNext()) {
             KeyValue<T> entry = entries.next();
             long key = entry.getKey();
             byte[] keyInBytes = SerializationUtils.longToBytes(key);
-            dataLock.lockWrite(key);
             byte[] currentValueInBytes = db.get(keyInBytes);
             T valueToWrite;
-            if (entry.getValue() == null) {
-                valueToWrite = null; //Delete value
-            } else if (currentValueInBytes == null) {
+            if (currentValueInBytes == null || entry.getValue() == null) {
                 valueToWrite = entry.getValue();
             } else {
                 valueToWrite = getCombinator().combine(SerializationUtils.bytesToObject(currentValueInBytes, getObjectClass()), entry.getValue());
@@ -196,7 +193,6 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
             } else {
                 writeBatch.put(keyInBytes, SerializationUtils.objectToBytes(valueToWrite, getObjectClass()));
             }
-            dataLock.unlockWrite(key);
         }
         db.write(writeBatch);
         try {

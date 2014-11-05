@@ -1,5 +1,6 @@
 package be.bagofwords.db.experimental.kyoto;
 
+import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
@@ -41,7 +42,7 @@ public class KyotoDataInterfaceFactory extends DataInterfaceFactory {
 
 
     @Override
-    protected <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator) {
+    public <T extends Object> CoreDataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator) {
         return new KyotoDataInterface<>(nameOfSubset, directory, objectClass, combinator);
     }
 }

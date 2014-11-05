@@ -4,6 +4,7 @@ import be.bagofwords.db.bloomfilter.LongBloomFilter;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class CompactIndex {
@@ -14,6 +15,7 @@ public class CompactIndex {
     private long numberOfFeatures;
     private List<Long> cachedKeys;
     private LongBloomFilter filterCounts;
+    private boolean wasCompacted = false;
 
     public CompactIndex(long numberOfFeatures, int numberOfCounts) {
         this.cachedKeys = new ArrayList<>();
@@ -40,6 +42,7 @@ public class CompactIndex {
         numberOfCounts++;
         if (isSparse()) {
             cachedKeys.add(key);
+            wasCompacted = false;
         } else {
             filterCounts.put(key);
         }
@@ -129,7 +132,26 @@ public class CompactIndex {
             }
             result = new CompactIndex(this.getNumberOfFeatures(), mergedCounts, this.getNumberOfCounts() + second.getNumberOfCounts());
         }
+        result.compact();
         return result;
     }
 
+    public synchronized void compact() {
+        if (!wasCompacted) {
+            if (isSparse()) {
+                Collections.sort(cachedKeys);
+                List<Long> newCachedKeys = new ArrayList<>();
+                long prev = Long.MAX_VALUE;
+                for (int i = 0; i < cachedKeys.size(); i++) {
+                    long curr = cachedKeys.get(i);
+                    if (curr != prev) {
+                        newCachedKeys.add(curr);
+                    }
+                    prev = curr;
+                }
+                cachedKeys = newCachedKeys;
+            }
+            wasCompacted = true;
+        }
+    }
 }

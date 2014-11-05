@@ -43,7 +43,7 @@ public class RocksDBDataInterfaceFactory extends DataInterfaceFactory {
     }
 
     @Override
-    protected <T> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator) {
+    public <T> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator) {
         return new RocksDBDataInterface<>(nameOfSubset, objectClass, combinator, directory, usePatch);
     }
 }

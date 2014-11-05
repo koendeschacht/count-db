@@ -28,20 +28,29 @@ public class FileBucket implements Comparable<FileBucket> {
     }
 
     public int getFileInd(long key) {
-        int pos = Collections.binarySearch((List) files, key);
-        if (pos < 0) {
-            pos = -(pos + 2);
-        }
-        if (pos == -1) {
-            UI.write("ARRAY INDEX OUT OF BOUNDS!!!!");
-            UI.write("Was looking for key " + key);
-            UI.write("In bucket starting with key " + getFirstKey());
-            UI.write("In files ");
-            for (FileInfo file : files) {
-                UI.write("   " + file.getFirstKey());
+        if (files.size() < 10) {
+            for (int i = 0; i < files.size(); i++) {
+                if (files.get(i).getFirstKey() <= key) {
+                    return i;
+                }
             }
+            throw new RuntimeException("Could not find file for key " + key + " in bucket " + this);
+        } else {
+            int pos = Collections.binarySearch((List) files, key);
+            if (pos < 0) {
+                pos = -(pos + 2);
+            }
+            if (pos == -1) {
+                UI.write("ARRAY INDEX OUT OF BOUNDS!!!!");
+                UI.write("Was looking for key " + key);
+                UI.write("In bucket starting with key " + getFirstKey());
+                UI.write("In files ");
+                for (FileInfo file : files) {
+                    UI.write("   " + file.getFirstKey());
+                }
+            }
+            return pos;
         }
-        return pos;
     }
 
     public long getFirstKey() {

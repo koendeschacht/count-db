@@ -11,7 +11,7 @@ import java.util.List;
 
 public class DataInterfaceFactoryOccasionalActionsThread extends SafeThread {
 
-    public static final long TIME_BETWEEN_FLUSHES = 1000; //Flush data interfaces every second
+    public static final long TIME_BETWEEN_FLUSHES = 2000;
 
     private final DataInterfaceFactory dataInterfaceFactory;
     private final MemoryManager memoryManager;
@@ -31,10 +31,15 @@ public class DataInterfaceFactoryOccasionalActionsThread extends SafeThread {
                 currentInterfaces = new ArrayList<>(dataInterfaceFactory.getAllInterfaces());
             }
             for (DataInterfaceFactory.DataInterfaceReference reference : currentInterfaces) {
-                DataInterface dataInterface = reference.get();
+                final DataInterface dataInterface = reference.get();
                 if (dataInterface != null) {
                     try {
-                        dataInterface.doOccasionalAction();
+                        dataInterface.doActionIfNotClosed(new DataInterface.ActionIfNotClosed() {
+                            @Override
+                            public void doAction() {
+                                dataInterface.doOccasionalAction();
+                            }
+                        });
                     } catch (Throwable t) {
                         UI.writeError("Received exception while performing occasional action for data interface " + dataInterface.getName() + ". Will close this interface.", t);
                         //we probably lost some data in the flush, to make sure that other threads know about the problems with

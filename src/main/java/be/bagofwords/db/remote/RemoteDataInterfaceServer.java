@@ -2,6 +2,8 @@ package be.bagofwords.db.remote;
 
 import be.bagofwords.application.BaseServer;
 import be.bagofwords.application.annotations.BowComponent;
+import be.bagofwords.application.memory.MemoryManager;
+import be.bagofwords.application.memory.MemoryStatus;
 import be.bagofwords.application.status.StatusViewable;
 import be.bagofwords.db.ChangedValuesListener;
 import be.bagofwords.db.DataInterface;
@@ -13,43 +15,63 @@ import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
 import be.bagofwords.ui.UI;
-import be.bagofwords.util.KeyValue;
-import be.bagofwords.util.NumUtils;
-import be.bagofwords.util.ReflectionUtils;
-import be.bagofwords.util.WrappedSocketConnection;
+import be.bagofwords.util.*;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.xerial.snappy.Snappy;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.Socket;
 import java.util.*;
 
 @BowComponent
 public class RemoteDataInterfaceServer extends BaseServer implements StatusViewable {
 
+    private static final long CLONE_BATCH_SIZE_PRIMITIVE = 100000;
+    private static final long CLONE_BATCH_SIZE_NON_PRIMITIVE = 100;
+
     private final DataInterfaceFactory dataInterfaceFactory;
     private final List<WrappedSocketConnection> listenToChangesConnections;
+    /*
+        This list keeps references to the data interfaces created by this server, so they are not garbage collected when the last socket handler for that interface is closed.
+        We want them to be kept in memory, so the cached values are also kept in memory, and they can be reused quickly when the next connection is created to that interface.
+
+        We probably don't want to use this list to look-up things, because the list kept by the DataInterfaceFactory should be considered the 'master' version.
+     */
+    private final List<DataInterface> createdInterfaces;
     private final Object createNewInterfaceLock = new Object();
+    private final MemoryManager memoryManager;
 
     @Autowired
-    public RemoteDataInterfaceServer(DataInterfaceFactory dataInterfaceFactory, RemoteCountDBEnvironmentProperties properties) throws IOException {
+    public RemoteDataInterfaceServer(MemoryManager memoryManager, DataInterfaceFactory dataInterfaceFactory, RemoteCountDBEnvironmentProperties properties) throws IOException {
         super("RemoteDataInterfaceServer", properties.getDataInterfaceServerPort());
         this.dataInterfaceFactory = dataInterfaceFactory;
         this.listenToChangesConnections = new ArrayList<>();
+        this.createdInterfaces = new ArrayList<>();
+        this.memoryManager = memoryManager;
     }
 
     @Override
-    protected SocketRequestHandler createSocketRequestHandler(WrappedSocketConnection connection) throws IOException {
-        Action action = Action.values()[connection.readByte()];
-        if (action == Action.CONNECT_TO_INTERFACE) {
-            return new DataInterfaceSocketRequestHandler(connection);
-        } else if (action == Action.LISTEN_TO_CHANGES) {
-            synchronized (listenToChangesConnections) {
-                listenToChangesConnections.add(connection);
+    protected SocketRequestHandler createSocketRequestHandler(Socket socket) throws IOException {
+        byte connectionTypeAsByte = (byte) socket.getInputStream().read();
+        if (connectionTypeAsByte < ConnectionType.values().length) {
+            ConnectionType connectionType = ConnectionType.values()[connectionTypeAsByte];
+            if (connectionType == ConnectionType.CONNECT_TO_INTERFACE) {
+                return new DataInterfaceSocketRequestHandler(new WrappedSocketConnection(socket));
+            } else if (connectionType == ConnectionType.BATCH_READ_FROM_INTERFACE) {
+                return new DataInterfaceSocketRequestHandler(new WrappedSocketConnection(socket, true, false));
+            } else if (connectionType == ConnectionType.BATCH_WRITE_TO_INTERFACE) {
+                return new DataInterfaceSocketRequestHandler(new WrappedSocketConnection(socket, false, true));
+            } else if (connectionType == ConnectionType.LISTEN_TO_CHANGES) {
+                synchronized (listenToChangesConnections) {
+                    listenToChangesConnections.add(new WrappedSocketConnection(socket, true, false));
+                }
+                return null;
             }
-            return null;
-        } else {
-            throw new RuntimeException("Unknown action " + action);
         }
+        throw new RuntimeException("Unknown connection type " + connectionTypeAsByte);
     }
 
     private void valuesChangedForInterface(String interfaceName, long[] keys) {
@@ -107,6 +129,7 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
                             valuesChangedForInterface(interfaceName, keys);
                         }
                     });
+                    createdInterfaces.add(dataInterface);
                 }
             }
             setName(getName() + "_" + dataInterface.getName());
@@ -169,12 +192,20 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
                     handleMightContain();
                 } else if (action == Action.OPTMIZE_FOR_READING) {
                     handleOptimizeForReading();
+                } else if (action == Action.READ_CACHED_VALUES) {
+                    handleReadCachedValues();
                 } else {
                     writeError("Unkown action " + action);
                     return false;
                 }
             }
             return true;
+        }
+
+        private void handleReadCachedValues() throws IOException {
+            CloseableIterator<KeyValue> iterator = dataInterface.cachedValueIterator();
+            writeValuesInBatches(iterator);
+            iterator.close();
         }
 
         private Action readNextAction() throws IOException {
@@ -211,16 +242,8 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
                     return connection.readLong();
                 }
             }, LONG_END));
-            try {
-                while (valueIt.hasNext()) {
-                    KeyValue value = valueIt.next();
-                    connection.writeLong(value.getKey());
-                    connection.writeValue(value.getValue(), dataInterface.getObjectClass());
-                }
-                connection.writeLong(LONG_END);
-            } finally {
-                IOUtils.closeQuietly(valueIt);
-            }
+            writeValuesInBatches(valueIt);
+            valueIt.close();
         }
 
         private void writeError(String errorMessage) throws IOException {
@@ -312,22 +335,63 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
         }
 
         private void handleReadAllValues() throws IOException {
-            CloseableIterator<KeyValue> it = dataInterface.iterator();
-            try {
-                while (it.hasNext()) {
-                    KeyValue next = it.next();
-                    Object valueToWrite = next.getValue();
-                    long key = next.getKey();
-                    if (key == LONG_END || key == LONG_ERROR || key == LONG_OK) {
-                        throw new RuntimeException("Unexpected key " + key + " in dataInterface " + dataInterface.getName());
-                    }
-                    connection.writeLong(key);
-                    connection.writeValue(valueToWrite, dataInterface.getObjectClass());
+            CloseableIterator<KeyValue> iterator = dataInterface.iterator();
+            writeValuesInBatches(iterator);
+            iterator.close();
+        }
+
+        private void writeValuesInBatches(CloseableIterator<KeyValue> iterator) throws IOException {
+            //will write data in batches so we can compress key's and values separately
+            List<Long> currentBatchKeys = new ArrayList<>();
+            List<Object> currentBatchValues = new ArrayList<>();
+            int widthOfObject = SerializationUtils.getWidth(dataInterface.getObjectClass());
+            long batchSize = widthOfObject != -1 && widthOfObject < 16 ? CLONE_BATCH_SIZE_PRIMITIVE : CLONE_BATCH_SIZE_NON_PRIMITIVE;
+            while (iterator.hasNext()) {
+                KeyValue curr = iterator.next();
+                currentBatchKeys.add(curr.getKey());
+                currentBatchValues.add(curr.getValue());
+                if (currentBatchKeys.size() >= batchSize || memoryManager.getMemoryStatus() != MemoryStatus.FREE) {
+                    writeCurrentBatch(currentBatchKeys, currentBatchValues);
+                    currentBatchKeys.clear();
+                    currentBatchValues.clear();
                 }
-                connection.writeLong(LONG_END);
-            } finally {
-                IOUtils.closeQuietly(it);
             }
+            if (!currentBatchKeys.isEmpty()) {
+                writeCurrentBatch(currentBatchKeys, currentBatchValues);
+            }
+            connection.writeLong(LONG_END);
+            connection.flush();
+        }
+
+        private void writeCurrentBatch(List<Long> currentBatchKeys, List<Object> currentBatchValues) throws IOException {
+            //write keys
+            connection.writeLong(currentBatchKeys.size());
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            DataOutputStream dos = new DataOutputStream(bos);
+            for (Long key : currentBatchKeys) {
+                dos.writeLong(key);
+            }
+            dos.close();
+            byte[] origKeys = bos.toByteArray();
+            byte[] compressedKeys = Snappy.compress(origKeys);
+//            UI.write("Compressed keys from " + origKeys.length + " to " + compressedKeys.length);
+            connection.writeByteArray(compressedKeys);
+
+            //write values
+            bos = new ByteArrayOutputStream();
+            dos = new DataOutputStream(bos);
+            for (Object value : currentBatchValues) {
+                byte[] objectAsBytes = SerializationUtils.objectToBytesCheckForNull(value, dataInterface.getObjectClass());
+                if (SerializationUtils.getWidth(dataInterface.getObjectClass()) == -1) {
+                    dos.writeInt(objectAsBytes.length);
+                }
+                dos.write(objectAsBytes);
+            }
+            dos.close();
+            byte[] origValues = bos.toByteArray();
+            byte[] compressedValues = Snappy.compress(origValues);
+//            UI.write("Compressed values from " + origValues.length + " to " + compressedValues.length);
+            connection.writeByteArray(compressedValues);
         }
 
         private void handleReadValue() throws IOException {
@@ -361,11 +425,13 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
         }
     }
 
-
     public static enum Action {
         READVALUE, WRITEVALUE, READVALUES, READKEYS, WRITEVALUES, DROPALLDATA, CLOSE_CONNECTION, FLUSH,
-        READALLVALUES, APPROXIMATE_SIZE, MIGHT_CONTAIN, EXACT_SIZE, LISTEN_TO_CHANGES, CONNECT_TO_INTERFACE, OPTMIZE_FOR_READING,
-        CLONE_DATA,
+        READALLVALUES, READ_CACHED_VALUES, APPROXIMATE_SIZE, MIGHT_CONTAIN, EXACT_SIZE, OPTMIZE_FOR_READING,
+    }
+
+    public static enum ConnectionType {
+        CONNECT_TO_INTERFACE, BATCH_WRITE_TO_INTERFACE, BATCH_READ_FROM_INTERFACE, LISTEN_TO_CHANGES
     }
 
     @Override

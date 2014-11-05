@@ -6,9 +6,13 @@ import be.bagofwords.db.remote.RemoteDataInterfaceServer.Action;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.KeyValue;
+import be.bagofwords.util.SerializationUtils;
 import be.bagofwords.util.WrappedSocketConnection;
 import org.apache.commons.io.IOUtils;
+import org.xerial.snappy.Snappy;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -161,7 +165,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
             connection = selectConnection();
             doAction(Action.WRITEVALUE, connection);
             connection.writeLong(key);
-            connection.writeValue(value, getObjectClass());
+            writeValue(value, connection);
             connection.flush();
             long response = connection.readLong();
             if (response != LONG_OK) {
@@ -180,12 +184,12 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     public void write(Iterator<KeyValue<T>> entries) {
         Connection connection = null;
         try {
-            connection = new Connection(host, port, true);
+            connection = new Connection(host, port, true, false, RemoteDataInterfaceServer.ConnectionType.BATCH_WRITE_TO_INTERFACE);
             doAction(Action.WRITEVALUES, connection);
             while (entries.hasNext()) {
                 KeyValue<T> entry = entries.next();
                 connection.writeLong(entry.getKey());
-                connection.writeValue(entry.getValue(), getObjectClass());
+                writeValue(entry.getValue(), connection);
             }
             connection.writeLong(LONG_END);
             connection.flush();
@@ -200,10 +204,14 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
         }
     }
 
+    private void writeValue(T value, Connection connection) throws IOException {
+        connection.writeValue(value, getObjectClass());
+    }
+
     @Override
     public CloseableIterator<KeyValue<T>> iterator(final Iterator<Long> keyIterator) {
         try {
-            final Connection connection = new Connection(host, port);
+            final Connection connection = new Connection(host, port, true, true, RemoteDataInterfaceServer.ConnectionType.BATCH_READ_FROM_INTERFACE);
             doAction(Action.READVALUES, connection);
             executorService.submit(new Runnable() {
                 @Override
@@ -230,7 +238,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     @Override
     public CloseableIterator<KeyValue<T>> iterator() {
         try {
-            final Connection connection = new Connection(host, port);
+            final Connection connection = new Connection(host, port, false, true, RemoteDataInterfaceServer.ConnectionType.BATCH_READ_FROM_INTERFACE);
             doAction(Action.READALLVALUES, connection);
             connection.flush();
             return createNewKeyValueIterator(connection);
@@ -242,23 +250,48 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     private CloseableIterator<KeyValue<T>> createNewKeyValueIterator(final Connection connection) {
         return new CloseableIterator<KeyValue<T>>() {
 
-            private KeyValue<T> next;
+            private Iterator<KeyValue<T>> nextValues;
 
             {
                 //Constructor
-                findNext();
+                findNextValues();
             }
 
-            private void findNext() {
+            private synchronized void findNextValues() {
                 if (!wasClosed()) {
                     try {
-                        long key = connection.readLong();
-                        if (key == LONG_END) {
-                            next = null;
+                        long numOfValues = connection.readLong();
+                        if (numOfValues == LONG_END) {
+                            nextValues = null;
                             close();
-                        } else if (key != LONG_ERROR) {
-                            T value = connection.readValue(getObjectClass());
-                            next = new KeyValue<>(key, value);
+                        } else if (numOfValues != LONG_ERROR) {
+                            byte[] compressedKeys = connection.readByteArray();
+                            byte[] compressedValues = connection.readByteArray();
+                            byte[] uncompressedKeys = Snappy.uncompress(compressedKeys);
+                            byte[] uncompressedValues = Snappy.uncompress(compressedValues);
+                            DataInputStream keyIS = new DataInputStream(new ByteArrayInputStream(uncompressedKeys));
+                            DataInputStream valueIS = new DataInputStream(new ByteArrayInputStream(uncompressedValues));
+                            List<KeyValue<T>> nextValuesList = new ArrayList<>();
+                            while (nextValuesList.size() < numOfValues) {
+                                long key = keyIS.readLong();
+                                int length = SerializationUtils.getWidth(getObjectClass());
+                                if (length == -1) {
+                                    length = valueIS.readInt();
+                                }
+                                byte[] objectAsBytes = new byte[length];
+                                if (length > 0) {
+                                    int bytesRead = valueIS.read(objectAsBytes);
+                                    if (bytesRead < length) {
+                                        throw new RuntimeException("Read " + bytesRead + " bytes, expected " + length);
+                                    }
+                                }
+                                T value = SerializationUtils.bytesToObjectCheckForNull(objectAsBytes, getObjectClass());
+                                nextValuesList.add(new KeyValue<>(key, value));
+                            }
+                            if (nextValuesList.isEmpty()) {
+                                throw new RuntimeException("Received zero values! numOfValues=" + numOfValues);
+                            }
+                            nextValues = nextValuesList.iterator();
                         } else {
                             throw new RuntimeException("Unexpected response " + connection.readString());
 
@@ -267,7 +300,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
                         throw new RuntimeException(e);
                     }
                 } else {
-                    next = null;
+                    nextValues = null;
                 }
             }
 
@@ -282,13 +315,15 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
             @Override
             public boolean hasNext() {
-                return next != null;
+                return nextValues != null;
             }
 
             @Override
             public KeyValue<T> next() {
-                KeyValue<T> result = next;
-                findNext();
+                KeyValue<T> result = nextValues.next();
+                if (!nextValues.hasNext()) {
+                    findNextValues();
+                }
                 return result;
             }
 
@@ -303,7 +338,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     @Override
     public CloseableIterator<Long> keyIterator() {
         try {
-            final Connection connection = new Connection(host, port);
+            final Connection connection = new Connection(host, port, false, true, RemoteDataInterfaceServer.ConnectionType.BATCH_READ_FROM_INTERFACE);
             doAction(Action.READKEYS, connection);
             connection.flush();
             return new CloseableIterator<Long>() {
@@ -360,6 +395,18 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     }
 
     @Override
+    public CloseableIterator<KeyValue<T>> cachedValueIterator() {
+        try {
+            final Connection connection = new Connection(host, port, false, true, RemoteDataInterfaceServer.ConnectionType.BATCH_READ_FROM_INTERFACE);
+            doAction(Action.READ_CACHED_VALUES, connection);
+            connection.flush();
+            return createNewKeyValueIterator(connection);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to iterate over values from " + host + ":" + port, e);
+        }
+    }
+
+    @Override
     public void dropAllData() {
         doSimpleAction(Action.DROPALLDATA);
     }
@@ -386,8 +433,8 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     }
 
     @Override
-    public DataInterface getImplementingDataInterface() {
-        return null;
+    public DataInterface getCoreDataInterface() {
+        return this;
     }
 
     private void doAction(Action action, Connection connection) throws IOException {
@@ -439,16 +486,16 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
         private boolean isTaken;
 
         private Connection(String host, int port) throws IOException {
-            this(host, port, false);
+            this(host, port, false, false, RemoteDataInterfaceServer.ConnectionType.CONNECT_TO_INTERFACE);
         }
 
-        public Connection(String host, int port, boolean useLargeOutputBuffer) throws IOException {
-            super(host, port, useLargeOutputBuffer);
-            initializeSubset();
+        public Connection(String host, int port, boolean useLargeOutputBuffer, boolean useLargeInputBuffer, RemoteDataInterfaceServer.ConnectionType connectionType) throws IOException {
+            super(host, port, useLargeOutputBuffer, useLargeInputBuffer);
+            initializeSubset(connectionType);
         }
 
-        private void initializeSubset() throws IOException {
-            writeByte((byte) Action.CONNECT_TO_INTERFACE.ordinal());
+        private void initializeSubset(RemoteDataInterfaceServer.ConnectionType connectionType) throws IOException {
+            writeByte((byte) connectionType.ordinal());
             writeString(getName());
             writeString(getObjectClass().getCanonicalName());
             writeString(getCombinator().getClass().getCanonicalName());

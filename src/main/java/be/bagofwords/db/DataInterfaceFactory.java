@@ -9,7 +9,6 @@ import be.bagofwords.db.cached.CachedDataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.combinator.OverWriteCombinator;
-import be.bagofwords.ui.UI;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
@@ -19,6 +18,7 @@ import java.util.List;
 public abstract class DataInterfaceFactory implements LateCloseableComponent {
 
     private final CachesManager cachesManager;
+    private final MemoryManager memoryManager;
     private final List<DataInterfaceReference> allInterfaces;
     private final ReferenceQueue<DataInterface> allInterfacesReferenceQueue;
 
@@ -27,13 +27,14 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
 
     public DataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager) {
         this.cachesManager = cachesManager;
+        this.memoryManager = memoryManager;
         this.allInterfaces = new ArrayList<>();
         this.allInterfacesReferenceQueue = new ReferenceQueue<>();
         this.occasionalActionsThread = new DataInterfaceFactoryOccasionalActionsThread(this, memoryManager);
         this.occasionalActionsThread.start();
     }
 
-    protected abstract <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator);
+    public abstract <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator);
 
     public DataInterface<Long> createCountDataInterface(String subset) {
         return createDataInterface(DatabaseCachingType.CACHED_AND_BLOOM, subset, Long.class, new LongCombinator());
@@ -48,7 +49,6 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
     }
 
     public <T extends Object> DataInterface<T> createDataInterface(final DatabaseCachingType type, final String subset, final Class<T> objectClass, final Combinator<T> combinator) {
-        UI.write("Creating data interface " + subset);
         DataInterface<T> result = createBaseDataInterface(subset, objectClass, combinator);
         if (type.useCache()) {
             result = cached(result);
@@ -63,7 +63,7 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
     }
 
     protected <T extends Object> DataInterface<T> cached(DataInterface<T> baseDataInterface) {
-        return new CachedDataInterface<>(cachesManager, baseDataInterface);
+        return new CachedDataInterface<>(memoryManager, cachesManager, baseDataInterface);
     }
 
     protected <T extends Object> DataInterface<T> bloom(DataInterface<T> dataInterface) {

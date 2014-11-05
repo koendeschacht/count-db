@@ -47,8 +47,8 @@ public abstract class LayeredDataInterface<T> extends DataInterface<T> {
     }
 
     @Override
-    public DataInterface getImplementingDataInterface() {
-        return baseInterface;
+    public DataInterface getCoreDataInterface() {
+        return baseInterface.getCoreDataInterface();
     }
 
     @Override
@@ -83,11 +83,23 @@ public abstract class LayeredDataInterface<T> extends DataInterface<T> {
 
     protected final void doClose() {
         try {
+            baseInterface.deregisterListener(this);
             doCloseImpl();
         } finally {
-            //even if the doClose() method failed, we still try to close the base interface
+            //even if the doCloseImpl() method failed, we still try to close the base interface
             baseInterface.close();
         }
+    }
+
+    @Override
+    public CloseableIterator<KeyValue<T>> cachedValueIterator() {
+        return baseInterface.cachedValueIterator();
+    }
+
+    @Override
+    public void doOccasionalAction() {
+        super.doOccasionalAction();
+        baseInterface.doOccasionalAction();
     }
 
     protected abstract void doCloseImpl();

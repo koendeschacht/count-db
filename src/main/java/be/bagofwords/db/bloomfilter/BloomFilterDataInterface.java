@@ -112,7 +112,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
 
     private void createNewBloomFilterNonSynchronized() {
         currentKeyForNewBloomFilterCreation = Long.MIN_VALUE;
-        long numOfValuesForBloomFilter = Math.max(1000000, baseInterface.apprSize());
+        long numOfValuesForBloomFilter = baseInterface.apprSize();
         bloomFilter = new LongBloomFilterWithCheckSum(numOfValuesForBloomFilter, INITIAL_FPP);
         bloomFilter.setDataCheckSum(baseInterface.dataCheckSum());
         long start = System.currentTimeMillis();
@@ -145,6 +145,14 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
         }
     }
 
+    @Override
+    public void doOccasionalAction() {
+        if (!bloomFilterWasWrittenToDisk) {
+            writeBloomFilterToDisk();
+        }
+        super.doOccasionalAction();
+    }
+
     private void writeBloomFilterToDisk() {
         bloomFilterDataInterface.write(getName(), bloomFilter);
         bloomFilterDataInterface.flush();
@@ -153,6 +161,9 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
 
     @Override
     protected void doCloseImpl() {
+        if (!bloomFilterWasWrittenToDisk) {
+            writeBloomFilterToDisk();
+        }
         bloomFilter = null;
     }
 }

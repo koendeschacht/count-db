@@ -57,8 +57,8 @@ public abstract class CoreDataInterface<T> extends DataInterface<T> {
     protected abstract void writeInt0(long key, T value);
 
     @Override
-    protected DataInterface getImplementingDataInterface() {
-        return null;
+    public DataInterface getCoreDataInterface() {
+        return this;
     }
 
     protected abstract void doClose();

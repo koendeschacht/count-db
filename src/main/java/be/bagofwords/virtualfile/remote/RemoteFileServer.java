@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.Socket;
 
 @BowComponent
 public class RemoteFileServer extends BaseServer {
@@ -26,8 +27,8 @@ public class RemoteFileServer extends BaseServer {
     }
 
     @Override
-    protected BaseServer.SocketRequestHandler createSocketRequestHandler(WrappedSocketConnection connection) throws IOException {
-        return new SocketRequestHandler(connection);
+    protected BaseServer.SocketRequestHandler createSocketRequestHandler(Socket socket) throws IOException {
+        return new SocketRequestHandler(new WrappedSocketConnection(socket));
     }
 
 

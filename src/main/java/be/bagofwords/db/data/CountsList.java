@@ -1,8 +1,9 @@
 package be.bagofwords.db.data;
 
-import be.bagofwords.util.Compactable;
+import be.bagofwords.util.ByteArraySerializable;
 import be.bagofwords.util.HashUtils;
 import be.bagofwords.util.Pair;
+import be.bagofwords.util.SerializationUtils;
 import org.codehaus.jackson.annotate.JsonIgnore;
 
 import java.util.ArrayList;
@@ -10,7 +11,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class CountsList extends ArrayList<Pair<Long, Long>> implements Compactable {
+public class CountsList extends ArrayList<Pair<Long, Long>> implements ByteArraySerializable {
 
     public CountsList() {
         super();
@@ -27,6 +28,18 @@ public class CountsList extends ArrayList<Pair<Long, Long>> implements Compactab
 
     public CountsList(int initialSize) {
         super(initialSize);
+    }
+
+    public CountsList(byte[] serialized) {
+        int longWidth = SerializationUtils.getWidth(Long.class);
+        int size = serialized.length / (longWidth * 2);
+        int offset = 0;
+        for (int i = 0; i < size; i++) {
+            long key = SerializationUtils.bytesToLong(serialized, offset);
+            long value = SerializationUtils.bytesToLong(serialized, serialized.length / 2 + offset);
+            offset += longWidth;
+            add(new Pair<>(key, value));
+        }
     }
 
     public synchronized long getCount(long key) {
@@ -55,7 +68,6 @@ public class CountsList extends ArrayList<Pair<Long, Long>> implements Compactab
         return new CountsList(this);
     }
 
-    @Override
     public void compact() {
         if (!isCompacted()) {
             synchronized (this) {
@@ -126,6 +138,26 @@ public class CountsList extends ArrayList<Pair<Long, Long>> implements Compactab
         List<Long> result = new ArrayList<>();
         for (Pair<Long, Long> value : sortedValues) {
             result.add(value.getFirst());
+        }
+        return result;
+    }
+
+    @Override
+    public byte[] toByteArray() {
+        int longWidth = SerializationUtils.getWidth(Long.class);
+        int size = size() * longWidth * 2;
+        byte[] result = new byte[size];
+        int offset = 0;
+        for (Pair<Long, Long> value : this) {
+            SerializationUtils.longToBytes(value.getFirst(), result, offset);
+            offset += longWidth;
+        }
+        for (Pair<Long, Long> value : this) {
+            SerializationUtils.longToBytes(value.getSecond(), result, offset);
+            offset += longWidth;
+        }
+        if (offset != result.length) {
+            throw new RuntimeException("Something went wrong!");
         }
         return result;
     }

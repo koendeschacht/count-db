@@ -144,6 +144,25 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         });
     }
 
+    public CloseableIterator<KeyValue<T>> cachedValueIterator() {
+        return new CloseableIterator<KeyValue<T>>() {
+            @Override
+            protected void closeInt() {
+                //ok
+            }
+
+            @Override
+            public boolean hasNext() {
+                return false;
+            }
+
+            @Override
+            public KeyValue<T> next() {
+                return null;
+            }
+        };
+    }
+
     public abstract void optimizeForReading();
 
     public abstract void dropAllData();
@@ -156,7 +175,7 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         return combinator;
     }
 
-    protected abstract DataInterface getImplementingDataInterface();
+    public abstract DataInterface getCoreDataInterface();
 
     public Class<T> getObjectClass() {
         return objectClass;
@@ -200,7 +219,6 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
     public void remove(long key) {
         write(key, null);
     }
-
 
     public long dataCheckSum() {
         CloseableIterator<KeyValue<T>> valueIterator = iterator();
@@ -268,6 +286,11 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         listeners.add(listener);
     }
 
+    @Override
+    public synchronized void deregisterListener(ChangedValuesListener listener) {
+        listeners.remove(listener);
+    }
+
     public void notifyListenersOfChangedValues(long[] keys) {
         for (ChangedValuesListener listener : listeners) {
             listener.valuesChanged(keys);
@@ -275,12 +298,7 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
     }
 
     public void doOccasionalAction() {
-        doActionIfNotClosed(new ActionIfNotClosed() {
-            @Override
-            public void doAction() {
-                flush();
-            }
-        });
+        //do nothing
     }
 
     @Override

@@ -28,12 +28,12 @@ public class BaseTestDataInterface {
 
         List<DatabaseBackendType> backendTypes = new ArrayList<>();
         backendTypes.add(DatabaseBackendType.LEVELDB);
-        backendTypes.add(DatabaseBackendType.MEMORY);
+//        backendTypes.add(DatabaseBackendType.MEMORY);
         backendTypes.add(DatabaseBackendType.REMOTE);
         backendTypes.add(DatabaseBackendType.FILE);
 //        backendTypes.add(DatabaseBackendType.LMDB); --> too slow
-        backendTypes.add(DatabaseBackendType.KYOTO);
-        backendTypes.add(DatabaseBackendType.ROCKSDB);
+//        backendTypes.add(DatabaseBackendType.KYOTO);
+//        backendTypes.add(DatabaseBackendType.ROCKSDB);
 
         for (DatabaseBackendType backendType : backendTypes) {
             result.add(new Object[]{DatabaseCachingType.CACHED_AND_BLOOM, backendType});
@@ -70,7 +70,7 @@ public class BaseTestDataInterface {
 
         if (backendType == DatabaseBackendType.REMOTE) {
             dataInterfaceServerFactory = new FileDataInterfaceFactory(cachesManager, memoryManager, "/tmp/dbServer_" + System.currentTimeMillis());
-            remoteDataInterfaceServer = new RemoteDataInterfaceServer(dataInterfaceServerFactory, properties);
+            remoteDataInterfaceServer = new RemoteDataInterfaceServer(memoryManager, dataInterfaceServerFactory, properties);
             remoteDataInterfaceServer.start();
         }
     }

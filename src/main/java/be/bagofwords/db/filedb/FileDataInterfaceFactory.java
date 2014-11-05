@@ -25,7 +25,7 @@ public class FileDataInterfaceFactory extends DataInterfaceFactory {
     }
 
     @Override
-    protected <T extends Object> DataInterface<T> createBaseDataInterface(final String nameOfSubset, final Class<T> objectClass, final Combinator<T> combinator) {
+    public <T extends Object> DataInterface<T> createBaseDataInterface(final String nameOfSubset, final Class<T> objectClass, final Combinator<T> combinator) {
         FileDataInterface<T> result = new FileDataInterface<>(memoryManager, combinator, objectClass, directory, nameOfSubset);
         memoryManager.registerMemoryGobbler(result);
         return result;

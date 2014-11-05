@@ -48,7 +48,7 @@ class BigramTestsThread extends SafeThread {
             }
             long numOfWordsInText = 0;
             char[] actualTextBuffer = charsRead < textBuffer.length ? Arrays.copyOf(textBuffer, charsRead) : textBuffer;
-            WordIterator wordIterator = new WordIterator(actualTextBuffer, Collections.<String>emptySet());
+            WordIterator wordIterator = new WordIterator(new String(actualTextBuffer), Collections.<String>emptySet());
             String prev = null;
             while (wordIterator.hasNext()) {
                 String word = wordIterator.next().toString().toLowerCase();

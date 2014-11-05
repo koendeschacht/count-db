@@ -1,7 +1,6 @@
 package be.bagofwords.db.experimental.kyoto;
 
 import be.bagofwords.db.CoreDataInterface;
-import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.iterator.CloseableIterator;
@@ -242,11 +241,6 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
             db.close();
             db = null;
         }
-    }
-
-    @Override
-    public DataInterface getImplementingDataInterface() {
-        return null;
     }
 
     @Override

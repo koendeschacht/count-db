@@ -14,8 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.net.SocketException;
-import java.util.HashMap;
-import java.util.Map;
 
 import static be.bagofwords.application.BaseServer.LONG_OK;
 
@@ -23,7 +21,6 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
 
     private final String host;
     private final int port;
-    private Map<String, DataInterface> dataInterfaceMap;
     private ChangedValueListenerThread changedValueListenerThread;
 
     @Autowired
@@ -35,11 +32,10 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
         super(cachesManager, memoryManager);
         this.host = host;
         this.port = port;
-        this.dataInterfaceMap = new HashMap<>();
     }
 
     @Override
-    protected synchronized <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator) {
+    public synchronized <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator) {
         if (changedValueListenerThread == null) {
             synchronized (this) {
                 try {
@@ -50,9 +46,7 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
                 }
             }
         }
-        DataInterface result = new RemoteDataInterface<>(nameOfSubset, objectClass, combinator, host, port);
-        dataInterfaceMap.put(nameOfSubset, result);
-        return result;
+        return new RemoteDataInterface<>(nameOfSubset, objectClass, combinator, host, port);
     }
 
     @Override
@@ -69,12 +63,12 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
 
         public ChangedValueListenerThread() throws IOException {
             super("ChangedValueListener", false);
-            connection = new WrappedSocketConnection(host, port);
+            connection = new WrappedSocketConnection(host, port, false, true);
         }
 
         @Override
         protected void runInt() throws Exception {
-            connection.writeByte((byte) RemoteDataInterfaceServer.Action.LISTEN_TO_CHANGES.ordinal());
+            connection.writeByte((byte) RemoteDataInterfaceServer.ConnectionType.LISTEN_TO_CHANGES.ordinal());
             connection.flush();
             try {
                 while (!isTerminateRequested()) {
@@ -84,7 +78,7 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
                     for (int i = 0; i < numOfKeys; i++) {
                         keys[i] = connection.readLong();
                     }
-                    DataInterface dataInterface = dataInterfaceMap.get(interfaceName);
+                    DataInterface dataInterface = getDataInterface(interfaceName);
                     if (dataInterface != null) {
                         dataInterface.notifyListenersOfChangedValues(keys);
                     }
@@ -97,6 +91,18 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
                 }
             }
             IOUtils.closeQuietly(connection);
+        }
+
+        private DataInterface getDataInterface(String interfaceName) {
+            synchronized (getAllInterfaces()) {
+                for (DataInterfaceReference dataInterfaceReference : getAllInterfaces()) {
+                    DataInterface dataInterface = dataInterfaceReference.get();
+                    if (dataInterface != null && dataInterface.getName().equals(interfaceName)) {
+                        return dataInterface.getCoreDataInterface();
+                    }
+                }
+            }
+            return null;
         }
 
         @Override
