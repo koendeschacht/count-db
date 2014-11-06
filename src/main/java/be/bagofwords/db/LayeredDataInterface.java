@@ -12,7 +12,6 @@ public abstract class LayeredDataInterface<T> extends DataInterface<T> {
     public LayeredDataInterface(DataInterface<T> baseInterface) {
         super(baseInterface.getName(), baseInterface.getObjectClass(), baseInterface.getCombinator());
         this.baseInterface = baseInterface;
-        this.baseInterface.registerListener(this);
     }
 
     @Override
@@ -76,14 +75,8 @@ public abstract class LayeredDataInterface<T> extends DataInterface<T> {
         return baseInterface.mightContain(key);
     }
 
-    @Override
-    public void valuesChanged(long[] keys) {
-        notifyListenersOfChangedValues(keys); //pass on to listeners
-    }
-
     protected final void doClose() {
         try {
-            baseInterface.deregisterListener(this);
             doCloseImpl();
         } finally {
             //even if the doCloseImpl() method failed, we still try to close the base interface

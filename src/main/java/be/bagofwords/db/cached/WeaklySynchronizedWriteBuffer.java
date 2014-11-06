@@ -2,6 +2,7 @@ package be.bagofwords.db.cached;
 
 import be.bagofwords.cache.DynamicMap;
 import be.bagofwords.db.DataInterfaceFactoryOccasionalActionsThread;
+import be.bagofwords.ui.UI;
 import be.bagofwords.util.KeyValue;
 
 import java.util.Iterator;
@@ -28,7 +29,7 @@ public class WeaklySynchronizedWriteBuffer<T> {
         this.timeOfLastUsage = System.currentTimeMillis();
     }
 
-    public void write(long key, T value) {
+    public void write(Long key, T value) {
         synchronized (lock) {
             checkFlush(DataInterfaceFactoryOccasionalActionsThread.TIME_BETWEEN_FLUSHES / 2);
             nonSynchronizedWrite(key, value);

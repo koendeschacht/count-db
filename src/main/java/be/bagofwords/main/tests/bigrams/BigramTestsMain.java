@@ -9,15 +9,18 @@ import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
-import be.bagofwords.db.remote.RemoteDatabaseInterfaceFactory;
 import be.bagofwords.main.tests.TestsApplicationContextFactory;
+import be.bagofwords.text.WordIterator;
 import be.bagofwords.ui.UI;
+import be.bagofwords.util.HashUtils;
 import be.bagofwords.util.NumUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.*;
+import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 
 public class BigramTestsMain implements MainClass {
@@ -33,29 +36,57 @@ public class BigramTestsMain implements MainClass {
     private MemoryManager memoryManager;
 
     private final File largeTextFile;
+    private final File bigramFile;
 
-    public BigramTestsMain(File largeTextFile) {
+    public BigramTestsMain(File largeTextFile, File bigramFile) {
         this.largeTextFile = largeTextFile;
+        this.bigramFile = bigramFile;
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
         if (args.length != 1) {
             UI.writeError("Please provide the path to a large text file");
         } else {
-            ApplicationManager.runSafely(new TestsApplicationContextFactory(new BigramTestsMain(new File(args[0]))));
+            ApplicationManager.runSafely(new TestsApplicationContextFactory(new BigramTestsMain(new File(args[0]), new File("/tmp/bigrams.bin"))));
         }
     }
 
     public void run() {
         try {
-            UI.write("Reading " + largeTextFile.getAbsolutePath());
             prepareTmpDir(tmpDbDir);
+            prepareBigrams();
 
             runAllTests(DataType.LONG_COUNT);
 //            runAllTests(DataType.SERIALIZED_OBJECT);
 
         } catch (Exception exp) {
             throw new RuntimeException(exp);
+        }
+    }
+
+    private void prepareBigrams() throws IOException {
+        if (!bigramFile.exists() || bigramFile.length() == 0) {
+            UI.write("Writing bigrams in " + largeTextFile.getAbsolutePath() + " to " + bigramFile.getAbsolutePath());
+            BufferedReader rdr = new BufferedReader(new FileReader(largeTextFile));
+            DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(bigramFile)));
+            long numOfBigramsWritten = 0;
+            long bigramsToRead = MAX_MILLION_ITEMS_TO_PROCESS * 1000 * 1000 * 3;
+            while (rdr.ready() && numOfBigramsWritten < bigramsToRead) {
+                WordIterator wordIterator = new WordIterator(rdr.readLine(), Collections.<String>emptySet());
+                String prev = null;
+                while (wordIterator.hasNext()) {
+                    String word = wordIterator.next().toString().toLowerCase();
+                    if (prev != null) {
+                        long bigram = HashUtils.hashCode(prev, " ", word);
+                        dos.writeLong(bigram);
+                        numOfBigramsWritten++;
+                    }
+                    prev = word;
+                }
+            }
+            IOUtils.closeQuietly(rdr);
+            IOUtils.closeQuietly(dos);
+            UI.write("Finished writing bigrams.");
         }
     }
 
@@ -91,22 +122,22 @@ public class BigramTestsMain implements MainClass {
 
     private void testSeparateWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType type) throws InterruptedException, FileNotFoundException {
         for (long items = MIN_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items <= MAX_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items *= 2) {
-            testSeparateWritingReading(dataType, factory, type, largeTextFile, 8, items);
+            testSeparateWritingReading(dataType, factory, type, 8, items);
         }
         factory.terminate();
     }
 
-    private void testSeparateWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType cachingType, File largeTextFile, int numberOfThreads, long numberOfItems) throws FileNotFoundException, InterruptedException {
+    private void testSeparateWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType cachingType, int numberOfThreads, long numberOfItems) throws FileNotFoundException, InterruptedException {
         final DataInterface dataInterface = createDataInterface(dataType, cachingType, factory);
         dataInterface.dropAllData();
-        final BufferedReader rdr = new BufferedReader(new FileReader(largeTextFile));
+        final DataInputStream inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(bigramFile)));
 
         //write data
         MutableLong numberOfItemsWritten = new MutableLong(0);
         CountDownLatch writeLatch = new CountDownLatch(numberOfThreads);
         long startOfWrite = System.nanoTime();
         for (int i = 0; i < numberOfThreads; i++) {
-            new BigramTestsThread(dataType, numberOfItemsWritten, numberOfItems, rdr, dataInterface, writeLatch, false).start();
+            new BigramTestsThread(dataType, numberOfItemsWritten, numberOfItems, inputStream, dataInterface, writeLatch, false).start();
         }
         writeLatch.await();
         dataInterface.flush();
@@ -119,7 +150,7 @@ public class BigramTestsMain implements MainClass {
         CountDownLatch readLatch = new CountDownLatch(numberOfThreads);
         long startOfRead = System.nanoTime();
         for (int i = 0; i < numberOfThreads; i++) {
-            new BigramTestsThread(dataType, numberOfItemsRead, Math.min(200 * 1024 * 1024, numberOfItems), rdr, dataInterface, readLatch, true).start();
+            new BigramTestsThread(dataType, numberOfItemsRead, Math.min(200 * 1024 * 1024, numberOfItems), inputStream, dataInterface, readLatch, true).start();
         }
         readLatch.await();
         dataInterface.flush();
@@ -140,13 +171,13 @@ public class BigramTestsMain implements MainClass {
     private void testMixedWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType cachingType, File largeTextFile, int numberOfThreads, long numberOfItems) throws FileNotFoundException, InterruptedException {
         final DataInterface dataInterface = createDataInterface(dataType, cachingType, factory);
         dataInterface.dropAllData();
-        final BufferedReader rdr = new BufferedReader(new FileReader(largeTextFile));
+        final DataInputStream inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(bigramFile)));
 
         //first fill database by writing data
         MutableLong numberOfItemsWritten = new MutableLong(0);
         CountDownLatch writeLatch = new CountDownLatch(numberOfThreads);
         for (int i = 0; i < numberOfThreads; i++) {
-            new BigramTestsThread(dataType, numberOfItemsWritten, numberOfItems, rdr, dataInterface, writeLatch, false).start();
+            new BigramTestsThread(dataType, numberOfItemsWritten, numberOfItems, inputStream, dataInterface, writeLatch, false).start();
         }
         writeLatch.await();
         dataInterface.flush();
@@ -160,7 +191,7 @@ public class BigramTestsMain implements MainClass {
         long start = System.nanoTime();
         for (int i = 0; i < numberOfThreads; i++) {
             boolean isReadThread = i % 2 == 0;
-            new BigramTestsThread(dataType, isReadThread ? numberOfItemsRead : numberOfItemsWritten, Math.min(100 * 1024 * 1024, numberOfItems), rdr, dataInterface, isReadThread ? readLatch : writeLatch, isReadThread).start();
+            new BigramTestsThread(dataType, isReadThread ? numberOfItemsRead : numberOfItemsWritten, Math.min(100 * 1024 * 1024, numberOfItems), inputStream, dataInterface, isReadThread ? readLatch : writeLatch, isReadThread).start();
         }
         readLatch.await(); //this assumes that reading data is faster than writing data.
         long endOfRead = System.nanoTime();

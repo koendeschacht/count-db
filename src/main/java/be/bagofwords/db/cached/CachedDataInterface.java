@@ -94,7 +94,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
             writeCacheLock.release(1);
             writeCacheLock.acquireUninterruptibly(100);
             weaklySynchronizedWriteBuffer = new WeaklySynchronizedWriteBuffer<>(this);
-            writeCache.put(Thread.currentThread(), weaklySynchronizedWriteBuffer); //notice that the
+            writeCache.put(Thread.currentThread(), weaklySynchronizedWriteBuffer);
             writeCacheLock.release(100);
         } else {
             writeCacheLock.release(1);
@@ -105,8 +105,28 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
 
     @Override
     public void write(Iterator<KeyValue<T>> entries) {
-        flushWriteCache(true);
-        baseInterface.write(entries);
+        writeAndInvalidateReadCacheEntries(entries);
+    }
+
+    private void writeAndInvalidateReadCacheEntries(final Iterator<KeyValue<T>> entries) {
+        baseInterface.write(new Iterator<KeyValue<T>>() {
+            @Override
+            public boolean hasNext() {
+                return entries.hasNext();
+            }
+
+            @Override
+            public KeyValue<T> next() {
+                KeyValue<T> next = entries.next();
+                readCache.remove(next.getKey());
+                return next;
+            }
+
+            @Override
+            public void remove() {
+                entries.remove();
+            }
+        });
     }
 
     @Override
@@ -174,6 +194,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     @Override
     public void dropAllData() {
         stopInitializeCachesThread();
+        flushWriteCache(true);
         writeCache.clear();
         readCache.clear();
         baseInterface.dropAllData();
@@ -181,15 +202,6 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
 
     public long apprSize() {
         return writeCache.size() + baseInterface.apprSize();
-    }
-
-    @Override
-    public void valuesChanged(long[] keys) {
-        stopInitializeCachesThread();
-        super.valuesChanged(keys);
-        for (Long key : keys) {
-            readCache.remove(key);
-        }
     }
 
     private void stopInitializeCachesThread() {
@@ -200,7 +212,8 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     }
 
     public void writeValuesFromFlush(List<KeyValue<T>> allValues) {
-        baseInterface.write(allValues.iterator());
+        writeAndInvalidateReadCacheEntries(allValues.iterator());
+
     }
 
     private class InitializeCachesThread extends SafeThread {

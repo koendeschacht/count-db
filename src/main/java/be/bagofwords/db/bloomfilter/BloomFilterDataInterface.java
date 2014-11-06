@@ -3,7 +3,10 @@ package be.bagofwords.db.bloomfilter;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.LayeredDataInterface;
 import be.bagofwords.iterator.CloseableIterator;
+import be.bagofwords.ui.UI;
+import be.bagofwords.util.KeyValue;
 
+import java.util.Iterator;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class BloomFilterDataInterface<T extends Object> extends LayeredDataInterface<T> {
@@ -13,36 +16,42 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
     private final DataInterface<LongBloomFilterWithCheckSum> bloomFilterDataInterface;
     private final ReentrantLock modifyBloomFilterLock;
     private LongBloomFilterWithCheckSum bloomFilter;
-    private boolean bloomFilterWasWrittenToDisk;
     private long currentKeyForNewBloomFilterCreation = Long.MAX_VALUE;
 
-    private long timeOfLastRead;
+    private long currentWriteCount;
+    private long writeCountOfSavedFilter;
 
     public BloomFilterDataInterface(DataInterface<T> baseInterface, DataInterface<LongBloomFilterWithCheckSum> bloomFilterDataInterface) {
         super(baseInterface);
         this.bloomFilterDataInterface = bloomFilterDataInterface;
         this.modifyBloomFilterLock = new ReentrantLock();
         this.bloomFilter = bloomFilterDataInterface.read(getName());
+        if (this.bloomFilter != null) {
+            writeCountOfSavedFilter = currentWriteCount = this.bloomFilter.getDataCheckSum();
+        } else {
+            currentWriteCount = -Long.MAX_VALUE;
+            writeCountOfSavedFilter = Long.MAX_VALUE;
+        }
     }
 
     @Override
     public void optimizeForReading() {
         baseInterface.optimizeForReading();
-        if (bloomFilter == null) {
+        if (!validBloomFilter(this.bloomFilter)) {
             createNewBloomFilter();
         }
     }
 
     @Override
     public T read(long key) {
-        timeOfLastRead = System.currentTimeMillis();
         LongBloomFilterWithCheckSum currentBloomFilter = bloomFilter;
-        if (currentBloomFilter == null && modifyBloomFilterLock.tryLock()) {
+        boolean validFilter = validBloomFilter(currentBloomFilter);
+        if (!validFilter && modifyBloomFilterLock.tryLock()) {
             createNewBloomFilter();
             currentBloomFilter = bloomFilter;
             modifyBloomFilterLock.unlock();
         }
-        if (currentBloomFilter == null || currentKeyForNewBloomFilterCreation < key) {
+        if (!validFilter || currentKeyForNewBloomFilterCreation < key) {
             //we are still creating the bloom filter
             return baseInterface.read(key);
         } else {
@@ -54,14 +63,46 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
         }
     }
 
+    private boolean validBloomFilter(LongBloomFilterWithCheckSum bloomFilter) {
+        return bloomFilter != null && currentWriteCount == bloomFilter.getDataCheckSum();
+    }
+
+    @Override
+    public void write(long key, T value) {
+        currentWriteCount++;
+        baseInterface.write(key, value);
+    }
+
+    @Override
+    public void write(final Iterator<KeyValue<T>> keyValueIterator) {
+        baseInterface.write(new Iterator<KeyValue<T>>() {
+            @Override
+            public boolean hasNext() {
+                return keyValueIterator.hasNext();
+            }
+
+            @Override
+            public KeyValue<T> next() {
+                KeyValue<T> next = keyValueIterator.next();
+                currentWriteCount++;
+                return next;
+            }
+
+            @Override
+            public void remove() {
+                keyValueIterator.remove();
+            }
+        });
+    }
 
     @Override
     public void dropAllData() {
         modifyBloomFilterLock.lock();
         try {
             baseInterface.dropAllData();
+            currentWriteCount = 0;
             createNewBloomFilterNonSynchronized();
-            writeBloomFilterToDisk();
+            writeBloomFilterToDiskIfNecessary();
         } finally {
             modifyBloomFilterLock.unlock();
         }
@@ -70,51 +111,26 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
     @Override
     public boolean mightContain(long key) {
         LongBloomFilterWithCheckSum currentBloomFilter = bloomFilter;
-        if (currentBloomFilter == null && modifyBloomFilterLock.tryLock()) {
+        boolean validFilter = validBloomFilter(currentBloomFilter);
+        if (!validFilter && modifyBloomFilterLock.tryLock()) {
             createNewBloomFilter();
             currentBloomFilter = bloomFilter;
             modifyBloomFilterLock.unlock();
         }
-        if (currentBloomFilter == null || currentKeyForNewBloomFilterCreation < key) {
+        if (!validFilter || currentKeyForNewBloomFilterCreation < key) {
             //we are still creating the bloom filter
-            return baseInterface.mightContain(key);
+            return baseInterface.read(key) != null;
         } else {
             return currentBloomFilter.mightContain(key);
         }
     }
 
-    @Override
-    public void valuesChanged(long[] keys) {
-        super.valuesChanged(keys);
-        modifyBloomFilterLock.lock();
-        try {
-            if (bloomFilter != null) {
-                for (Long key : keys) {
-                    bloomFilter.put(key);
-                }
-                if (bloomFilter.expectedFpp() > MAX_FPP) {
-                    if (System.currentTimeMillis() - timeOfLastRead < 1000) {
-                        //read in last second, create a new bloom filter
-                        createNewBloomFilterNonSynchronized();
-                    } else {
-                        //no reads in last second, let's drop the bloom filter for now
-                        bloomFilter = null;
-                    }
-                }
-            }
-            if (keys.length > 0) {
-                bloomFilterWasWrittenToDisk = false;
-            }
-        } finally {
-            modifyBloomFilterLock.unlock();
-        }
-    }
-
     private void createNewBloomFilterNonSynchronized() {
         currentKeyForNewBloomFilterCreation = Long.MIN_VALUE;
+        baseInterface.flush();
         long numOfValuesForBloomFilter = baseInterface.apprSize();
         bloomFilter = new LongBloomFilterWithCheckSum(numOfValuesForBloomFilter, INITIAL_FPP);
-        bloomFilter.setDataCheckSum(baseInterface.dataCheckSum());
+        bloomFilter.setDataCheckSum(currentWriteCount);
         long start = System.currentTimeMillis();
         int numOfKeys = 0;
         CloseableIterator<Long> it = baseInterface.keyIterator();
@@ -126,9 +142,8 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
         }
         it.close();
         currentKeyForNewBloomFilterCreation = Long.MAX_VALUE;
-        bloomFilterWasWrittenToDisk = false;
         long taken = (System.currentTimeMillis() - start);
-//        UI.write("Created bloomfilter " + getName() + " in " + taken + " ms for " + numOfKeys + " keys, size is " + bloomFilter.getBits().size() / (8 * 1024) + " kbytes.");
+        UI.write("Created bloomfilter " + getName() + " in " + taken + " ms for " + numOfKeys + " keys, size is " + bloomFilter.getBits().size() / (8 * 1024) + " kbytes.");
     }
 
     private void createNewBloomFilter() {
@@ -140,30 +155,32 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
     @Override
     public void flush() {
         baseInterface.flush();
-        if (!bloomFilterWasWrittenToDisk) {
-            writeBloomFilterToDisk();
-        }
+        writeBloomFilterToDiskIfNecessary();
     }
 
     @Override
     public void doOccasionalAction() {
-        if (!bloomFilterWasWrittenToDisk) {
-            writeBloomFilterToDisk();
-        }
+        writeBloomFilterToDiskIfNecessary();
         super.doOccasionalAction();
     }
 
-    private void writeBloomFilterToDisk() {
-        bloomFilterDataInterface.write(getName(), bloomFilter);
-        bloomFilterDataInterface.flush();
-        bloomFilterWasWrittenToDisk = true;
+    private void writeBloomFilterToDiskIfNecessary() {
+        if (currentWriteCount != writeCountOfSavedFilter) {
+            modifyBloomFilterLock.lock();
+            bloomFilterDataInterface.write(getName(), bloomFilter);
+            bloomFilterDataInterface.flush();
+            if (bloomFilter == null) {
+                writeCountOfSavedFilter = 0;
+            } else {
+                writeCountOfSavedFilter = bloomFilter.getDataCheckSum();
+            }
+            modifyBloomFilterLock.unlock();
+        }
     }
 
     @Override
     protected void doCloseImpl() {
-        if (!bloomFilterWasWrittenToDisk) {
-            writeBloomFilterToDisk();
-        }
+        writeBloomFilterToDiskIfNecessary();
         bloomFilter = null;
     }
 }

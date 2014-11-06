@@ -6,22 +6,12 @@ import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.application.environment.RemoteCountDBEnvironmentProperties;
 import be.bagofwords.db.combinator.Combinator;
-import be.bagofwords.ui.UI;
-import be.bagofwords.util.SafeThread;
-import be.bagofwords.util.WrappedSocketConnection;
-import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.io.IOException;
-import java.net.SocketException;
-
-import static be.bagofwords.application.BaseServer.LONG_OK;
 
 public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
 
     private final String host;
     private final int port;
-    private ChangedValueListenerThread changedValueListenerThread;
 
     @Autowired
     public RemoteDatabaseInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, RemoteCountDBEnvironmentProperties environmentProperties) {
@@ -36,78 +26,7 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
 
     @Override
     public synchronized <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator) {
-        if (changedValueListenerThread == null) {
-            synchronized (this) {
-                try {
-                    this.changedValueListenerThread = new ChangedValueListenerThread();
-                    this.changedValueListenerThread.start();
-                } catch (IOException e) {
-                    throw new RuntimeException("Unexpected exception while starting changedValueListenerThread", e);
-                }
-            }
-        }
         return new RemoteDataInterface<>(nameOfSubset, objectClass, combinator, host, port);
     }
 
-    @Override
-    public synchronized void terminate() {
-        if (changedValueListenerThread != null) {
-            changedValueListenerThread.terminateAndWaitForFinish();
-        }
-        super.terminate();
-    }
-
-    private class ChangedValueListenerThread extends SafeThread {
-
-        private WrappedSocketConnection connection;
-
-        public ChangedValueListenerThread() throws IOException {
-            super("ChangedValueListener", false);
-            connection = new WrappedSocketConnection(host, port, false, true);
-        }
-
-        @Override
-        protected void runInt() throws Exception {
-            connection.writeByte((byte) RemoteDataInterfaceServer.ConnectionType.LISTEN_TO_CHANGES.ordinal());
-            connection.flush();
-            try {
-                while (!isTerminateRequested()) {
-                    String interfaceName = connection.readString();
-                    int numOfKeys = connection.readInt();
-                    long[] keys = new long[numOfKeys];
-                    for (int i = 0; i < numOfKeys; i++) {
-                        keys[i] = connection.readLong();
-                    }
-                    DataInterface dataInterface = getDataInterface(interfaceName);
-                    if (dataInterface != null) {
-                        dataInterface.notifyListenersOfChangedValues(keys);
-                    }
-                    connection.writeLong(LONG_OK);
-                    connection.flush();
-                }
-            } catch (SocketException exp) {
-                if (!exp.getMessage().equals("Socket closed")) {
-                    UI.writeError("Error in ChangedValueListener", exp);
-                }
-            }
-            IOUtils.closeQuietly(connection);
-        }
-
-        private DataInterface getDataInterface(String interfaceName) {
-            synchronized (getAllInterfaces()) {
-                for (DataInterfaceReference dataInterfaceReference : getAllInterfaces()) {
-                    DataInterface dataInterface = dataInterfaceReference.get();
-                    if (dataInterface != null && dataInterface.getName().equals(interfaceName)) {
-                        return dataInterface.getCoreDataInterface();
-                    }
-                }
-            }
-            return null;
-        }
-
-        @Override
-        protected void doTerminate() {
-            IOUtils.closeQuietly(connection);
-        }
-    }
 }

@@ -30,11 +30,15 @@ public class FileBucket implements Comparable<FileBucket> {
     public int getFileInd(long key) {
         if (files.size() < 10) {
             for (int i = 0; i < files.size(); i++) {
-                if (files.get(i).getFirstKey() <= key) {
-                    return i;
+                if (files.get(i).getFirstKey() > key) {
+                    if (i == 0) {
+                        throw new RuntimeException("Incorrect bucket starting from " + getFirstKey() + " for key " + key);
+                    } else {
+                        return i - 1;
+                    }
                 }
             }
-            throw new RuntimeException("Could not find file for key " + key + " in bucket " + this);
+            return files.size() - 1;
         } else {
             int pos = Collections.binarySearch((List) files, key);
             if (pos < 0) {

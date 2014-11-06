@@ -105,11 +105,10 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     @Override
-    public void writeInt0(long key, T value) {
+    public void write(long key, T value) {
         FileBucket bucket = getBucket(key);
         bucket.lockWrite();
-        int fileInd = bucket.getFileInd(key);
-        FileInfo file = bucket.getFiles().get(fileInd);
+        FileInfo file = bucket.getFile(key);
         try {
             DataOutputStream dos = getOutputStream(file, true);
             long extraSize = writeValue(dos, key, value);
@@ -125,7 +124,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     @Override
-    public void writeInt0(Iterator<KeyValue<T>> entries) {
+    public void write(Iterator<KeyValue<T>> entries) {
         long batchSize = SerializationUtils.getWidth(getObjectClass()) == -1 ? BATCH_SIZE_NON_PRIMITIVE_VALUES : BATCH_SIZE_PRIMITIVE_VALUES;
         while (entries.hasNext()) {
             MappedLists<FileBucket, KeyValue<T>> entriesToFileBuckets = new MappedLists<>();

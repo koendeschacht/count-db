@@ -54,7 +54,7 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    protected void writeInt0(long key, T value) {
+    public void write(long key, T value) {
         dataLock.lockWrite(key);
         if (value == null) {
             db.delete(SerializationUtils.longToBytes(key));
@@ -175,7 +175,7 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public synchronized void writeInt0(Iterator<KeyValue<T>> entries) {
+    public synchronized void write(Iterator<KeyValue<T>> entries) {
         WriteBatch writeBatch = db.createWriteBatch();
         while (entries.hasNext()) {
             KeyValue<T> entry = entries.next();

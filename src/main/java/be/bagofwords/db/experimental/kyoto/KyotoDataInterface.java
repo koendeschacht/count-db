@@ -4,6 +4,7 @@ import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.iterator.CloseableIterator;
+import be.bagofwords.util.DataLock;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.SerializationUtils;
 import kyotocabinet.Cursor;
@@ -19,6 +20,7 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
 
     private final static int BATCH_SIZE = 10000;
     private DB db;
+    private DataLock dataLock;
 
     protected KyotoDataInterface(String name, String path, Class<T> objectClass, Combinator<T> combinator) {
         super(name, objectClass, combinator);
@@ -35,6 +37,7 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
         if (!success) {
             throw new RuntimeException("Failed to open Kyoto DB at " + file.getAbsolutePath());
         }
+        dataLock = new DataLock();
     }
 
     @Override
@@ -44,8 +47,9 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public void writeInt0(long key, T value) {
+    public void write(long key, T value) {
         byte[] keyAsBytes = SerializationUtils.longToBytes(key);
+        dataLock.lockWrite(key);
         if (value == null) {
             db.remove(keyAsBytes);
         } else {
@@ -64,6 +68,7 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
                 db.set(keyAsBytes, valueAsBytes);
             }
         }
+        dataLock.unlockWrite(key);
     }
 
     @Override
@@ -167,7 +172,7 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public void writeInt0(Iterator<KeyValue<T>> entries) {
+    public void write(Iterator<KeyValue<T>> entries) {
         while (entries.hasNext()) {
             //Write values in batch:
             Map<Long, T> valuesToWrite = new HashMap<>();
@@ -187,7 +192,7 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
         }
     }
 
-    private void bulkWrite(Map<Long, T> valuesToWrite) {
+    private synchronized void bulkWrite(Map<Long, T> valuesToWrite) {
         //First read current values in bulk
         Map<Long, T> currentValues = new HashMap<>();
         CloseableIterator<KeyValue<T>> valueIt = iterator(valuesToWrite.keySet().iterator());

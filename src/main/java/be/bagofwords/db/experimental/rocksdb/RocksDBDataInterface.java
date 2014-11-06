@@ -55,7 +55,7 @@ public class RocksDBDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    protected void writeInt0(Iterator<KeyValue<T>> entries) {
+    public void write(Iterator<KeyValue<T>> entries) {
         writeLock.lockWriteAll();
         try {
             WriteBatch writeBatch = new WriteBatch();
@@ -90,7 +90,7 @@ public class RocksDBDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    protected void writeInt0(long key, T value) {
+    public void write(long key, T value) {
         byte[] keyAsBytes = SerializationUtils.longToBytes(key);
         writeLock.lockWrite(key);
         try {

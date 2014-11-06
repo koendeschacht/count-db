@@ -106,9 +106,20 @@ public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
             };
             threads[i].start();
         }
+        SafeThread flushThread = new SafeThread("flushThread", false) {
+            @Override
+            protected void runInt() throws Exception {
+                for (int j = 0; j < 50; j++) {
+                    db.flush();
+                    Utils.threadSleep(100);
+                }
+            }
+        };
+        flushThread.start();
         for (SafeThread thread : threads) {
             thread.waitForFinish();
         }
+        flushThread.waitForFinish();
         db.flush();
         CloseableIterator<KeyValue<Long>> iterator = db.iterator();
         while (iterator.hasNext()) {

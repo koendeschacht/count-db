@@ -27,7 +27,7 @@ public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T
     }
 
     @Override
-    protected void writeInt0(long key, T value) {
+    public void write(long key, T value) {
         lock.lockWrite(key);
         nonSynchronizedWrite(key, value);
         lock.unlockWrite(key);
@@ -47,7 +47,7 @@ public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T
     }
 
     @Override
-    protected void writeInt0(Iterator<KeyValue<T>> entries) {
+    public void write(Iterator<KeyValue<T>> entries) {
         lock.lockWriteAll();
         while (entries.hasNext()) {
             KeyValue<T> entry = entries.next();

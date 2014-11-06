@@ -265,11 +265,10 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
                             nextValues = null;
                             close();
                         } else if (numOfValues != LONG_ERROR) {
-                            byte[] compressedKeys = connection.readByteArray();
+                            byte[] keys = connection.readByteArray();
                             byte[] compressedValues = connection.readByteArray();
-                            byte[] uncompressedKeys = Snappy.uncompress(compressedKeys);
                             byte[] uncompressedValues = Snappy.uncompress(compressedValues);
-                            DataInputStream keyIS = new DataInputStream(new ByteArrayInputStream(uncompressedKeys));
+                            DataInputStream keyIS = new DataInputStream(new ByteArrayInputStream(keys));
                             DataInputStream valueIS = new DataInputStream(new ByteArrayInputStream(uncompressedValues));
                             List<KeyValue<T>> nextValuesList = new ArrayList<>();
                             while (nextValuesList.size() < numOfValues) {
@@ -474,11 +473,6 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
                 connections.remove(connection);
             }
         }
-    }
-
-    @Override
-    public void valuesChanged(long[] keys) {
-        notifyListenersOfChangedValues(keys);
     }
 
     private class Connection extends WrappedSocketConnection {

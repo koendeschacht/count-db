@@ -4,26 +4,20 @@ package be.bagofwords.main.tests.bigrams;
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/22/14.
  */
 public class BigramCount {
-    private String firstWord;
-    private String secondWord;
+    private long bigram;
     private long count;
 
-    public BigramCount(String firstWord, String secondWord) {
-        this(firstWord, secondWord, 1);
+    public BigramCount(long bigram) {
+        this(bigram, 1);
     }
 
-    public BigramCount(String firstWord, String secondWord, long count) {
-        this.firstWord = firstWord;
-        this.secondWord = secondWord;
+    public BigramCount(long bigram, long count) {
+        this.bigram = bigram;
         this.count = count;
     }
 
-    public String getFirstWord() {
-        return firstWord;
-    }
-
-    public String getSecondWord() {
-        return secondWord;
+    public long getBigram() {
+        return bigram;
     }
 
     public long getCount() {
@@ -38,14 +32,8 @@ public class BigramCount {
 
     //Used for serialization
 
-    public void setFirstWord(String firstWord) {
-        this.firstWord = firstWord;
-    }
-
-    //Used for serialization
-
-    public void setSecondWord(String secondWord) {
-        this.secondWord = secondWord;
+    public void setBigram(long bigram) {
+        this.bigram = bigram;
     }
 
     //Used for serialization

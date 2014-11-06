@@ -4,6 +4,7 @@ import be.bagofwords.db.combinator.OverWriteCombinator;
 import be.bagofwords.db.helper.TestObject;
 import be.bagofwords.db.helper.UnitTestContextLoader;
 import be.bagofwords.iterator.CloseableIterator;
+import be.bagofwords.ui.UI;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.Utils;
 import org.junit.Assert;
@@ -265,7 +266,9 @@ public class TestDataInterface extends BaseTestDataInterface {
         db.write("test", "null");
         db.flush();
         Assert.assertEquals("null", db.read("test"));
+        UI.write("About to write null");
         db.write("test", null);
+        UI.write("About to flush null");
         db.flush();
         Assert.assertEquals(null, db.read("test"));
         db.write("test", "null");

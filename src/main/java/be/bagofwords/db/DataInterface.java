@@ -16,12 +16,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public abstract class DataInterface<T extends Object> implements DataIterable<KeyValue<T>>, ChangedValuesPublisher, ChangedValuesListener {
+public abstract class DataInterface<T extends Object> implements DataIterable<KeyValue<T>> {
 
     private final Combinator<T> combinator;
     private final Class<T> objectClass;
     private final String name;
-    private final List<ChangedValuesListener> listeners;
 
     private final Object closeLock = new Object();
     private boolean wasClosed;
@@ -33,7 +32,6 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         this.name = name;
         this.objectClass = objectClass;
         this.combinator = combinator;
-        this.listeners = new ArrayList<>();
     }
 
     public abstract T read(long key);
@@ -279,22 +277,6 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
 
     public final boolean wasClosed() {
         return wasClosed;
-    }
-
-    @Override
-    public synchronized void registerListener(ChangedValuesListener listener) {
-        listeners.add(listener);
-    }
-
-    @Override
-    public synchronized void deregisterListener(ChangedValuesListener listener) {
-        listeners.remove(listener);
-    }
-
-    public void notifyListenersOfChangedValues(long[] keys) {
-        for (ChangedValuesListener listener : listeners) {
-            listener.valuesChanged(keys);
-        }
     }
 
     public void doOccasionalAction() {

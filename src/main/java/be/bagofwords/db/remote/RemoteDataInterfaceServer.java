@@ -5,7 +5,6 @@ import be.bagofwords.application.annotations.BowComponent;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.application.memory.MemoryStatus;
 import be.bagofwords.application.status.StatusViewable;
-import be.bagofwords.db.ChangedValuesListener;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseCachingType;
@@ -33,7 +32,6 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
     private static final long CLONE_BATCH_SIZE_NON_PRIMITIVE = 100;
 
     private final DataInterfaceFactory dataInterfaceFactory;
-    private final List<WrappedSocketConnection> listenToChangesConnections;
     /*
         This list keeps references to the data interfaces created by this server, so they are not garbage collected when the last socket handler for that interface is closed.
         We want them to be kept in memory, so the cached values are also kept in memory, and they can be reused quickly when the next connection is created to that interface.
@@ -48,7 +46,6 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
     public RemoteDataInterfaceServer(MemoryManager memoryManager, DataInterfaceFactory dataInterfaceFactory, RemoteCountDBEnvironmentProperties properties) throws IOException {
         super("RemoteDataInterfaceServer", properties.getDataInterfaceServerPort());
         this.dataInterfaceFactory = dataInterfaceFactory;
-        this.listenToChangesConnections = new ArrayList<>();
         this.createdInterfaces = new ArrayList<>();
         this.memoryManager = memoryManager;
     }
@@ -64,37 +61,9 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
                 return new DataInterfaceSocketRequestHandler(new WrappedSocketConnection(socket, true, false));
             } else if (connectionType == ConnectionType.BATCH_WRITE_TO_INTERFACE) {
                 return new DataInterfaceSocketRequestHandler(new WrappedSocketConnection(socket, false, true));
-            } else if (connectionType == ConnectionType.LISTEN_TO_CHANGES) {
-                synchronized (listenToChangesConnections) {
-                    listenToChangesConnections.add(new WrappedSocketConnection(socket, true, false));
-                }
-                return null;
             }
         }
         throw new RuntimeException("Unknown connection type " + connectionTypeAsByte);
-    }
-
-    private void valuesChangedForInterface(String interfaceName, long[] keys) {
-        synchronized (listenToChangesConnections) {
-            for (int i = 0; i < listenToChangesConnections.size(); i++) {
-                WrappedSocketConnection connection = listenToChangesConnections.get(i);
-                try {
-                    connection.writeString(interfaceName);
-                    connection.writeInt(keys.length);
-                    for (Long key : keys) {
-                        connection.writeLong(key);
-                    }
-                    connection.flush();
-                    long response = connection.readLong();
-                    if (response != LONG_OK) {
-                        throw new RuntimeException("Unexpected response " + response + " from " + connection.getInetAddress());
-                    }
-                } catch (IOException exp) {
-                    IOUtils.closeQuietly(connection);
-                    listenToChangesConnections.remove(i--);
-                }
-            }
-        }
     }
 
     public class DataInterfaceSocketRequestHandler extends BaseServer.SocketRequestHandler {
@@ -123,12 +92,6 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
                     }
                 } else {
                     dataInterface = dataInterfaceFactory.createDataInterface(DatabaseCachingType.CACHED, interfaceName, objectClass, combinator);
-                    dataInterface.registerListener(new ChangedValuesListener() {
-                        @Override
-                        public void valuesChanged(long[] keys) {
-                            valuesChangedForInterface(interfaceName, keys);
-                        }
-                    });
                     createdInterfaces.add(dataInterface);
                 }
             }
@@ -373,9 +336,7 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
             }
             dos.close();
             byte[] origKeys = bos.toByteArray();
-            byte[] compressedKeys = Snappy.compress(origKeys);
-//            UI.write("Compressed keys from " + origKeys.length + " to " + compressedKeys.length);
-            connection.writeByteArray(compressedKeys);
+            connection.writeByteArray(origKeys);
 
             //write values
             bos = new ByteArrayOutputStream();
@@ -431,7 +392,7 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
     }
 
     public static enum ConnectionType {
-        CONNECT_TO_INTERFACE, BATCH_WRITE_TO_INTERFACE, BATCH_READ_FROM_INTERFACE, LISTEN_TO_CHANGES
+        CONNECT_TO_INTERFACE, BATCH_WRITE_TO_INTERFACE, BATCH_READ_FROM_INTERFACE
     }
 
     @Override
