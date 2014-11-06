@@ -2,10 +2,8 @@ package be.bagofwords.db.cached;
 
 import be.bagofwords.cache.DynamicMap;
 import be.bagofwords.db.DataInterfaceFactoryOccasionalActionsThread;
-import be.bagofwords.ui.UI;
 import be.bagofwords.util.KeyValue;
 
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -65,20 +63,6 @@ public class WeaklySynchronizedWriteBuffer<T> {
                 dataInterface.writeValuesFromFlush(allValues);
             }
             timeOfLastFlush = System.currentTimeMillis();
-        }
-    }
-
-    public void write(Iterator<KeyValue<T>> entries, long batchSize) {
-        synchronized (lock) {
-            int numOfValuesWritten = 0;
-            while (entries.hasNext()) {
-                KeyValue<T> curr = entries.next();
-                nonSynchronizedWrite(curr.getKey(), curr.getValue());
-                numOfValuesWritten++;
-                if (numOfValuesWritten % batchSize == 0) {
-                    checkFlush(DataInterfaceFactoryOccasionalActionsThread.TIME_BETWEEN_FLUSHES / 2);
-                }
-            }
         }
     }
 

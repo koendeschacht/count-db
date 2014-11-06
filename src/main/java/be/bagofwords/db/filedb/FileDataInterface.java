@@ -431,7 +431,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         }
     }
 
-    private List<KeyValue<T>> rewriteFile(FileBucket bucket, FileInfo file, boolean inWritePhase, long maxFileSize) {
+    private void rewriteFile(FileBucket bucket, FileInfo file, boolean inWritePhase, long maxFileSize) {
         try {
             int fileInd = bucket.getFiles().indexOf(file);
             List<KeyValue<T>> values = readValues(file);
@@ -465,7 +465,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             }
             file.fileIsCleaned(sample(fileLocations, 100));
             dos.close();
-            return values;
         } catch (Exception exp) {
             try {
                 close();
@@ -764,10 +763,9 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         if (file.isDirty()) {
             bucket.unlockRead();
             bucket.lockWrite();
-            List<KeyValue<T>> result = rewriteFile(bucket, file, false, MAX_FILE_SIZE_READ);
+            rewriteFile(bucket, file, false, MAX_FILE_SIZE_READ);
             bucket.unlockWrite();
             bucket.lockRead();
-            return result;
         }
         return readValues(file);
     }
@@ -807,9 +805,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                         if (bucketInd == buckets.length) {
                             bucketInd--; //rounding error?
                         }
-                        if (bucketInd >= buckets.length) {
-                            UI.write("huh?");
-                        }
                         buckets[bucketInd].add(new KeyValue<>(key, readValue.getValue()));
                     }
                     for (int bucketInd = 0; bucketInd < buckets.length; bucketInd++) {
@@ -817,8 +812,8 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                         DBUtils.mergeValues(result, currentBucket, getCombinator());
                         buckets[bucketInd] = null; //Free some memory
                     }
+                    return result;
                 }
-                return result;
             } else {
                 return Collections.emptyList();
             }
