@@ -13,14 +13,16 @@ public class FileBucket implements Comparable<FileBucket> {
 
     private final long firstKey; //inclusive
     private final long lastKey; //inclusive
-    private final List<FileInfo> files;
-    private final Semaphore lock;
+    private List<FileInfo> files;
+    private final Semaphore appendLock;
+    private final Semaphore rewriteLock;
 
     public FileBucket(long firstKey, long lastKey) {
         this.firstKey = firstKey;
         this.lastKey = lastKey;
         this.files = new ArrayList<>();
-        this.lock = new Semaphore(NUMBER_OF_READ_PERMITS);
+        this.appendLock = new Semaphore(1);
+        this.rewriteLock = new Semaphore(NUMBER_OF_READ_PERMITS);
     }
 
     public List<FileInfo> getFiles() {
@@ -69,38 +71,46 @@ public class FileBucket implements Comparable<FileBucket> {
         return lastKey;
     }
 
-    public void unlockWrite() {
-        lock.release(NUMBER_OF_READ_PERMITS);
-        if (lock.availablePermits() > NUMBER_OF_READ_PERMITS) {
-            throw new RuntimeException("Illegal state of lock: too many unlocks");
-        }
+    public void lockAppend() {
+        appendLock.acquireUninterruptibly();
     }
 
-    public void lockWrite() {
-        lock.acquireUninterruptibly(NUMBER_OF_READ_PERMITS);
-    }
-
-    public void unlockRead() {
-        lock.release(1);
-        if (lock.availablePermits() > NUMBER_OF_READ_PERMITS) {
-            throw new RuntimeException("Illegal state of lock: too many unlocks");
+    public void unlockAppend() {
+        appendLock.release();
+        if (appendLock.availablePermits() > 1) {
+            throw new RuntimeException("Illegal state of append lock: too many unlocks!");
         }
     }
 
     public void lockRead() {
-        lock.acquireUninterruptibly(1);
+        rewriteLock.acquireUninterruptibly(1);
     }
 
-    public boolean tryLockRead() {
-        return lock.tryAcquire(1);
+    public void unlockRead() {
+        rewriteLock.release(1);
+    }
+
+    public void lockRewrite() {
+        rewriteLock.acquireUninterruptibly(NUMBER_OF_READ_PERMITS);
+    }
+
+    public void unlockRewrite() {
+        rewriteLock.release(NUMBER_OF_READ_PERMITS);
+        if (rewriteLock.availablePermits() > NUMBER_OF_READ_PERMITS) {
+            throw new RuntimeException("Illegal state of rewrite lock: too many unlocks!");
+        }
     }
 
     public String toString() {
-        return super.toString() + " " + firstKey + ", permits=" + lock.availablePermits();
+        return super.toString() + " " + firstKey + ", appendLock=" + appendLock.availablePermits() + " rewriteLock=" + rewriteLock.availablePermits();
     }
 
     @Override
     public int compareTo(FileBucket o) {
         return Long.compare(firstKey, o.getFirstKey());
+    }
+
+    public void setFiles(List<FileInfo> files) {
+        this.files = files;
     }
 }

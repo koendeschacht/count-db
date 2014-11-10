@@ -4,7 +4,6 @@ import be.bagofwords.db.combinator.OverWriteCombinator;
 import be.bagofwords.db.helper.TestObject;
 import be.bagofwords.db.helper.UnitTestContextLoader;
 import be.bagofwords.iterator.CloseableIterator;
-import be.bagofwords.ui.UI;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.Utils;
 import org.junit.Assert;
@@ -266,9 +265,7 @@ public class TestDataInterface extends BaseTestDataInterface {
         db.write("test", "null");
         db.flush();
         Assert.assertEquals("null", db.read("test"));
-        UI.write("About to write null");
         db.write("test", null);
-        UI.write("About to flush null");
         db.flush();
         Assert.assertEquals(null, db.read("test"));
         db.write("test", "null");
@@ -290,7 +287,7 @@ public class TestDataInterface extends BaseTestDataInterface {
 
     @Test
     public void testAccents() {
-        DataInterface<String> dataInterface = dataInterfaceFactory.createDataInterface(type, "testAccents", String.class);
+        DataInterface<String> dataInterface = dataInterfaceFactory.createDataInterface(type, "testAccents", String.class, new OverWriteCombinator<String>());
         String valuesWithAccents = "mé$àç7€";
         String keyWithAccents = "à§péçïàĺķĕƛ";
         dataInterface.write("key", valuesWithAccents);
@@ -316,6 +313,26 @@ public class TestDataInterface extends BaseTestDataInterface {
                 dataInterface.flush();
             }
         });
+    }
+
+    @Test
+    public void testDataAppearsEventually() {
+        DataInterface<Long> dataInterface = createCountDataInterface("testDataAppearsEventually");
+        long key = 42;
+        dataInterface.write(key, 10l);
+        Assert.assertTrue(findValue(dataInterface, key, 10l));
+        dataInterface.write(key, 1l);
+        Assert.assertTrue(findValue(dataInterface, key, 11l));
+    }
+
+    private boolean findValue(DataInterface<Long> dataInterface, long key, Long targetValue) {
+        long started = System.currentTimeMillis();
+        boolean foundValue = false;
+        while (!foundValue && System.currentTimeMillis() - started < 30000) {
+            foundValue = targetValue.equals(dataInterface.read(key));
+            Utils.threadSleep(10);
+        }
+        return foundValue;
     }
 
     private void writeRandomObjects(DataInterface<TestObject> dataInterface, int numOfExamples, Random random) throws Exception {

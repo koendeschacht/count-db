@@ -12,9 +12,7 @@ import be.bagofwords.util.HashUtils;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.StringUtils;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 public abstract class DataInterface<T extends Object> implements DataIterable<KeyValue<T>> {
 
@@ -23,15 +21,17 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
     private final String name;
 
     private final Object closeLock = new Object();
+    private final boolean isTemporaryDataInterface;
     private boolean wasClosed;
 
-    protected DataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
+    protected DataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
         if (StringUtils.isEmpty(name)) {
             throw new IllegalArgumentException("Name can not be null or empty");
         }
         this.name = name;
         this.objectClass = objectClass;
         this.combinator = combinator;
+        this.isTemporaryDataInterface = isTemporaryDataInterface;
     }
 
     public abstract T read(long key);
@@ -266,6 +266,9 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         doActionIfNotClosed(new ActionIfNotClosed() {
                                 @Override
                                 public void doAction() {
+                                    if (isTemporaryDataInterface) {
+                                        dropAllData();
+                                    }
                                     doClose();
                                     wasClosed = true;
                                 }
@@ -279,16 +282,15 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         return wasClosed;
     }
 
-    public void doOccasionalAction() {
-        //do nothing
-    }
-
     @Override
     protected void finalize() throws Throwable {
         doActionIfNotClosed(new ActionIfNotClosed() {
             @Override
             public void doAction() {
-                UI.write("Closing data interface " + getName() + " because it is about to be garbage collected.");
+                if (!isTemporaryDataInterface()) {
+                    //the user did not close the data interface himself?
+                    UI.write("Closing data interface " + getName() + " because it is about to be garbage collected.");
+                }
                 close();
             }
         });
@@ -306,4 +308,9 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
     public interface ActionIfNotClosed {
         public void doAction();
     }
+
+    public boolean isTemporaryDataInterface() {
+        return isTemporaryDataInterface;
+    }
+
 }

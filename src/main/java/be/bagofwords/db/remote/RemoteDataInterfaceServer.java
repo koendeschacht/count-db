@@ -78,20 +78,21 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
 
         private void prepareHandler() throws Exception {
             startTime = System.currentTimeMillis();
-            final String interfaceName = connection.readString();
+            String interfaceName = connection.readString();
+            boolean isTemporary = connection.readBoolean();
             Class objectClass = readClass();
             Class combinatorClass = readClass();
             Combinator combinator = (Combinator) ReflectionUtils.createObject(combinatorClass);
             synchronized (createNewInterfaceLock) {
                 dataInterface = findInterface(interfaceName);
                 if (dataInterface != null) {
-                    if (dataInterface.getCombinator().getClass() != combinator.getClass() || dataInterface.getObjectClass() != objectClass) {
+                    if (dataInterface.getCombinator().getClass() != combinator.getClass() || dataInterface.getObjectClass() != objectClass || dataInterface.isTemporaryDataInterface() != isTemporary) {
                         writeError(" Data interface " + interfaceName + " was already initialized!");
                     } else if (dataInterface.wasClosed()) {
                         writeError(" Data interface " + interfaceName + " was closed!");
                     }
                 } else {
-                    dataInterface = dataInterfaceFactory.createDataInterface(DatabaseCachingType.CACHED, interfaceName, objectClass, combinator);
+                    dataInterface = dataInterfaceFactory.createDataInterface(DatabaseCachingType.CACHED, interfaceName, objectClass, combinator, isTemporary);
                     createdInterfaces.add(dataInterface);
                 }
             }

@@ -22,8 +22,8 @@ public class LevelDBDataInterfaceFactory extends DataInterfaceFactory {
     }
 
     @Override
-    public <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator) {
-        return new LevelDBDataInterface<>(directory, nameOfSubset, objectClass, combinator);
+    public <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
+        return new LevelDBDataInterface<>(directory, nameOfSubset, objectClass, combinator, isTemporaryDataInterface);
     }
 
 }

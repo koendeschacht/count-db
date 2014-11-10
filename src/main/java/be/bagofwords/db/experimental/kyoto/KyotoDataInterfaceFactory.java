@@ -42,7 +42,7 @@ public class KyotoDataInterfaceFactory extends DataInterfaceFactory {
 
 
     @Override
-    public <T extends Object> CoreDataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator) {
-        return new KyotoDataInterface<>(nameOfSubset, directory, objectClass, combinator);
+    public <T extends Object> CoreDataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
+        return new KyotoDataInterface<>(nameOfSubset, directory, objectClass, combinator, isTemporaryDataInterface);
     }
 }

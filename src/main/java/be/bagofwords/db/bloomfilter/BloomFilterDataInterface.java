@@ -64,13 +64,23 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
     }
 
     private boolean validBloomFilter(LongBloomFilterWithCheckSum bloomFilter) {
-        return bloomFilter != null && currentWriteCount == bloomFilter.getDataCheckSum();
+        return bloomFilter != null && currentWriteCount == bloomFilter.getDataCheckSum() && bloomFilter.expectedFpp() < MAX_FPP;
     }
 
     @Override
     public void write(long key, T value) {
-        currentWriteCount++;
+        tryToUpdateFilter(key);
         baseInterface.write(key, value);
+    }
+
+    private void tryToUpdateFilter(long key) {
+        LongBloomFilterWithCheckSum currFilter = bloomFilter;
+        if (currFilter != null) {
+            //try to keep filter up-to-date
+            currFilter.put(key);
+        } else {
+            currentWriteCount++; //this will force a new filter to be computed on read
+        }
     }
 
     @Override
@@ -84,7 +94,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
             @Override
             public KeyValue<T> next() {
                 KeyValue<T> next = keyValueIterator.next();
-                currentWriteCount++;
+                tryToUpdateFilter(next.getKey());
                 return next;
             }
 
@@ -143,7 +153,9 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
         it.close();
         currentKeyForNewBloomFilterCreation = Long.MAX_VALUE;
         long taken = (System.currentTimeMillis() - start);
-        UI.write("Created bloomfilter " + getName() + " in " + taken + " ms for " + numOfKeys + " keys, size is " + bloomFilter.getBits().size() / (8 * 1024) + " kbytes.");
+        if (numOfKeys > 0) {
+            UI.write("Created bloomfilter " + getName() + " in " + taken + " ms for " + numOfKeys + " keys, size is " + bloomFilter.getBits().size() / (8 * 1024) + " kbytes.");
+        }
     }
 
     private void createNewBloomFilter() {
@@ -156,12 +168,6 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
     public void flush() {
         baseInterface.flush();
         writeBloomFilterToDiskIfNecessary();
-    }
-
-    @Override
-    public void doOccasionalAction() {
-        writeBloomFilterToDiskIfNecessary();
-        super.doOccasionalAction();
     }
 
     private void writeBloomFilterToDiskIfNecessary() {

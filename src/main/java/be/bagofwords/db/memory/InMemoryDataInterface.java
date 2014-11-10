@@ -15,8 +15,8 @@ public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T
     private Map<Long, T> values;
     private final DataLock lock;
 
-    protected InMemoryDataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
-        super(name, objectClass, combinator);
+    protected InMemoryDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
+        super(name, objectClass, combinator, isTemporaryDataInterface);
         this.values = new ConcurrentHashMap<>();
         this.lock = new DataLock();
     }

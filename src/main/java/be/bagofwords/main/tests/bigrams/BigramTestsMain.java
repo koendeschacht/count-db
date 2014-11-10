@@ -8,7 +8,10 @@ import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.combinator.LongCombinator;
+import be.bagofwords.db.experimental.kyoto.KyotoDataInterfaceFactory;
+import be.bagofwords.db.experimental.rocksdb.RocksDBDataInterfaceFactory;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
+import be.bagofwords.db.leveldb.LevelDBDataInterfaceFactory;
 import be.bagofwords.main.tests.TestsApplicationContextFactory;
 import be.bagofwords.text.WordIterator;
 import be.bagofwords.ui.UI;
@@ -26,7 +29,7 @@ import java.util.concurrent.CountDownLatch;
 public class BigramTestsMain implements MainClass {
 
     private static final long MIN_MILLION_ITEMS_TO_PROCESS = 1;
-    private static final long MAX_MILLION_ITEMS_TO_PROCESS = 128;
+    private static final long MAX_MILLION_ITEMS_TO_PROCESS = 256;
 
     private static final File tmpDbDir = new File("/tmp/testBigramCounts");
 
@@ -94,11 +97,11 @@ public class BigramTestsMain implements MainClass {
         UI.write("Testing batch writing / reading for data type " + dataType);
 //        testSeparateWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
         testSeparateWritingReading(dataType, new FileDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
-//        testSeparateWritingReading(dataType, new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, "localhost", 1208), DatabaseCachingType.CACHED_AND_BLOOM);
+        //testSeparateWritingReading(dataType, new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, "localhost", 1208), DatabaseCachingType.CACHED_AND_BLOOM);
 //        testSeparateWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
 //        testSeparateWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
 //        testSeparateWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBDPatched", true), DatabaseCachingType.DIRECT);
-        //testBatchWritingAndReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT); --> too slow
+//        testBatchWritingAndReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT); --> too slow
 
         UI.write("Testing mixed writing / reading for data type " + dataType);
 //        testMixedWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
@@ -122,7 +125,9 @@ public class BigramTestsMain implements MainClass {
 
     private void testSeparateWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType type) throws InterruptedException, FileNotFoundException {
         for (long items = MIN_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items <= MAX_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items *= 2) {
-            testSeparateWritingReading(dataType, factory, type, 8, items);
+            if (!(factory instanceof KyotoDataInterfaceFactory) || items < 256 * 1024 * 1024) {
+                testSeparateWritingReading(dataType, factory, type, 8, items);
+            }
         }
         factory.terminate();
     }
@@ -163,7 +168,9 @@ public class BigramTestsMain implements MainClass {
 
     private void testMixedWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType type) throws InterruptedException, FileNotFoundException {
         for (long items = MIN_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items <= MAX_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items *= 2) {
-            testMixedWritingReading(dataType, factory, type, largeTextFile, 8, items);
+            if (!(factory instanceof KyotoDataInterfaceFactory) || items < 256 * 1024 * 1024) {
+                testMixedWritingReading(dataType, factory, type, largeTextFile, 8, items);
+            }
         }
         factory.terminate();
     }

@@ -90,7 +90,7 @@ public class BaseTestDataInterface {
     }
 
     protected DataInterface<Long> createCountDataInterface(String subsetName) {
-        return dataInterfaceFactory.createDataInterface(type, subsetName, Long.class, new LongCombinator());
+        return dataInterfaceFactory.createDataInterface(type, subsetName + "_" + System.currentTimeMillis(), Long.class, new LongCombinator());
     }
 
 

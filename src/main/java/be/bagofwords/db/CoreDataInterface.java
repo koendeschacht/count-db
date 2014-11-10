@@ -4,8 +4,8 @@ import be.bagofwords.db.combinator.Combinator;
 
 public abstract class CoreDataInterface<T> extends DataInterface<T> {
 
-    public CoreDataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
-        super(name, objectClass, combinator);
+    public CoreDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporary) {
+        super(name, objectClass, combinator, isTemporary);
     }
 
     @Override

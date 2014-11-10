@@ -1,5 +1,6 @@
 package be.bagofwords.db.cached;
 
+import be.bagofwords.application.memory.MemoryGobbler;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.application.memory.MemoryStatus;
 import be.bagofwords.cache.Cache;
@@ -16,20 +17,23 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Semaphore;
 
-public class CachedDataInterface<T extends Object> extends LayeredDataInterface<T> {
+public class CachedDataInterface<T extends Object> extends LayeredDataInterface<T> implements MemoryGobbler {
 
     private Cache<T> readCache;
-    private Map<Thread, WeaklySynchronizedWriteBuffer<T>> writeCache;
-    private final Semaphore writeCacheLock;
+    private Map<Thread, WriteBuffer<T>> writeBufferMapping;
+    private final Semaphore writeBufferMappingLock;
     private final MemoryManager memoryManager;
     private final SafeThread initializeCachesThread;
+    private final Set<Long> dirtyKeys;
 
     public CachedDataInterface(MemoryManager memoryManager, CachesManager cachesManager, DataInterface<T> baseInterface) {
         super(baseInterface);
         this.memoryManager = memoryManager;
+        this.memoryManager.registerMemoryGobbler(this);
         this.readCache = cachesManager.createNewCache(getName(), baseInterface.getObjectClass());
-        this.writeCache = new HashMap<>();
-        this.writeCacheLock = new Semaphore(100);
+        this.dirtyKeys = new HashSet<>();
+        this.writeBufferMapping = new HashMap<>();
+        this.writeBufferMappingLock = new Semaphore(100);
         this.initializeCachesThread = new InitializeCachesThread(baseInterface);
         this.initializeCachesThread.start();
     }
@@ -87,46 +91,27 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
         };
     }
 
-    private WeaklySynchronizedWriteBuffer<T> getWriteBuffer() {
-        writeCacheLock.acquireUninterruptibly(1);
-        WeaklySynchronizedWriteBuffer<T> weaklySynchronizedWriteBuffer = writeCache.get(Thread.currentThread());
-        if (weaklySynchronizedWriteBuffer == null) {
-            writeCacheLock.release(1);
-            writeCacheLock.acquireUninterruptibly(100);
-            weaklySynchronizedWriteBuffer = new WeaklySynchronizedWriteBuffer<>(this);
-            writeCache.put(Thread.currentThread(), weaklySynchronizedWriteBuffer);
-            writeCacheLock.release(100);
+    private WriteBuffer<T> getWriteBuffer() {
+        writeBufferMappingLock.acquireUninterruptibly(1);
+        WriteBuffer<T> writeBuffer = writeBufferMapping.get(Thread.currentThread());
+        if (writeBuffer == null) {
+            writeBufferMappingLock.release(1);
+            writeBufferMappingLock.acquireUninterruptibly(100);
+            writeBuffer = new WriteBuffer<>(this);
+            writeBufferMapping.put(Thread.currentThread(), writeBuffer);
+            writeBufferMappingLock.release(100);
         } else {
-            writeCacheLock.release(1);
+            writeBufferMappingLock.release(1);
         }
-        return weaklySynchronizedWriteBuffer;
+        return writeBuffer;
     }
 
 
     @Override
     public void write(Iterator<KeyValue<T>> entries) {
-        writeAndInvalidateReadCacheEntries(entries);
-    }
-
-    private void writeAndInvalidateReadCacheEntries(final Iterator<KeyValue<T>> entries) {
-        baseInterface.write(new Iterator<KeyValue<T>>() {
-            @Override
-            public boolean hasNext() {
-                return entries.hasNext();
-            }
-
-            @Override
-            public KeyValue<T> next() {
-                KeyValue<T> next = entries.next();
-                readCache.remove(next.getKey());
-                return next;
-            }
-
-            @Override
-            public void remove() {
-                entries.remove();
-            }
-        });
+        baseInterface.write(entries);
+        baseInterface.flush();
+        readCache.clear();
     }
 
     @Override
@@ -138,8 +123,8 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
             //even if the flush failed, we remove our data structures
             readCache.clear();
             readCache = null;
-            writeCache.clear();
-            writeCache = null;
+            writeBufferMapping.clear();
+            writeBufferMapping = null;
             baseInterface.close();
         }
     }
@@ -147,35 +132,35 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     public void flush() {
         flushWriteCache(true);
         baseInterface.flush();
-    }
-
-    @Override
-    public void doOccasionalAction() {
-        flushWriteCache(false);
+        synchronized (dirtyKeys) {
+            for (Long key : dirtyKeys) {
+                readCache.remove(key);
+            }
+            dirtyKeys.clear();
+        }
+        //cleanup:
         removeUnusedWriteBuffers();
-        super.doOccasionalAction();
     }
 
     private void removeUnusedWriteBuffers() {
-        writeCacheLock.acquireUninterruptibly(100);
-        Iterator<Map.Entry<Thread, WeaklySynchronizedWriteBuffer<T>>> iterator = writeCache.entrySet().iterator();
+        writeBufferMappingLock.acquireUninterruptibly(100);
+        Iterator<Map.Entry<Thread, WriteBuffer<T>>> iterator = writeBufferMapping.entrySet().iterator();
         while (iterator.hasNext()) {
-            Map.Entry<Thread, WeaklySynchronizedWriteBuffer<T>> next = iterator.next();
+            Map.Entry<Thread, WriteBuffer<T>> next = iterator.next();
             if (System.currentTimeMillis() - next.getValue().getTimeOfLastUsage() > 20 * 1000) {
                 //not used in last 20s, remove
                 iterator.remove();
                 next.getValue().flush();  //make sure all lingering data was flushed
-                UI.write("Removed write buffer for " + getName());
             }
         }
-        writeCacheLock.release(100);
+        writeBufferMappingLock.release(100);
     }
 
     private void flushWriteCache(final boolean force) {
-        writeCacheLock.acquireUninterruptibly(1);
-        Collection<WeaklySynchronizedWriteBuffer<T>> buffers = writeCache.values();
+        writeBufferMappingLock.acquireUninterruptibly(1);
+        Collection<WriteBuffer<T>> buffers = writeBufferMapping.values();
         final CountDownLatch latch = new CountDownLatch(buffers.size());
-        for (final WeaklySynchronizedWriteBuffer<T> buffer : buffers) {
+        for (final WriteBuffer<T> buffer : buffers) {
             new Thread() {
                 public void run() {
                     buffer.checkFlush(force ? 0 : DataInterfaceFactoryOccasionalActionsThread.TIME_BETWEEN_FLUSHES);
@@ -188,20 +173,20 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-        writeCacheLock.release(1);
+        writeBufferMappingLock.release(1);
     }
 
     @Override
     public void dropAllData() {
         stopInitializeCachesThread();
         flushWriteCache(true);
-        writeCache.clear();
+        writeBufferMapping.clear();
         readCache.clear();
         baseInterface.dropAllData();
     }
 
     public long apprSize() {
-        return writeCache.size() + baseInterface.apprSize();
+        return writeBufferMapping.size() + baseInterface.apprSize();
     }
 
     private void stopInitializeCachesThread() {
@@ -212,8 +197,33 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     }
 
     public void writeValuesFromFlush(List<KeyValue<T>> allValues) {
-        writeAndInvalidateReadCacheEntries(allValues.iterator());
+        baseInterface.write(allValues.iterator());
+        synchronized (dirtyKeys) {
+            for (KeyValue<T> value : allValues) {
+                dirtyKeys.add(value.getKey());
+            }
+        }
+    }
 
+    @Override
+    public void freeMemory() {
+        //note that the read caches are managed by the CachesManager, this class only manages the write buffer
+        flushWriteCache(true);
+    }
+
+    @Override
+    public String getMemoryUsage() {
+        return "write buffers size=" + getSizeOfAllWriteBuffers();
+    }
+
+    private long getSizeOfAllWriteBuffers() {
+        writeBufferMappingLock.acquireUninterruptibly(1);
+        long result = 0;
+        for (WriteBuffer<T> writeBuffer : writeBufferMapping.values()) {
+            result += writeBuffer.size();
+        }
+        writeBufferMappingLock.release(1);
+        return result;
     }
 
     private class InitializeCachesThread extends SafeThread {
@@ -233,10 +243,10 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
                 numOfValuesWritten++;
             }
             if (iterator.hasNext()) {
-                UI.write("Could not add (all) values to cache of " + getName() + " because memory was full");
+                UI.write("Could not add (all) values to cache of " + baseInterface.getName() + " because memory was full");
             } else {
                 if (numOfValuesWritten > 0) {
-                    UI.write("Added " + numOfValuesWritten + " values to cache of " + getName() + " in " + (System.currentTimeMillis() - start) + " ms");
+                    UI.write("Added " + numOfValuesWritten + " values to cache of " + baseInterface.getName() + " in " + (System.currentTimeMillis() - start) + " ms");
                 }
             }
             iterator.close();

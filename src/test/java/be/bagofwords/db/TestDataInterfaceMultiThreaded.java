@@ -121,6 +121,9 @@ public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
         }
         flushThread.waitForFinish();
         db.flush();
+        for (int j = 0; j < 1000; j++) {
+            db.readCount(HashUtils.randomDistributeHash(j));
+        }
         CloseableIterator<KeyValue<Long>> iterator = db.iterator();
         while (iterator.hasNext()) {
             KeyValue<Long> curr = iterator.next();

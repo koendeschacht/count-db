@@ -17,10 +17,12 @@ import java.util.List;
 
 public abstract class DataInterfaceFactory implements LateCloseableComponent {
 
-    private final CachesManager cachesManager;
-    private final MemoryManager memoryManager;
-    private final List<DataInterfaceReference> allInterfaces;
-    private final ReferenceQueue<DataInterface> allInterfacesReferenceQueue;
+    private int tmpDataInterfaceCount = 0;
+
+    private CachesManager cachesManager;
+    private MemoryManager memoryManager;
+    private List<DataInterfaceReference> allInterfaces;
+    private ReferenceQueue<DataInterface> allInterfacesReferenceQueue;
 
     private DataInterface<LongBloomFilterWithCheckSum> cachedBloomFilters;
     private DataInterfaceFactoryOccasionalActionsThread occasionalActionsThread;
@@ -34,22 +36,26 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
         this.occasionalActionsThread.start();
     }
 
-    public abstract <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator);
+    public abstract <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface);
 
     public DataInterface<Long> createCountDataInterface(String subset) {
-        return createDataInterface(DatabaseCachingType.CACHED_AND_BLOOM, subset, Long.class, new LongCombinator());
+        return createDataInterface(DatabaseCachingType.CACHED_AND_BLOOM, subset, Long.class, new LongCombinator(), false);
     }
 
-    public <T extends Object> DataInterface<T> createDataInterface(DatabaseCachingType type, String subset, Class<T> objectClass) {
-        return createDataInterface(type, subset, objectClass, new OverWriteCombinator<T>());
+    public DataInterface<Long> createTmpCountDataInterface(String subset) {
+        return createDataInterface(DatabaseCachingType.CACHED_AND_BLOOM, createNameForTemporaryInterface(subset), Long.class, new LongCombinator(), true);
     }
 
-    public <T extends Object> DataInterface<T> createDataInterface(String subset, Class<T> objectClass) {
-        return createDataInterface(DatabaseCachingType.CACHED_AND_BLOOM, subset, objectClass, new OverWriteCombinator<T>());
+    public <T extends Object> DataInterface<T> createDataInterface(DatabaseCachingType type, String subset, Class<T> objectClass, Combinator<T> combinator) {
+        return createDataInterface(type, subset, objectClass, combinator, false);
     }
 
-    public <T extends Object> DataInterface<T> createDataInterface(final DatabaseCachingType type, final String subset, final Class<T> objectClass, final Combinator<T> combinator) {
-        DataInterface<T> result = createBaseDataInterface(subset, objectClass, combinator);
+    public <T extends Object> DataInterface<T> createTmpDataInterface(DatabaseCachingType type, String subset, Class<T> objectClass, Combinator<T> combinator) {
+        return createDataInterface(type, createNameForTemporaryInterface(subset), objectClass, combinator, true);
+    }
+
+    public <T extends Object> DataInterface<T> createDataInterface(DatabaseCachingType type, String subset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
+        DataInterface<T> result = createBaseDataInterface(subset, objectClass, combinator, isTemporaryDataInterface);
         if (type.useCache()) {
             result = cached(result);
         }
@@ -73,7 +79,7 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
 
     private void checkInitialisationCachedBloomFilters() {
         if (cachedBloomFilters == null) {
-            cachedBloomFilters = createBaseDataInterface("system/bloomFilter", LongBloomFilterWithCheckSum.class, new OverWriteCombinator<LongBloomFilterWithCheckSum>());
+            cachedBloomFilters = createBaseDataInterface("system/bloomFilter", LongBloomFilterWithCheckSum.class, new OverWriteCombinator<LongBloomFilterWithCheckSum>(), false);
             synchronized (allInterfaces) {
                 allInterfaces.add(new DataInterfaceReference(cachedBloomFilters, allInterfacesReferenceQueue));
             }
@@ -132,6 +138,10 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
             }
             reference = (DataInterfaceReference) allInterfacesReferenceQueue.poll();
         }
+    }
+
+    private String createNameForTemporaryInterface(String subset) {
+        return "tmp/" + subset + "_" + System.currentTimeMillis() + "_" + tmpDataInterfaceCount++ + "/";
     }
 
     public static class DataInterfaceReference extends WeakReference<DataInterface> {

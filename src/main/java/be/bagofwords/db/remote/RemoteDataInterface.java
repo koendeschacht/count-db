@@ -32,8 +32,8 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     private final List<Connection> connections;
     private final ExecutorService executorService;
 
-    public RemoteDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, String host, int port) {
-        super(name, objectClass, combinator);
+    public RemoteDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, String host, int port, boolean isTemporaryDataInterface) {
+        super(name, objectClass, combinator, isTemporaryDataInterface);
         this.host = host;
         this.port = port;
         this.connections = new ArrayList<>();
@@ -491,6 +491,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
         private void initializeSubset(RemoteDataInterfaceServer.ConnectionType connectionType) throws IOException {
             writeByte((byte) connectionType.ordinal());
             writeString(getName());
+            writeBoolean(isTemporaryDataInterface());
             writeString(getObjectClass().getCanonicalName());
             writeString(getCombinator().getClass().getCanonicalName());
             flush();

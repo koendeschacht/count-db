@@ -24,8 +24,8 @@ public class RocksDBDataInterface<T> extends CoreDataInterface<T> {
     private final File dbDirectory;
     private RocksDB db;
 
-    public RocksDBDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, String directory, boolean usePatch) {
-        super(name, objectClass, combinator);
+    public RocksDBDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, String directory, boolean usePatch, boolean isTemporaryDataInterface) {
+        super(name, objectClass, combinator, isTemporaryDataInterface);
         this.useMergeHack = usePatch;
         try {
             if (useMergeHack && objectClass == Long.class) {

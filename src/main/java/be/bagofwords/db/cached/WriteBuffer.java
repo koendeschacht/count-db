@@ -9,9 +9,9 @@ import java.util.List;
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 27/10/14.
  */
-public class WeaklySynchronizedWriteBuffer<T> {
+public class WriteBuffer<T> {
 
-    private final static int MAX_VALUES_TO_CACHE = 200 * 1000;
+    private final static int MAX_VALUES_TO_CACHE = 100000;
 
     private long timeOfLastUsage;
     private long timeOfLastFlush;
@@ -20,7 +20,7 @@ public class WeaklySynchronizedWriteBuffer<T> {
 
     private final Object lock = new Object();
 
-    public WeaklySynchronizedWriteBuffer(CachedDataInterface<T> dataInterface) {
+    public WriteBuffer(CachedDataInterface<T> dataInterface) {
         this.writeCache = new DynamicMap<>(dataInterface.getObjectClass());
         this.dataInterface = dataInterface;
         this.timeOfLastFlush = System.currentTimeMillis();
@@ -68,5 +68,9 @@ public class WeaklySynchronizedWriteBuffer<T> {
 
     public long getTimeOfLastUsage() {
         return timeOfLastUsage;
+    }
+
+    public long size() {
+        return writeCache.size();
     }
 }

@@ -10,7 +10,7 @@ public abstract class LayeredDataInterface<T> extends DataInterface<T> {
     protected DataInterface<T> baseInterface;
 
     public LayeredDataInterface(DataInterface<T> baseInterface) {
-        super(baseInterface.getName(), baseInterface.getObjectClass(), baseInterface.getCombinator());
+        super(baseInterface.getName(), baseInterface.getObjectClass(), baseInterface.getCombinator(), baseInterface.isTemporaryDataInterface());
         this.baseInterface = baseInterface;
     }
 
@@ -89,11 +89,6 @@ public abstract class LayeredDataInterface<T> extends DataInterface<T> {
         return baseInterface.cachedValueIterator();
     }
 
-    @Override
-    public void doOccasionalAction() {
-        super.doOccasionalAction();
-        baseInterface.doOccasionalAction();
-    }
-
     protected abstract void doCloseImpl();
+
 }

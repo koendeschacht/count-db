@@ -37,7 +37,7 @@ public class DataInterfaceFactoryOccasionalActionsThread extends SafeThread {
                         dataInterface.doActionIfNotClosed(new DataInterface.ActionIfNotClosed() {
                             @Override
                             public void doAction() {
-                                dataInterface.doOccasionalAction();
+                                dataInterface.flush();
                             }
                         });
                     } catch (Throwable t) {

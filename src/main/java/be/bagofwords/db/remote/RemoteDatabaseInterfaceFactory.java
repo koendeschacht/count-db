@@ -25,8 +25,8 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
     }
 
     @Override
-    public synchronized <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator) {
-        return new RemoteDataInterface<>(nameOfSubset, objectClass, combinator, host, port);
+    public synchronized <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
+        return new RemoteDataInterface<>(nameOfSubset, objectClass, combinator, host, port, isTemporaryDataInterface);
     }
 
 }

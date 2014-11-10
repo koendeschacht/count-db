@@ -8,15 +8,16 @@ import java.util.List;
 class FileInfo implements Comparable {
 
     private final long firstKey;
-    private int size;
+    private int readSize;
+    private int writeSize;
     private byte[] cachedFileContents;
     //This field is only filled in when the file is clean (i.e. not isDirty)
     private List<Pair<Long, Integer>> fileLocations;
 
-    public FileInfo(long firstKey, int size) {
+    public FileInfo(long firstKey, int readSize, int writeSize) {
         this.firstKey = firstKey;
-        this.size = size;
-        if (size == 0) {
+        this.readSize = readSize;
+        if (readSize == 0) {
             fileLocations = Collections.emptyList();
         }
     }
@@ -25,19 +26,13 @@ class FileInfo implements Comparable {
         return firstKey;
     }
 
-    public int getSize() {
-        return size;
+    public int getReadSize() {
+        return readSize;
     }
 
-    public void setSize(int size) {
-        this.size = size;
-    }
-
-    public boolean isDirty() {
-        return fileLocations == null;
-    }
-
-    public void fileIsCleaned(List<Pair<Long, Integer>> fileLocations) {
+    public void fileWasRewritten(List<Pair<Long, Integer>> fileLocations, int newReadSize, int newWriteSize) {
+        this.readSize = newReadSize;
+        this.writeSize = newWriteSize;
         this.fileLocations = fileLocations;
     }
 
@@ -53,14 +48,11 @@ class FileInfo implements Comparable {
     }
 
     public String toString() {
-        return super.toString() + " " + getFirstKey() + " " + getSize() + " " + isDirty();
+        return super.toString() + " " + getFirstKey() + " " + getReadSize() + " " + getWriteSize();
     }
 
-    public void increaseSize(long diff, boolean cleanWrite) {
-        this.size += diff;
-        if (!cleanWrite) {
-            this.fileLocations = null;
-        }
+    public void increaseWriteSize(int diff) {
+        this.writeSize += diff;
     }
 
     public List<Pair<Long, Integer>> getFileLocations() {
@@ -84,4 +76,11 @@ class FileInfo implements Comparable {
         this.cachedFileContents = cachedFileContents;
     }
 
+    public int getWriteSize() {
+        return writeSize;
+    }
+
+    public boolean isDirty() {
+        return readSize < writeSize;
+    }
 }
