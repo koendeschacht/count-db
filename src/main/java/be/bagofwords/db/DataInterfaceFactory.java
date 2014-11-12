@@ -25,14 +25,14 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
     private ReferenceQueue<DataInterface> allInterfacesReferenceQueue;
 
     private DataInterface<LongBloomFilterWithCheckSum> cachedBloomFilters;
-    private DataInterfaceFactoryOccasionalActionsThread occasionalActionsThread;
+    private FlushDataInterfacesThread occasionalActionsThread;
 
     public DataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager) {
         this.cachesManager = cachesManager;
         this.memoryManager = memoryManager;
         this.allInterfaces = new ArrayList<>();
         this.allInterfacesReferenceQueue = new ReferenceQueue<>();
-        this.occasionalActionsThread = new DataInterfaceFactoryOccasionalActionsThread(this, memoryManager);
+        this.occasionalActionsThread = new FlushDataInterfacesThread(this, memoryManager);
         this.occasionalActionsThread.start();
     }
 
@@ -101,23 +101,13 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
             for (WeakReference<DataInterface> referenceToDI : allInterfaces) {
                 final DataInterface dataInterface = referenceToDI.get();
                 if (dataInterface != null && dataInterface != cachedBloomFilters) {
-                    dataInterface.doActionIfNotClosed(new DataInterface.ActionIfNotClosed() {
-                        @Override
-                        public void doAction() {
-                            dataInterface.flush();
-                            dataInterface.close();
-                        }
-                    });
+                    dataInterface.flush();
+                    dataInterface.close();
                 }
             }
             if (cachedBloomFilters != null) {
-                cachedBloomFilters.doActionIfNotClosed(new DataInterface.ActionIfNotClosed() {
-                    @Override
-                    public void doAction() {
-                        cachedBloomFilters.flush();
-                        cachedBloomFilters.close();
-                    }
-                });
+                cachedBloomFilters.flush();
+                cachedBloomFilters.close();
                 cachedBloomFilters = null;
             }
             allInterfaces.clear();

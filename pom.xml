@@ -52,8 +52,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>2.3.2</version>
                 <configuration>
-                    <source>1.7</source>
-                    <target>1.7</target>
+                    <source>1.8</source>
+                    <target>1.8</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -103,7 +103,7 @@
         <dependency>
             <groupId>be.bagofwords</groupId>
             <artifactId>bow-utils</artifactId>
-            <version>1.0.2</version>
+            <version>1.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

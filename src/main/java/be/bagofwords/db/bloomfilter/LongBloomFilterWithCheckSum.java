@@ -24,6 +24,10 @@ public class LongBloomFilterWithCheckSum extends LongBloomFilter {
         this.dataCheckSum = dataCheckSum;
     }
 
+    public void increaseDataCheckSum() {
+        this.dataCheckSum++;
+    }
+
     //Used for serialization
 
     public LongBloomFilterWithCheckSum() {

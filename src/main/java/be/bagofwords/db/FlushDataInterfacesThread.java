@@ -9,15 +9,15 @@ import be.bagofwords.util.Utils;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DataInterfaceFactoryOccasionalActionsThread extends SafeThread {
+public class FlushDataInterfacesThread extends SafeThread {
 
-    public static final long TIME_BETWEEN_FLUSHES = 2000;
+    private static final long TIME_BETWEEN_FLUSHES = 2000;
 
     private final DataInterfaceFactory dataInterfaceFactory;
     private final MemoryManager memoryManager;
 
-    public DataInterfaceFactoryOccasionalActionsThread(DataInterfaceFactory dataInterfaceFactory, MemoryManager memoryManager) {
-        super("DataInterfaceFactoryOccasionalActionsThread", true);
+    public FlushDataInterfacesThread(DataInterfaceFactory dataInterfaceFactory, MemoryManager memoryManager) {
+        super("FlushDataInterfacesThread", true);
         this.dataInterfaceFactory = dataInterfaceFactory;
         this.memoryManager = memoryManager;
     }
@@ -30,28 +30,24 @@ public class DataInterfaceFactoryOccasionalActionsThread extends SafeThread {
             synchronized (dataInterfaceFactory.getAllInterfaces()) {
                 currentInterfaces = new ArrayList<>(dataInterfaceFactory.getAllInterfaces());
             }
-            for (DataInterfaceFactory.DataInterfaceReference reference : currentInterfaces) {
-                final DataInterface dataInterface = reference.get();
-                if (dataInterface != null) {
-                    try {
-                        dataInterface.doActionIfNotClosed(new DataInterface.ActionIfNotClosed() {
-                            @Override
-                            public void doAction() {
+            currentInterfaces.parallelStream().forEach(reference -> {
+                        final DataInterface dataInterface = reference.get();
+                        if (dataInterface != null) {
+                            try {
                                 dataInterface.flush();
+                            } catch (Throwable t) {
+                                UI.writeError("Received exception while performing occasional action for data interface " + dataInterface.getName() + ". Will close this interface.", t);
+                                //we probably lost some data in the flush, to make sure that other threads know about the problems with
+                                //this data interface, we close it.
+                                try {
+                                    dataInterface.close();
+                                } catch (Throwable t2) {
+                                    UI.writeError("Failed to close " + dataInterface.getName(), t2);
+                                }
                             }
-                        });
-                    } catch (Throwable t) {
-                        UI.writeError("Received exception while performing occasional action for data interface " + dataInterface.getName() + ". Will close this interface.", t);
-                        //we probably lost some data in the flush, to make sure that other threads know about the problems with
-                        //this data interface, we close it.
-                        try {
-                            dataInterface.close();
-                        } catch (Throwable t2) {
-                            UI.writeError("Failed to close " + dataInterface.getName(), t2);
                         }
                     }
-                }
-            }
+            );
             long timeToSleepBetweenFlushes = TIME_BETWEEN_FLUSHES;
             if (memoryManager.getMemoryStatus() == MemoryStatus.CRITICAL) {
                 timeToSleepBetweenFlushes = 0;

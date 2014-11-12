@@ -413,12 +413,7 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
         synchronized (runningRequestHandlers) {
             sortedRequestHandlers = new ArrayList<>(runningRequestHandlers);
         }
-        Collections.sort(sortedRequestHandlers, new Comparator<RemoteDataInterfaceServer.SocketRequestHandler>() {
-            @Override
-            public int compare(RemoteDataInterfaceServer.SocketRequestHandler o1, RemoteDataInterfaceServer.SocketRequestHandler o2) {
-                return -Double.compare(o1.getTotalNumberOfRequests(), o2.getTotalNumberOfRequests());
-            }
-        });
+        Collections.sort(sortedRequestHandlers, (o1, o2) -> -Double.compare(o1.getTotalNumberOfRequests(), o2.getTotalNumberOfRequests()));
         for (int i = 0; i < sortedRequestHandlers.size(); i++) {
             DataInterfaceSocketRequestHandler handler = (DataInterfaceSocketRequestHandler) sortedRequestHandlers.get(i);
             ln(sb, "<tr><td>" + i + " subset </td><td>" + handler.getDataInterface().getName() + "</td></tr>");

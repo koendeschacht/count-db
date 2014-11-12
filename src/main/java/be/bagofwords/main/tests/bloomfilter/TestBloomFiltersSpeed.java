@@ -14,12 +14,7 @@ public class TestBloomFiltersSpeed {
     public static void main(String[] args) {
         LongBloomFilter bloomFilter1 = new LongBloomFilter(NUM_OF_VALUES, 0.001);
 
-        BloomFilter<Long> bloomFilter2 = BloomFilter.create(new Funnel<Long>() {
-            @Override
-            public void funnel(Long from, PrimitiveSink into) {
-                into.putLong(from);
-            }
-        }, NUM_OF_VALUES, 0.001);
+        BloomFilter<Long> bloomFilter2 = BloomFilter.create((from, into) -> into.putLong(from), NUM_OF_VALUES, 0.001);
 
         LongCountsBloomFilter bloomFilter3 = new LongCountsBloomFilter(NUM_OF_VALUES, 0.001);
         UI.write("Writing values for filter 1 took " + putValues(bloomFilter1));

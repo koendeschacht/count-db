@@ -61,12 +61,7 @@ public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T
         //We should probably add locking for this iterator, but do we want to
         //keep all the data locked until it is closed?
         List<Map.Entry<Long, T>> sortedValues = new ArrayList<>(values.entrySet());
-        Collections.sort(sortedValues, new Comparator<Map.Entry<Long, T>>() {
-            @Override
-            public int compare(Map.Entry<Long, T> o1, Map.Entry<Long, T> o2) {
-                return Long.compare(o1.getKey(), o2.getKey());
-            }
-        });
+        Collections.sort(sortedValues, (o1, o2) -> Long.compare(o1.getKey(), o2.getKey()));
         final Iterator<Map.Entry<Long, T>> valuesIt = sortedValues.iterator();
         return new CloseableIterator<KeyValue<T>>() {
             @Override
@@ -101,9 +96,11 @@ public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T
 
     @Override
     public void flush() {
-        //make sure that all writes have completely finished:
-        lock.lockWriteAll();
-        lock.unlockWriteAll();
+        doActionIfNotClosed(() -> {
+            //make sure that all writes have completely finished:
+            lock.lockWriteAll();
+            lock.unlockWriteAll();
+        });
     }
 
     @Override

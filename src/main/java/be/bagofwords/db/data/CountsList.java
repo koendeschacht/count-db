@@ -125,14 +125,11 @@ public class CountsList extends ArrayList<Pair<Long, Long>> implements ByteArray
 
     public List<Long> getSortedKeys() {
         List<Pair<Long, Long>> sortedValues = new ArrayList<>(this);
-        Collections.sort(sortedValues, new Comparator<Pair<Long, Long>>() {
-            @Override
-            public int compare(Pair<Long, Long> val1, Pair<Long, Long> val2) {
-                if (val1.getSecond().equals(val2.getSecond())) {
-                    return Long.compare(val1.getFirst(), val2.getFirst());
-                } else {
-                    return -Long.compare(val1.getSecond(), val2.getSecond()); //largest first
-                }
+        Collections.sort(sortedValues, (val1, val2) -> {
+            if (val1.getSecond().equals(val2.getSecond())) {
+                return Long.compare(val1.getFirst(), val2.getFirst());
+            } else {
+                return -Long.compare(val1.getSecond(), val2.getSecond()); //largest first
             }
         });
         List<Long> result = new ArrayList<>();

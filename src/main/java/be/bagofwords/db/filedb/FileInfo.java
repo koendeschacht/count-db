@@ -2,7 +2,6 @@ package be.bagofwords.db.filedb;
 
 import be.bagofwords.util.Pair;
 
-import java.util.Collections;
 import java.util.List;
 
 class FileInfo implements Comparable {
@@ -12,13 +11,16 @@ class FileInfo implements Comparable {
     private int writeSize;
     private byte[] cachedFileContents;
     //This field is only filled in when the file is clean (i.e. not isDirty)
-    private List<Pair<Long, Integer>> fileLocations;
+    private long[] fileLocationsKeys;
+    private int[] fileLocationsValues;
 
     public FileInfo(long firstKey, int readSize, int writeSize) {
         this.firstKey = firstKey;
         this.readSize = readSize;
+        this.writeSize = writeSize;
         if (readSize == 0) {
-            fileLocations = Collections.emptyList();
+            fileLocationsKeys = new long[0];
+            fileLocationsValues = new int[0];
         }
     }
 
@@ -33,7 +35,12 @@ class FileInfo implements Comparable {
     public void fileWasRewritten(List<Pair<Long, Integer>> fileLocations, int newReadSize, int newWriteSize) {
         this.readSize = newReadSize;
         this.writeSize = newWriteSize;
-        this.fileLocations = fileLocations;
+        this.fileLocationsKeys = new long[fileLocations.size()];
+        this.fileLocationsValues = new int[fileLocations.size()];
+        for (int i = 0; i < fileLocations.size(); i++) {
+            fileLocationsKeys[i] = fileLocations.get(i).getFirst();
+            fileLocationsValues[i] = fileLocations.get(i).getSecond();
+        }
     }
 
     @Override
@@ -55,8 +62,12 @@ class FileInfo implements Comparable {
         this.writeSize += diff;
     }
 
-    public List<Pair<Long, Integer>> getFileLocations() {
-        return fileLocations;
+    public long[] getFileLocationsKeys() {
+        return fileLocationsKeys;
+    }
+
+    public int[] getFileLocationsValues() {
+        return fileLocationsValues;
     }
 
     public long discardFileContents() {

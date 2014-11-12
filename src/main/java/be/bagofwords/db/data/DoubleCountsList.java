@@ -125,14 +125,11 @@ public class DoubleCountsList extends ArrayList<Pair<Long, Double>> implements B
 
     public List<Long> getSortedKeys() {
         List<Pair<Long, Double>> sortedValues = new ArrayList<>(this);
-        Collections.sort(sortedValues, new Comparator<Pair<Long, Double>>() {
-            @Override
-            public int compare(Pair<Long, Double> val1, Pair<Long, Double> val2) {
-                if (val1.getSecond().equals(val2.getSecond())) {
-                    return Long.compare(val1.getFirst(), val2.getFirst());
-                } else {
-                    return -Double.compare(val1.getSecond(), val2.getSecond()); //largest first
-                }
+        Collections.sort(sortedValues, (val1, val2) -> {
+            if (val1.getSecond().equals(val2.getSecond())) {
+                return Long.compare(val1.getFirst(), val2.getFirst());
+            } else {
+                return -Double.compare(val1.getSecond(), val2.getSecond()); //largest first
             }
         });
         List<Long> result = new ArrayList<>();

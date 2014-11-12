@@ -213,20 +213,17 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
         try {
             final Connection connection = new Connection(host, port, true, true, RemoteDataInterfaceServer.ConnectionType.BATCH_READ_FROM_INTERFACE);
             doAction(Action.READVALUES, connection);
-            executorService.submit(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        while (keyIterator.hasNext()) {
-                            Long nextKey = keyIterator.next();
-                            connection.writeLong(nextKey);
-                        }
-                        connection.writeLong(LONG_END);
-                        connection.flush();
-                    } catch (Exception e) {
-                        UI.writeError("Received exception while sending keys for read(..), for subset " + getName() + ". Closing connection. ", e);
-                        IOUtils.closeQuietly(connection);
+            executorService.submit(() -> {
+                try {
+                    while (keyIterator.hasNext()) {
+                        Long nextKey = keyIterator.next();
+                        connection.writeLong(nextKey);
                     }
+                    connection.writeLong(LONG_END);
+                    connection.flush();
+                } catch (Exception e) {
+                    UI.writeError("Received exception while sending keys for read(..), for subset " + getName() + ". Closing connection. ", e);
+                    IOUtils.closeQuietly(connection);
                 }
             });
             return createNewKeyValueIterator(connection);
@@ -411,8 +408,10 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     }
 
     @Override
-    public void flush() {
-        doSimpleAction(Action.FLUSH);
+    public synchronized void flush() {
+        doActionIfNotClosed(() -> {
+            doSimpleAction(Action.FLUSH);
+        });
     }
 
     @Override

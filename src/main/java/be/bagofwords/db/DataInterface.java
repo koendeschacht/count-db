@@ -263,16 +263,13 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
     }
 
     public final void close() {
-        doActionIfNotClosed(new ActionIfNotClosed() {
-                                @Override
-                                public void doAction() {
-                                    if (isTemporaryDataInterface) {
-                                        dropAllData();
-                                    }
-                                    doClose();
-                                    wasClosed = true;
-                                }
-                            }
+        doActionIfNotClosed(() -> {
+            if (isTemporaryDataInterface) {
+                dropAllData();
+            }
+            doClose();
+            wasClosed = true;
+        }
         );
     }
 
@@ -284,15 +281,12 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
 
     @Override
     protected void finalize() throws Throwable {
-        doActionIfNotClosed(new ActionIfNotClosed() {
-            @Override
-            public void doAction() {
-                if (!isTemporaryDataInterface()) {
-                    //the user did not close the data interface himself?
-                    UI.write("Closing data interface " + getName() + " because it is about to be garbage collected.");
-                }
-                close();
+        doActionIfNotClosed(() -> {
+            if (!isTemporaryDataInterface()) {
+                //the user did not close the data interface himself?
+                UI.write("Closing data interface " + getName() + " because it is about to be garbage collected.");
             }
+            close();
         });
         super.finalize();
     }

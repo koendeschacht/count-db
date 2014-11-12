@@ -300,19 +300,9 @@ public class TestDataInterface extends BaseTestDataInterface {
     @Test
     public void testFlushIfNotClosed() {
         final DataInterface<Long> dataInterface = createCountDataInterface("testFlushIfNotClosed");
-        dataInterface.doActionIfNotClosed(new DataInterface.ActionIfNotClosed() {
-            @Override
-            public void doAction() {
-                dataInterface.flush();
-            }
-        });
+        dataInterface.doActionIfNotClosed(() -> dataInterface.flush());
         dataInterface.close();
-        dataInterface.doActionIfNotClosed(new DataInterface.ActionIfNotClosed() {
-            @Override
-            public void doAction() {
-                dataInterface.flush();
-            }
-        });
+        dataInterface.doActionIfNotClosed(() -> dataInterface.flush());
     }
 
     @Test
