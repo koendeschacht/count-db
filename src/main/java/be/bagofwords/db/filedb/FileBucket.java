@@ -5,24 +5,25 @@ import be.bagofwords.ui.UI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class FileBucket implements Comparable<FileBucket> {
 
     private static final int NUMBER_OF_READ_PERMITS = 1000;
 
-    private final long firstKey; //inclusive
-    private final long lastKey; //inclusive
+    private long firstKey; //inclusive
+    private long lastKey; //inclusive
     private List<FileInfo> files;
-    private final Semaphore appendLock;
-    private final Semaphore rewriteLock;
+    private final ReadWriteLock lock;
+    private boolean shouldBeCleanedBeforeRead;
 
     public FileBucket(long firstKey, long lastKey) {
+        this();
         this.firstKey = firstKey;
         this.lastKey = lastKey;
         this.files = new ArrayList<>();
-        this.appendLock = new Semaphore(1);
-        this.rewriteLock = new Semaphore(NUMBER_OF_READ_PERMITS);
+        this.shouldBeCleanedBeforeRead = false;
     }
 
     public List<FileInfo> getFiles() {
@@ -71,38 +72,24 @@ public class FileBucket implements Comparable<FileBucket> {
         return lastKey;
     }
 
-    public void lockAppend() {
-        appendLock.acquireUninterruptibly();
-    }
-
-    public void unlockAppend() {
-        appendLock.release();
-        if (appendLock.availablePermits() > 1) {
-            throw new RuntimeException("Illegal state of append lock: too many unlocks!");
-        }
-    }
-
     public void lockRead() {
-        rewriteLock.acquireUninterruptibly(1);
+        lock.readLock().lock();
     }
 
     public void unlockRead() {
-        rewriteLock.release(1);
+        lock.readLock().unlock();
     }
 
-    public void lockRewrite() {
-        rewriteLock.acquireUninterruptibly(NUMBER_OF_READ_PERMITS);
+    public void lockWrite() {
+        lock.writeLock().lock();
     }
 
-    public void unlockRewrite() {
-        rewriteLock.release(NUMBER_OF_READ_PERMITS);
-        if (rewriteLock.availablePermits() > NUMBER_OF_READ_PERMITS) {
-            throw new RuntimeException("Illegal state of rewrite lock: too many unlocks!");
-        }
+    public void unlockWrite() {
+        lock.writeLock().unlock();
     }
 
     public String toString() {
-        return super.toString() + " " + firstKey + ", appendLock=" + appendLock.availablePermits() + " rewriteLock=" + rewriteLock.availablePermits();
+        return super.toString() + " " + firstKey;
     }
 
     @Override
@@ -110,7 +97,36 @@ public class FileBucket implements Comparable<FileBucket> {
         return Long.compare(firstKey, o.getFirstKey());
     }
 
+    public boolean shouldBeCleanedBeforeRead() {
+        return shouldBeCleanedBeforeRead;
+    }
+
+    public void setShouldBeCleanedBeforeRead(boolean shouldBeCleanedBeforeRead) {
+        this.shouldBeCleanedBeforeRead = shouldBeCleanedBeforeRead;
+    }
+
+
+    /**
+     * Serialization:
+     */
+
+    public FileBucket() {
+        this.lock = new ReentrantReadWriteLock();
+    }
+
     public void setFiles(List<FileInfo> files) {
         this.files = files;
+    }
+
+    public boolean isShouldBeCleanedBeforeRead() {
+        return shouldBeCleanedBeforeRead;
+    }
+
+    public void setFirstKey(long firstKey) {
+        this.firstKey = firstKey;
+    }
+
+    public void setLastKey(long lastKey) {
+        this.lastKey = lastKey;
     }
 }

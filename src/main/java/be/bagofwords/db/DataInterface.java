@@ -21,8 +21,9 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
     private final String name;
 
     private final Object closeLock = new Object();
-    private final boolean isTemporaryDataInterface;
     private boolean wasClosed;
+    private boolean closeWasRequested;
+    private final boolean isTemporaryDataInterface;
 
     protected DataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
         if (StringUtils.isEmpty(name)) {
@@ -263,14 +264,20 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
     }
 
     public final void close() {
-        doActionIfNotClosed(() -> {
-            if (isTemporaryDataInterface) {
-                dropAllData();
-            }
-            doClose();
-            wasClosed = true;
-        }
+        requestClose();
+        ifNotClosed(() -> {
+                    if (isTemporaryDataInterface) {
+                        dropAllData();
+                    }
+                    flush();
+                    doClose();
+                    wasClosed = true;
+                }
         );
+    }
+
+    protected void requestClose() {
+        closeWasRequested = true;
     }
 
     protected abstract void doClose();
@@ -279,9 +286,13 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         return wasClosed;
     }
 
+    protected final boolean closeWasRequested() {
+        return closeWasRequested;
+    }
+
     @Override
     protected void finalize() throws Throwable {
-        doActionIfNotClosed(() -> {
+        ifNotClosed(() -> {
             if (!isTemporaryDataInterface()) {
                 //the user did not close the data interface himself?
                 UI.write("Closing data interface " + getName() + " because it is about to be garbage collected.");
@@ -291,7 +302,7 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         super.finalize();
     }
 
-    public void doActionIfNotClosed(ActionIfNotClosed action) {
+    public void ifNotClosed(ActionIfNotClosed action) {
         synchronized (closeLock) {
             if (!wasClosed()) {
                 action.doAction();

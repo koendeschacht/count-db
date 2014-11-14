@@ -1,5 +1,6 @@
 package be.bagofwords.db.helper;
 
+import be.bagofwords.application.BowTaskScheduler;
 import be.bagofwords.application.annotations.BowComponent;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
@@ -26,26 +27,28 @@ public class DataInterfaceFactoryFactory {
     @Autowired
     private MemoryManager memoryManager;
     @Autowired
+    private BowTaskScheduler taskScheduler;
+    @Autowired
     private UnitTestEnvironmentProperties environmentProperties;
 
     public DataInterfaceFactory createFactory(DatabaseBackendType backendType) {
         switch (backendType) {
             case FILE:
-                return new FileDataInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDataDirectory() + "server/");
+                return new FileDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, environmentProperties.getDataDirectory() + "server/");
             case REMOTE:
-                return new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDatabaseServerAddress(), environmentProperties.getDataInterfaceServerPort());
+                return new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, taskScheduler, environmentProperties.getDatabaseServerAddress(), environmentProperties.getDataInterfaceServerPort());
             case MEMORY:
-                return new InMemoryDataInterfaceFactory(cachesManager, memoryManager);
+                return new InMemoryDataInterfaceFactory(cachesManager, memoryManager, taskScheduler);
             case LEVELDB:
-                return new LevelDBDataInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDataDirectory() + "leveLDB/");
+                return new LevelDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, environmentProperties.getDataDirectory() + "leveLDB/");
             case LMDB:
-                return new LMDBDataInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDataDirectory() + "lmDB/");
+                return new LMDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, environmentProperties.getDataDirectory() + "lmDB/");
             case KYOTO:
-                return new KyotoDataInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDataDirectory() + "kyotoDB/");
+                return new KyotoDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, environmentProperties.getDataDirectory() + "kyotoDB/");
             case ROCKSDB:
-                return new RocksDBDataInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDataDirectory() + "rocksDB/", false);
+                return new RocksDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, environmentProperties.getDataDirectory() + "rocksDB/", false);
             case ROCKSDB_PATCHED:
-                return new RocksDBDataInterfaceFactory(cachesManager, memoryManager, environmentProperties.getDataDirectory() + "rocksDB/", true);
+                return new RocksDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, environmentProperties.getDataDirectory() + "rocksDB/", true);
             default:
                 throw new RuntimeException("Unknown backend type " + backendType);
         }

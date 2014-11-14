@@ -1,10 +1,12 @@
 package be.bagofwords.db.remote;
 
+import be.bagofwords.application.BowTaskScheduler;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer.Action;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.ui.UI;
+import be.bagofwords.util.ExecutorServiceFactory;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.SerializationUtils;
 import be.bagofwords.util.WrappedSocketConnection;
@@ -18,48 +20,63 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import static be.bagofwords.application.BaseServer.*;
 
 public class RemoteDataInterface<T> extends DataInterface<T> {
 
-    private final static int MAX_NUM_OF_CONNECTIONS = 200;
-    private final static long MAX_WAIT = 10000;
+    private final static int MAX_NUM_OF_CONNECTIONS = 50;
+    private final static long MAX_WAIT = 60 * 1000;
 
     private final String host;
     private final int port;
-    private final List<Connection> connections;
+    private final List<Connection> smallBufferConnections;
+    private final List<Connection> largeWriteBufferConnections;
+    private final List<Connection> largeReadBufferConnections;
     private final ExecutorService executorService;
 
-    public RemoteDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, String host, int port, boolean isTemporaryDataInterface) {
+    public RemoteDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, String host, int port, boolean isTemporaryDataInterface, BowTaskScheduler taskScheduler) {
         super(name, objectClass, combinator, isTemporaryDataInterface);
         this.host = host;
         this.port = port;
-        this.connections = new ArrayList<>();
-        executorService = Executors.newFixedThreadPool(10);
+        this.smallBufferConnections = new ArrayList<>();
+        this.largeReadBufferConnections = new ArrayList<>();
+        this.largeWriteBufferConnections = new ArrayList<>();
+        executorService = ExecutorServiceFactory.createExecutorService("remote_data_interface");
+        taskScheduler.schedulePeriodicTask(() -> ifNotClosed(this::removeUnusedConnections), 1000);
     }
 
-    private Connection selectConnection() throws IOException {
-        Connection result = trySimpleSelect();
+    private Connection selectSmallBufferConnection() throws IOException {
+        return selectConnection(smallBufferConnections, false, false, RemoteDataInterfaceServer.ConnectionType.CONNECT_TO_INTERFACE);
+    }
+
+    private Connection selectLargeWriteBufferConnection() throws IOException {
+        return selectConnection(largeWriteBufferConnections, true, false, RemoteDataInterfaceServer.ConnectionType.BATCH_WRITE_TO_INTERFACE);
+    }
+
+    private Connection selectLargeReadBufferConnection() throws IOException {
+        return selectConnection(largeReadBufferConnections, false, true, RemoteDataInterfaceServer.ConnectionType.BATCH_READ_FROM_INTERFACE);
+    }
+
+    private Connection selectConnection(List<Connection> connections, boolean largeWriteBuffer, boolean largeReadBuffer, RemoteDataInterfaceServer.ConnectionType connectionType) throws IOException {
+        Connection result = selectFreeConnection(connections);
         if (result != null) {
             return result;
         } else {
             //Can we create an extra connection?
-            if (connections.size() < MAX_NUM_OF_CONNECTIONS) {
-                synchronized (connections) {
-                    if (connections.size() < MAX_NUM_OF_CONNECTIONS) {
-                        Connection newConn = new Connection(host, port);
-                        connections.add(newConn);
-                        newConn.setTaken(true);
-                        return newConn;
-                    }
+            synchronized (connections) {
+                if (connections.size() < MAX_NUM_OF_CONNECTIONS) {
+                    Connection newConn = new Connection(host, port, largeWriteBuffer, largeReadBuffer, connectionType);
+                    connections.add(newConn);
+                    newConn.setTaken(true);
+                    return newConn;
                 }
             }
             //Let's wait until a connection becomes available
             long start = System.currentTimeMillis();
             while (System.currentTimeMillis() - start < MAX_WAIT) {
-                result = trySimpleSelect();
+                result = selectFreeConnection(connections);
                 if (result != null) {
                     return result;
                 }
@@ -68,7 +85,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
         throw new RuntimeException("Failed to reserve a connection!");
     }
 
-    private Connection trySimpleSelect() {
+    private Connection selectFreeConnection(List<Connection> connections) {
         synchronized (connections) {
             for (Connection connection : connections) {
                 if (!connection.isTaken()) {
@@ -84,7 +101,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     public T read(long key) {
         Connection connection = null;
         try {
-            connection = selectConnection();
+            connection = selectSmallBufferConnection();
             doAction(Action.READVALUE, connection);
             connection.writeLong(key);
             connection.flush();
@@ -101,7 +118,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     public boolean mightContain(long key) {
         Connection connection = null;
         try {
-            connection = selectConnection();
+            connection = selectSmallBufferConnection();
             doAction(Action.MIGHT_CONTAIN, connection);
             connection.writeLong(key);
             connection.flush();
@@ -118,7 +135,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     public long apprSize() {
         Connection connection = null;
         try {
-            connection = selectConnection();
+            connection = selectSmallBufferConnection();
             doAction(Action.APPROXIMATE_SIZE, connection);
             connection.flush();
             long response = connection.readLong();
@@ -140,7 +157,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     public long exactSize() {
         Connection connection = null;
         try {
-            connection = selectConnection();
+            connection = selectSmallBufferConnection();
             doAction(Action.EXACT_SIZE, connection);
             connection.flush();
             long response = connection.readLong();
@@ -162,7 +179,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     public void write(long key, T value) {
         Connection connection = null;
         try {
-            connection = selectConnection();
+            connection = selectSmallBufferConnection();
             doAction(Action.WRITEVALUE, connection);
             connection.writeLong(key);
             writeValue(value, connection);
@@ -184,7 +201,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     public void write(Iterator<KeyValue<T>> entries) {
         Connection connection = null;
         try {
-            connection = new Connection(host, port, true, false, RemoteDataInterfaceServer.ConnectionType.BATCH_WRITE_TO_INTERFACE);
+            connection = selectLargeWriteBufferConnection();
             doAction(Action.WRITEVALUES, connection);
             while (entries.hasNext()) {
                 KeyValue<T> entry = entries.next();
@@ -196,11 +213,12 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
             long response = connection.readLong();
             if (response != LONG_OK) {
                 throw new RuntimeException("Unexpected error while reading approximate size " + connection.readString());
+            } else {
+                releaseConnection(connection);
             }
         } catch (Exception e) {
+            dropConnection(connection);
             throw new RuntimeException(e);
-        } finally {
-            IOUtils.closeQuietly(connection);
         }
     }
 
@@ -211,7 +229,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     @Override
     public CloseableIterator<KeyValue<T>> iterator(final Iterator<Long> keyIterator) {
         try {
-            final Connection connection = new Connection(host, port, true, true, RemoteDataInterfaceServer.ConnectionType.BATCH_READ_FROM_INTERFACE);
+            final Connection connection = selectLargeReadBufferConnection();
             doAction(Action.READVALUES, connection);
             executorService.submit(() -> {
                 try {
@@ -234,12 +252,14 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
     @Override
     public CloseableIterator<KeyValue<T>> iterator() {
+        Connection connection = null;
         try {
-            final Connection connection = new Connection(host, port, false, true, RemoteDataInterfaceServer.ConnectionType.BATCH_READ_FROM_INTERFACE);
+            connection = selectLargeReadBufferConnection();
             doAction(Action.READALLVALUES, connection);
             connection.flush();
             return createNewKeyValueIterator(connection);
         } catch (Exception e) {
+            dropConnection(connection);
             throw new RuntimeException("Failed to iterate over values from " + host + ":" + port, e);
         }
     }
@@ -303,9 +323,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
             @Override
             public void closeInt() {
                 synchronized (connection) {
-                    if (connection.isOpen()) {
-                        IOUtils.closeQuietly(connection);
-                    }
+                    releaseConnection(connection);
                 }
             }
 
@@ -333,10 +351,12 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
     @Override
     public CloseableIterator<Long> keyIterator() {
+        Connection connection = null;
         try {
-            final Connection connection = new Connection(host, port, false, true, RemoteDataInterfaceServer.ConnectionType.BATCH_READ_FROM_INTERFACE);
+            connection = selectLargeReadBufferConnection();
             doAction(Action.READKEYS, connection);
             connection.flush();
+            Connection thisConnection = connection;
             return new CloseableIterator<Long>() {
 
                 private Long next;
@@ -348,7 +368,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
                 private void findNext() {
                     try {
-                        long key = connection.readLong();
+                        long key = thisConnection.readLong();
                         if (key == LONG_END) {
                             //End
                             next = null;
@@ -356,7 +376,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
                         } else if (key != LONG_ERROR) {
                             next = key;
                         } else {
-                            throw new RuntimeException("Unexpected response " + connection.readString());
+                            throw new RuntimeException("Unexpected response " + thisConnection.readString());
 
                         }
                     } catch (Exception e) {
@@ -378,26 +398,27 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
                 @Override
                 public void closeInt() {
-                    synchronized (connection) {
-                        if (connection.isOpen()) {
-                            IOUtils.closeQuietly(connection);
-                        }
+                    synchronized (thisConnection) {
+                        releaseConnection(thisConnection);
                     }
                 }
             };
         } catch (Exception e) {
+            dropConnection(connection);
             throw new RuntimeException(e);
         }
     }
 
     @Override
     public CloseableIterator<KeyValue<T>> cachedValueIterator() {
+        Connection connection = null;
         try {
-            final Connection connection = new Connection(host, port, false, true, RemoteDataInterfaceServer.ConnectionType.BATCH_READ_FROM_INTERFACE);
+            connection = selectLargeReadBufferConnection();
             doAction(Action.READ_CACHED_VALUES, connection);
             connection.flush();
             return createNewKeyValueIterator(connection);
         } catch (Exception e) {
+            dropConnection(connection);
             throw new RuntimeException("Failed to iterate over values from " + host + ":" + port, e);
         }
     }
@@ -409,9 +430,24 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
     @Override
     public synchronized void flush() {
-        doActionIfNotClosed(() -> {
+        ifNotClosed(() -> {
             doSimpleAction(Action.FLUSH);
         });
+    }
+
+    private void removeUnusedConnections() {
+        removeUnusedConnections(smallBufferConnections);
+        removeUnusedConnections(largeReadBufferConnections);
+        removeUnusedConnections(largeWriteBufferConnections);
+    }
+
+    private void removeUnusedConnections(List<Connection> connections) {
+        synchronized (connections) {
+            List<Connection> unusedConnections = connections.stream().filter(connection -> (!connection.isTaken() && System.currentTimeMillis() - connection.getLastUsage() > 60 * 1000) || !connection.isOpen()).collect(Collectors.toList());
+            for (Connection unusedConnection : unusedConnections) {
+                dropConnection(unusedConnection);
+            }
+        }
     }
 
     @Override
@@ -421,13 +457,19 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
     @Override
     protected void doClose() {
+        dropConnections(smallBufferConnections);
+        dropConnections(largeWriteBufferConnections);
+        dropConnections(largeReadBufferConnections);
+        executorService.shutdownNow();
+    }
+
+    private void dropConnections(List<Connection> connections) {
         synchronized (connections) {
             for (Connection connection : connections) {
                 IOUtils.closeQuietly(connection);
             }
             connections.clear();
         }
-        executorService.shutdownNow();
     }
 
     @Override
@@ -443,7 +485,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     private void doSimpleAction(Action action) {
         Connection connection = null;
         try {
-            connection = selectConnection();
+            connection = selectSmallBufferConnection();
             doAction(action, connection);
             connection.flush();
             long response = connection.readLong();
@@ -468,8 +510,14 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     private void dropConnection(Connection connection) {
         if (connection != null) {
             IOUtils.closeQuietly(connection);
-            synchronized (connections) {
-                connections.remove(connection);
+            synchronized (smallBufferConnections) {
+                smallBufferConnections.remove(connection);
+            }
+            synchronized (largeReadBufferConnections) {
+                largeReadBufferConnections.remove(connection);
+            }
+            synchronized (largeWriteBufferConnections) {
+                largeWriteBufferConnections.remove(connection);
             }
         }
     }
@@ -477,10 +525,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     private class Connection extends WrappedSocketConnection {
 
         private boolean isTaken;
-
-        private Connection(String host, int port) throws IOException {
-            this(host, port, false, false, RemoteDataInterfaceServer.ConnectionType.CONNECT_TO_INTERFACE);
-        }
+        private long lastUsage;
 
         public Connection(String host, int port, boolean useLargeOutputBuffer, boolean useLargeInputBuffer, RemoteDataInterfaceServer.ConnectionType connectionType) throws IOException {
             super(host, port, useLargeOutputBuffer, useLargeInputBuffer);
@@ -507,10 +552,16 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
         private void setTaken(boolean taken) {
             isTaken = taken;
+            lastUsage = System.currentTimeMillis();
         }
 
         public void release() {
             isTaken = false;
+            lastUsage = System.currentTimeMillis();
+        }
+
+        public long getLastUsage() {
+            return lastUsage;
         }
 
         public void close() throws IOException {

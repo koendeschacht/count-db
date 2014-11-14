@@ -96,7 +96,7 @@ public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T
 
     @Override
     public void flush() {
-        doActionIfNotClosed(() -> {
+        ifNotClosed(() -> {
             //make sure that all writes have completely finished:
             lock.lockWriteAll();
             lock.unlockWriteAll();

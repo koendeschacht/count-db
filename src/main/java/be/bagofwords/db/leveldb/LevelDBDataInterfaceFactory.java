@@ -1,5 +1,6 @@
 package be.bagofwords.db.leveldb;
 
+import be.bagofwords.application.BowTaskScheduler;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.DataInterface;
@@ -12,8 +13,8 @@ public class LevelDBDataInterfaceFactory extends DataInterfaceFactory {
 
     private final String directory;
 
-    public LevelDBDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, String directory) {
-        super(cachesManager, memoryManager);
+    public LevelDBDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, BowTaskScheduler taskScheduler, String directory) {
+        super(cachesManager, memoryManager, taskScheduler);
         this.directory = directory;
         File dirFile = new File(directory);
         if (!dirFile.exists()) {

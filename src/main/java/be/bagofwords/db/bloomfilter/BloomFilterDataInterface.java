@@ -1,8 +1,11 @@
 package be.bagofwords.db.bloomfilter;
 
+import be.bagofwords.application.BowTaskScheduler;
+import be.bagofwords.db.DBUtils;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.LayeredDataInterface;
 import be.bagofwords.iterator.CloseableIterator;
+import be.bagofwords.ui.UI;
 import be.bagofwords.util.KeyValue;
 
 import java.util.Iterator;
@@ -20,7 +23,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
     private long actualWriteCount;
     private long writeCountOfSavedFilter;
 
-    public BloomFilterDataInterface(DataInterface<T> baseInterface, DataInterface<LongBloomFilterWithCheckSum> bloomFilterDataInterface) {
+    public BloomFilterDataInterface(DataInterface<T> baseInterface, DataInterface<LongBloomFilterWithCheckSum> bloomFilterDataInterface, BowTaskScheduler taskScheduler) {
         super(baseInterface);
         this.bloomFilterDataInterface = bloomFilterDataInterface;
         this.modifyBloomFilterLock = new ReentrantLock();
@@ -31,6 +34,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
             writeCountOfSavedFilter = -Long.MAX_VALUE;
             actualWriteCount = writeCountOfSavedFilter + 1;
         }
+        taskScheduler.schedulePeriodicTask(() -> ifNotClosed(this::writeBloomFilterToDiskIfNecessary), 1000);
     }
 
     @Override
@@ -159,9 +163,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
         it.close();
         currentKeyForNewBloomFilterCreation = Long.MAX_VALUE;
         long taken = (System.currentTimeMillis() - start);
-//        if (numOfKeys > 0) {
-//            UI.write("Created bloomfilter " + getName() + " in " + taken + " ms for " + numOfKeys + " keys, size is " + bloomFilter.getBits().size() / (8 * 1024) + " kbytes.");
-//        }
+        UI.write("Created bloomfilter " + getName() + " in " + taken + " ms for " + numOfKeys + " keys, size is " + bloomFilter.getBits().size() / (8 * 1024) + " kbytes.");
     }
 
     private void createNewBloomFilter() {
@@ -172,10 +174,8 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
 
     @Override
     public synchronized void flush() {
-        doActionIfNotClosed(() -> {
-            baseInterface.flush();
-            writeBloomFilterToDiskIfNecessary();
-        });
+        baseInterface.flush();
+        writeBloomFilterToDiskIfNecessary();
     }
 
     private void writeBloomFilterToDiskIfNecessary() {
@@ -187,12 +187,16 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
             needsToBeWritten = writeCountOfSavedFilter != bloomFilter.getDataCheckSum() && bloomFilter.getDataCheckSum() == actualWriteCount;
         }
         if (needsToBeWritten) {
+            long start = System.currentTimeMillis();
             bloomFilterDataInterface.write(getName(), bloomFilter);
             bloomFilterDataInterface.flush();
             if (bloomFilter == null) {
                 writeCountOfSavedFilter = -Long.MAX_VALUE;
             } else {
                 writeCountOfSavedFilter = bloomFilter.getDataCheckSum();
+            }
+            if (DBUtils.DEBUG) {
+                UI.write("Written bloom filter to disk, " + actualWriteCount + " " + (bloomFilter != null ? bloomFilter.getDataCheckSum() : -Long.MAX_VALUE) + " " + writeCountOfSavedFilter + " took " + (System.currentTimeMillis() - start));
             }
         }
         modifyBloomFilterLock.unlock();

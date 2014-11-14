@@ -11,6 +11,8 @@ import java.util.List;
  */
 public class DBUtils {
 
+    public static final boolean DEBUG = false;
+
     public static <T> void mergeValues(List<KeyValue<T>> mergedValuesList, List<KeyValue<T>> unmergedValues, Combinator<T> combinator) {
         Collections.sort(unmergedValues);
         //combine values

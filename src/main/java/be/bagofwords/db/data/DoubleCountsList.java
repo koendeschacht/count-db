@@ -4,11 +4,10 @@ import be.bagofwords.util.ByteArraySerializable;
 import be.bagofwords.util.HashUtils;
 import be.bagofwords.util.Pair;
 import be.bagofwords.util.SerializationUtils;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 public class DoubleCountsList extends ArrayList<Pair<Long, Double>> implements ByteArraySerializable {

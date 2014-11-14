@@ -1,12 +1,13 @@
 package be.bagofwords.db.filedb;
 
 import be.bagofwords.util.Pair;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.List;
 
 class FileInfo implements Comparable {
 
-    private final long firstKey;
+    private long firstKey;
     private int readSize;
     private int writeSize;
     private byte[] cachedFileContents;
@@ -79,10 +80,12 @@ class FileInfo implements Comparable {
         return bytesReleased;
     }
 
+    @JsonIgnore
     public byte[] getCachedFileContents() {
         return cachedFileContents;
     }
 
+    @JsonIgnore
     public void setCachedFileContents(byte[] cachedFileContents) {
         this.cachedFileContents = cachedFileContents;
     }
@@ -91,7 +94,36 @@ class FileInfo implements Comparable {
         return writeSize;
     }
 
-    public boolean isDirty() {
-        return readSize < writeSize;
+    @JsonIgnore
+    public boolean isClean() {
+        return readSize == writeSize;
+    }
+
+
+    /**
+     * Serialization:
+     */
+
+    public FileInfo() {
+    }
+
+    public void setFirstKey(long firstKey) {
+        this.firstKey = firstKey;
+    }
+
+    public void setReadSize(int readSize) {
+        this.readSize = readSize;
+    }
+
+    public void setWriteSize(int writeSize) {
+        this.writeSize = writeSize;
+    }
+
+    public void setFileLocationsKeys(long[] fileLocationsKeys) {
+        this.fileLocationsKeys = fileLocationsKeys;
+    }
+
+    public void setFileLocationsValues(int[] fileLocationsValues) {
+        this.fileLocationsValues = fileLocationsValues;
     }
 }

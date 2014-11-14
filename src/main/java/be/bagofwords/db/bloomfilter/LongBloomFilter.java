@@ -5,7 +5,6 @@ import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
 import com.google.common.math.LongMath;
 import com.google.common.primitives.Ints;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 
 import java.io.Serializable;
 import java.math.RoundingMode;
@@ -13,11 +12,10 @@ import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-@JsonIgnoreProperties("dataCheckSum")
 public class LongBloomFilter implements Serializable {
 
-    private int numOfHashFunctions;
-    private BitArray bits;
+    protected int numOfHashFunctions;
+    protected BitArray bits;
 
     public LongBloomFilter(long expectedSize, double fpp) {
         if (expectedSize > Integer.MAX_VALUE) {

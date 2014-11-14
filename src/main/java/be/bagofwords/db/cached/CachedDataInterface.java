@@ -1,5 +1,6 @@
 package be.bagofwords.db.cached;
 
+import be.bagofwords.application.BowTaskScheduler;
 import be.bagofwords.application.memory.MemoryGobbler;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.application.memory.MemoryStatus;
@@ -19,24 +20,27 @@ import java.util.List;
 
 public class CachedDataInterface<T extends Object> extends LayeredDataInterface<T> implements MemoryGobbler {
 
-    private static final int NUM_OF_WRITE_BUFFERS = 20;
+    private static final int NUM_OF_WRITE_BUFFERS = 10;
 
     private ReadCache<T> readCache;
-    private List<DynamicMap<T>> writeBuffers;
+    private boolean readCacheDirty;
+    private List<SwappableDynamicMap> writeBuffers;
     private final MemoryManager memoryManager;
     private final SafeThread initializeCachesThread;
 
-    public CachedDataInterface(MemoryManager memoryManager, CachesManager cachesManager, DataInterface<T> baseInterface) {
+    public CachedDataInterface(MemoryManager memoryManager, CachesManager cachesManager, DataInterface<T> baseInterface, BowTaskScheduler taskScheduler) {
         super(baseInterface);
         this.memoryManager = memoryManager;
         this.memoryManager.registerMemoryGobbler(this);
         this.readCache = cachesManager.createNewCache(getName(), baseInterface.getObjectClass());
+        this.readCacheDirty = false;
         this.writeBuffers = new ArrayList<>();
         for (int i = 0; i < NUM_OF_WRITE_BUFFERS; i++) {
-            this.writeBuffers.add(new DynamicMap<>(getObjectClass()));
+            this.writeBuffers.add(new SwappableDynamicMap());
         }
         this.initializeCachesThread = new InitializeCachesThread(baseInterface);
         this.initializeCachesThread.start();
+        taskScheduler.schedulePeriodicTask(() -> ifNotClosed(this::flushWriteCache), 1000);
     }
 
     @Override
@@ -73,18 +77,18 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
         if (writeBufferInd < 0) {
             writeBufferInd += NUM_OF_WRITE_BUFFERS;
         }
-        DynamicMap<T> writeBuffer = writeBuffers.get(writeBufferInd);
+        SwappableDynamicMap writeBuffer = writeBuffers.get(writeBufferInd);
         synchronized (writeBuffer) {
-            KeyValue<T> cachedValue = writeBuffer.get(key);
+            KeyValue<T> cachedValue = writeBuffer.getMap().get(key);
             if (cachedValue == null) {
                 //first write of this key
-                writeBuffer.put(key, value);
+                writeBuffer.getMap().put(key, value);
             } else {
                 if (value != null && cachedValue.getValue() != null) {
                     T combinedValue = getCombinator().combine(cachedValue.getValue(), value);
-                    writeBuffer.put(key, combinedValue);
+                    writeBuffer.getMap().put(key, combinedValue);
                 } else {
-                    writeBuffer.put(key, value);
+                    writeBuffer.getMap().put(key, value);
                 }
             }
         }
@@ -134,31 +138,29 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     }
 
     public synchronized void flush() {
-        doActionIfNotClosed(() -> {
-            //flush values in write cache
-            List<Long> allKeys = new ArrayList<>();
-            writeBuffers.parallelStream().forEach(buffer -> {
-                List<KeyValue<T>> valuesInBuffer;
-                synchronized (buffer) {
-                    valuesInBuffer = buffer.removeAllValues();
-                }
-                if (!valuesInBuffer.isEmpty()) {
-                    baseInterface.write(valuesInBuffer.iterator());
-                    synchronized (allKeys) {
-                        for (KeyValue<T> value : valuesInBuffer) {
-                            allKeys.add(value.getKey());
-                        }
-                    }
-                }
-            });
+        flushWriteCache();
+        baseInterface.flush();
+        cleanDirtyReadCache();
+    }
 
-            if (!allKeys.isEmpty()) {
-                //flush base interface (changes should now be visible)
-                baseInterface.flush();
-                //invalidate items in read cache
-                for (Long key : allKeys) {
-                    readCache.remove(key);
-                }
+    private void cleanDirtyReadCache() {
+        if (readCacheDirty) {
+            stopInitializeCachesThread();
+            readCacheDirty = false; //should come before clearing read cache
+            readCache.clear();
+        }
+    }
+
+    private synchronized void flushWriteCache() {
+        //flush values in write cache
+        writeBuffers.parallelStream().forEach(buffer -> {
+            DynamicMap<T> oldValues;
+            synchronized (buffer) {
+                oldValues = buffer.putNew();
+            }
+            if (oldValues.size() > 0) {
+                baseInterface.write(oldValues.iterator());
+                readCacheDirty = true; //should come after writing values
             }
         });
     }
@@ -166,9 +168,9 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     @Override
     public void dropAllData() {
         stopInitializeCachesThread();
-        for (DynamicMap<T> writeBuffer : writeBuffers) {
+        for (SwappableDynamicMap writeBuffer : writeBuffers) {
             synchronized (writeBuffer) {
-                writeBuffer.clear();
+                writeBuffer.putNew();
             }
         }
         readCache.clear();
@@ -188,8 +190,18 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     }
 
     @Override
-    public String getMemoryUsage() {
-        return "write buffers size=" + apprSize();
+    public long getMemoryUsage() {
+        return sizeOfWriteBuffers();
+    }
+
+    private long sizeOfWriteBuffers() {
+        long result = 0;
+        for (SwappableDynamicMap writeBuffer : writeBuffers) {
+            synchronized (writeBuffer) {
+                result += writeBuffer.getMap().size();
+            }
+        }
+        return result;
     }
 
 
@@ -219,6 +231,25 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
             iterator.close();
         }
     }
+
+    private class SwappableDynamicMap {
+        private DynamicMap<T> map;
+
+        private SwappableDynamicMap() {
+            map = new DynamicMap<>(getObjectClass());
+        }
+
+        public DynamicMap<T> putNew() {
+            DynamicMap<T> old = map;
+            map = new DynamicMap<>(getObjectClass());
+            return old;
+        }
+
+        public DynamicMap<T> getMap() {
+            return map;
+        }
+    }
+
 }
 
 

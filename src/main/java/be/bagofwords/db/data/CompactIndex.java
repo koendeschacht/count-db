@@ -1,7 +1,7 @@
 package be.bagofwords.db.data;
 
 import be.bagofwords.db.bloomfilter.LongBloomFilter;
-import org.codehaus.jackson.annotate.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.ArrayList;
 import java.util.Collections;

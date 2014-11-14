@@ -85,6 +85,12 @@ public abstract class LayeredDataInterface<T> extends DataInterface<T> {
     }
 
     @Override
+    protected void requestClose() {
+        super.requestClose();
+        baseInterface.requestClose();
+    }
+
+    @Override
     public CloseableIterator<KeyValue<T>> cachedValueIterator() {
         return baseInterface.cachedValueIterator();
     }

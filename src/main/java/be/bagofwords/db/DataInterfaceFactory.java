@@ -1,5 +1,6 @@
 package be.bagofwords.db;
 
+import be.bagofwords.application.BowTaskScheduler;
 import be.bagofwords.application.LateCloseableComponent;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
@@ -21,19 +22,18 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
 
     private CachesManager cachesManager;
     private MemoryManager memoryManager;
+    protected BowTaskScheduler taskScheduler;
     private List<DataInterfaceReference> allInterfaces;
     private ReferenceQueue<DataInterface> allInterfacesReferenceQueue;
 
     private DataInterface<LongBloomFilterWithCheckSum> cachedBloomFilters;
-    private FlushDataInterfacesThread occasionalActionsThread;
 
-    public DataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager) {
+    public DataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, BowTaskScheduler taskScheduler) {
         this.cachesManager = cachesManager;
         this.memoryManager = memoryManager;
+        this.taskScheduler = taskScheduler;
         this.allInterfaces = new ArrayList<>();
         this.allInterfacesReferenceQueue = new ReferenceQueue<>();
-        this.occasionalActionsThread = new FlushDataInterfacesThread(this, memoryManager);
-        this.occasionalActionsThread.start();
     }
 
     public abstract <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface);
@@ -69,12 +69,12 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
     }
 
     protected <T extends Object> DataInterface<T> cached(DataInterface<T> baseDataInterface) {
-        return new CachedDataInterface<>(memoryManager, cachesManager, baseDataInterface);
+        return new CachedDataInterface<>(memoryManager, cachesManager, baseDataInterface, taskScheduler);
     }
 
     protected <T extends Object> DataInterface<T> bloom(DataInterface<T> dataInterface) {
         checkInitialisationCachedBloomFilters();
-        return new BloomFilterDataInterface<>(dataInterface, cachedBloomFilters);
+        return new BloomFilterDataInterface<>(dataInterface, cachedBloomFilters, taskScheduler);
     }
 
     private void checkInitialisationCachedBloomFilters() {
@@ -92,7 +92,6 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
 
     @Override
     public synchronized void terminate() {
-        occasionalActionsThread.terminateAndWaitForFinish();
         closeAllInterfaces();
     }
 
@@ -101,12 +100,10 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
             for (WeakReference<DataInterface> referenceToDI : allInterfaces) {
                 final DataInterface dataInterface = referenceToDI.get();
                 if (dataInterface != null && dataInterface != cachedBloomFilters) {
-                    dataInterface.flush();
                     dataInterface.close();
                 }
             }
             if (cachedBloomFilters != null) {
-                cachedBloomFilters.flush();
                 cachedBloomFilters.close();
                 cachedBloomFilters = null;
             }

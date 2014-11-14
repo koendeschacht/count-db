@@ -1,6 +1,7 @@
 package be.bagofwords.main.tests.bigrams;
 
 import be.bagofwords.application.ApplicationManager;
+import be.bagofwords.application.BowTaskScheduler;
 import be.bagofwords.application.MainClass;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
@@ -9,10 +10,7 @@ import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.experimental.kyoto.KyotoDataInterfaceFactory;
-import be.bagofwords.db.experimental.rocksdb.RocksDBDataInterfaceFactory;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
-import be.bagofwords.db.leveldb.LevelDBDataInterfaceFactory;
-import be.bagofwords.db.remote.RemoteDatabaseInterfaceFactory;
 import be.bagofwords.main.tests.TestsApplicationContextFactory;
 import be.bagofwords.text.WordIterator;
 import be.bagofwords.ui.UI;
@@ -29,8 +27,8 @@ import java.util.concurrent.CountDownLatch;
 
 public class BigramTestsMain implements MainClass {
 
-    private static final long MIN_MILLION_ITEMS_TO_PROCESS = 1;
-    private static final long MAX_MILLION_ITEMS_TO_PROCESS = 256;
+    private static final long MIN_MILLION_ITEMS_TO_PROCESS = 64;
+    private static final long MAX_MILLION_ITEMS_TO_PROCESS = 128;
 
     private static final File tmpDbDir = new File("/tmp/testBigramCounts");
 
@@ -38,6 +36,8 @@ public class BigramTestsMain implements MainClass {
     private CachesManager cachesManager;
     @Autowired
     private MemoryManager memoryManager;
+    @Autowired
+    private BowTaskScheduler taskScheduler;
 
     private final File largeTextFile;
     private final File bigramFile;
@@ -61,7 +61,7 @@ public class BigramTestsMain implements MainClass {
             prepareBigrams();
 
             runAllTests(DataType.LONG_COUNT);
-            runAllTests(DataType.SERIALIZED_OBJECT);
+//            runAllTests(DataType.SERIALIZED_OBJECT);
 
         } catch (Exception exp) {
             throw new RuntimeException(exp);
@@ -96,21 +96,21 @@ public class BigramTestsMain implements MainClass {
 
     private void runAllTests(DataType dataType) throws InterruptedException, FileNotFoundException {
         UI.write("Testing batch writing / reading for data type " + dataType);
-        testSeparateWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
-        testSeparateWritingReading(dataType, new FileDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
-        testSeparateWritingReading(dataType, new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, "localhost", 1208), DatabaseCachingType.CACHED_AND_BLOOM);
-        testSeparateWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
-        testSeparateWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
-        testSeparateWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBDPatched", true), DatabaseCachingType.DIRECT);
+//        testSeparateWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
+//        testSeparateWritingReading(dataType, new FileDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
+//        testSeparateWritingReading(dataType, new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, "localhost", 1208), DatabaseCachingType.CACHED_AND_BLOOM);
+//        testSeparateWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
+//        testSeparateWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
+//        testSeparateWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBDPatched", true), DatabaseCachingType.DIRECT);
 //        testBatchWritingAndReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT); --> too slow
 
         UI.write("Testing mixed writing / reading for data type " + dataType);
-        testMixedWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
-        testMixedWritingReading(dataType, new FileDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
-        testMixedWritingReading(dataType, new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, "localhost", 1208), DatabaseCachingType.CACHED_AND_BLOOM);
-        testMixedWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
-        testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
-        testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBDPatched", true), DatabaseCachingType.DIRECT);
+//        testMixedWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
+        testMixedWritingReading(dataType, new FileDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
+//        testMixedWritingReading(dataType, new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, "localhost", 1208), DatabaseCachingType.CACHED_AND_BLOOM);
+//        testMixedWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
+//        testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
+//        testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBDPatched", true), DatabaseCachingType.DIRECT);
 //        testMixedWritingReading(dataType, new LMDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/lmDB"), DatabaseCachingType.DIRECT); --> too slow
     }
 

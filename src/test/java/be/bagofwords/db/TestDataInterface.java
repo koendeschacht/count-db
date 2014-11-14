@@ -300,9 +300,9 @@ public class TestDataInterface extends BaseTestDataInterface {
     @Test
     public void testFlushIfNotClosed() {
         final DataInterface<Long> dataInterface = createCountDataInterface("testFlushIfNotClosed");
-        dataInterface.doActionIfNotClosed(() -> dataInterface.flush());
+        dataInterface.ifNotClosed(() -> dataInterface.flush());
         dataInterface.close();
-        dataInterface.doActionIfNotClosed(() -> dataInterface.flush());
+        dataInterface.ifNotClosed(() -> dataInterface.flush());
     }
 
     @Test
@@ -318,7 +318,12 @@ public class TestDataInterface extends BaseTestDataInterface {
     private boolean findValue(DataInterface<Long> dataInterface, long key, Long targetValue) {
         long started = System.currentTimeMillis();
         boolean foundValue = false;
-        while (!foundValue && System.currentTimeMillis() - started < 30000) {
+        while (!foundValue && System.currentTimeMillis() - started < 5000) {
+            foundValue = targetValue.equals(dataInterface.read(key));
+            Utils.threadSleep(10);
+        }
+        dataInterface.flush();
+        while (!foundValue && System.currentTimeMillis() - started < 10000) {
             foundValue = targetValue.equals(dataInterface.read(key));
             Utils.threadSleep(10);
         }

@@ -1,5 +1,6 @@
 package be.bagofwords.db.remote;
 
+import be.bagofwords.application.BowTaskScheduler;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.DataInterface;
@@ -14,19 +15,19 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
     private final int port;
 
     @Autowired
-    public RemoteDatabaseInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, RemoteCountDBEnvironmentProperties environmentProperties) {
-        this(cachesManager, memoryManager, environmentProperties.getDatabaseServerAddress(), environmentProperties.getDataInterfaceServerPort());
+    public RemoteDatabaseInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, BowTaskScheduler taskScheduler, RemoteCountDBEnvironmentProperties environmentProperties) {
+        this(cachesManager, memoryManager, taskScheduler, environmentProperties.getDatabaseServerAddress(), environmentProperties.getDataInterfaceServerPort());
     }
 
-    public RemoteDatabaseInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, String host, int port) {
-        super(cachesManager, memoryManager);
+    public RemoteDatabaseInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, BowTaskScheduler taskScheduler, String host, int port) {
+        super(cachesManager, memoryManager, taskScheduler);
         this.host = host;
         this.port = port;
     }
 
     @Override
     public synchronized <T extends Object> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
-        return new RemoteDataInterface<>(nameOfSubset, objectClass, combinator, host, port, isTemporaryDataInterface);
+        return new RemoteDataInterface<>(nameOfSubset, objectClass, combinator, host, port, isTemporaryDataInterface, taskScheduler);
     }
 
 }

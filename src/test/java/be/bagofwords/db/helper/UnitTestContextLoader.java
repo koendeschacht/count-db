@@ -12,7 +12,6 @@ import org.springframework.test.context.ContextLoader;
 
 public class UnitTestContextLoader implements ContextLoader {
 
-
     @Override
     public String[] processLocations(Class<?> aClass, String... locations) {
         return locations;

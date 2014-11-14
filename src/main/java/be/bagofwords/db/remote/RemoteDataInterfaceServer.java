@@ -416,7 +416,9 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
         Collections.sort(sortedRequestHandlers, (o1, o2) -> -Double.compare(o1.getTotalNumberOfRequests(), o2.getTotalNumberOfRequests()));
         for (int i = 0; i < sortedRequestHandlers.size(); i++) {
             DataInterfaceSocketRequestHandler handler = (DataInterfaceSocketRequestHandler) sortedRequestHandlers.get(i);
-            ln(sb, "<tr><td>" + i + " subset </td><td>" + handler.getDataInterface().getName() + "</td></tr>");
+            if (handler.getDataInterface() != null) {
+                ln(sb, "<tr><td>" + i + " subset </td><td>" + handler.getDataInterface().getName() + "</td></tr>");
+            }
             ln(sb, "<tr><td>" + i + " Started at </td><td>" + new Date(handler.getStartTime()) + "</td></tr>");
             ln(sb, "<tr><td>" + i + " Total number of requests </td><td>" + handler.getTotalNumberOfRequests() + "</td></tr>");
             double requestsPerSec = handler.getTotalNumberOfRequests() * 1000.0 / (System.currentTimeMillis() - handler.getStartTime());

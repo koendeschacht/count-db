@@ -1,10 +1,11 @@
 package be.bagofwords.db.experimental.rocksdb;
 
-import be.bagofwords.db.DataInterfaceFactory;
-import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.application.BowTaskScheduler;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.DataInterface;
+import be.bagofwords.db.DataInterfaceFactory;
+import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.util.Utils;
 import org.rocksdb.RocksDB;
 
@@ -18,8 +19,8 @@ public class RocksDBDataInterfaceFactory extends DataInterfaceFactory {
     private final String directory;
     private final boolean usePatch;
 
-    public RocksDBDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, String directory, boolean usePatch) {
-        super(cachesManager, memoryManager);
+    public RocksDBDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, BowTaskScheduler taskScheduler, String directory, boolean usePatch) {
+        super(cachesManager, memoryManager, taskScheduler);
         this.directory = directory;
         this.usePatch = usePatch;
         File libFile = findLibFile();

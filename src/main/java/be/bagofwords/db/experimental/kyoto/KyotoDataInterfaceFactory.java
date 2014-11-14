@@ -1,10 +1,10 @@
 package be.bagofwords.db.experimental.kyoto;
 
-import be.bagofwords.db.CoreDataInterface;
-import be.bagofwords.db.DataInterfaceFactory;
+import be.bagofwords.application.BowTaskScheduler;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
-import be.bagofwords.db.DataInterface;
+import be.bagofwords.db.CoreDataInterface;
+import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.util.Utils;
 
@@ -17,8 +17,8 @@ public class KyotoDataInterfaceFactory extends DataInterfaceFactory {
 
     private final String directory;
 
-    public KyotoDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, String directory) {
-        super(cachesManager, memoryManager);
+    public KyotoDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, BowTaskScheduler taskScheduler, String directory) {
+        super(cachesManager, memoryManager, taskScheduler);
         this.directory = directory;
         File libFile = findLibFile();
         if (libFile == null) {
