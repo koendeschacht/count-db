@@ -12,7 +12,6 @@ public class CountDBUnitTestApplicationContextFactory extends UnitTestApplicatio
     public AnnotationConfigApplicationContext createApplicationContext() {
         AnnotationConfigApplicationContext applicationContext = super.createApplicationContext();
         applicationContext.getBeanFactory().registerSingleton("environmentProperties", new UnitTestEnvironmentProperties());
-        applicationContext.register();
         return applicationContext;
     }
 }
