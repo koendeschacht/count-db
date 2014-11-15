@@ -186,7 +186,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
 
     @Override
     public void freeMemory() {
-        flush();
+        flushWriteCache();
     }
 
     @Override
