@@ -28,7 +28,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     private static final long MAX_FILE_SIZE_WRITE = 50 * 1024 * 1024;
     private static final long MAX_FILE_SIZE_READ = 10 * 1024 * 1024;
     private static final long BITS_TO_DISCARD_FOR_FILE_BUCKETS = 58;
-    private static final int BATCH_SIZE_PRIMITIVE_VALUES = 1000000;
+    private static final int BATCH_SIZE_PRIMITIVE_VALUES = 100000;
     private static final int BATCH_SIZE_NON_PRIMITIVE_VALUES = 100;
 
     private static final String META_FILE = "META_FILE";
@@ -441,7 +441,8 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     targetSize = MAX_FILE_SIZE_READ;
                 } else {
                     //write phase
-                    needsRewrite = !file.isClean() && file.getWriteSize() > MAX_FILE_SIZE_WRITE;
+                    double probOfRewriteForSize = file.getWriteSize() * 4.0 / MAX_FILE_SIZE_WRITE - 3.0;
+                    needsRewrite = !file.isClean() && Math.random() < probOfRewriteForSize;
                     targetSize = MAX_FILE_SIZE_READ;
                 }
                 if (needsRewrite) {
@@ -465,7 +466,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                             }
                             dos.close();
                             swapTempForReal(file);
-                            file.fileWasRewritten(sample(fileLocations, 50), currentSizeOfFile, currentSizeOfFile);
+                            file.fileWasRewritten(sample(fileLocations, 200), currentSizeOfFile, currentSizeOfFile);
                             fileLocations = new ArrayList<>();
                             file = new FileInfo(key, 0, 0);
                             currentSizeOfFile = 0;
@@ -478,7 +479,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                         currentSizeOfFile += dataToWrite.length;
                     }
                     swapTempForReal(file);
-                    file.fileWasRewritten(sample(fileLocations, 50), currentSizeOfFile, currentSizeOfFile);
+                    file.fileWasRewritten(sample(fileLocations, 200), currentSizeOfFile, currentSizeOfFile);
                     dos.close();
                     numOfRewrittenFiles++;
                 }
