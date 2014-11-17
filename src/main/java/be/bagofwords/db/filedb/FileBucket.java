@@ -84,6 +84,10 @@ public class FileBucket implements Comparable<FileBucket> {
         lock.writeLock().lock();
     }
 
+    public boolean tryLockWrite() {
+        return lock.writeLock().tryLock();
+    }
+
     public void unlockWrite() {
         lock.writeLock().unlock();
     }
@@ -101,10 +105,10 @@ public class FileBucket implements Comparable<FileBucket> {
         return shouldBeCleanedBeforeRead;
     }
 
+
     public void setShouldBeCleanedBeforeRead(boolean shouldBeCleanedBeforeRead) {
         this.shouldBeCleanedBeforeRead = shouldBeCleanedBeforeRead;
     }
-
 
     /**
      * Serialization:

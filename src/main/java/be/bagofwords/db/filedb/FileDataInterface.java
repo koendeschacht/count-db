@@ -44,7 +44,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     private final long randomId;
 
     private final String sizeOfCachedFileContentsLock = new String("LOCK");
-    private final long maxSizeOfCachedFileContents = Runtime.getRuntime().maxMemory() / 3;
+    private final long maxSizeOfCachedFileContents;
     private long currentSizeOfCachedFileContents;
 
     private long timeOfLastWrite;
@@ -58,6 +58,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         this.sizeOfValues = SerializationUtils.getWidth(objectClass);
         this.randomId = new Random().nextLong();
         this.memoryManager = memoryManager;
+        this.maxSizeOfCachedFileContents = memoryManager.getAvailableMemoryInBytes() / 3;
         timeOfLastRead = 0;
         checkDataDir();
         MetaFile metaFile = readMetaInfo();
@@ -428,7 +429,14 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     private int rewriteBucket(FileBucket bucket, boolean forceClean) {
-        bucket.lockWrite();
+        if (forceClean) {
+            bucket.lockWrite();
+        } else {
+            boolean success = bucket.tryLockWrite();
+            if (!success) {
+                return 0; //will not clean bucket now but continue with other buckets, we'll be back soon.
+            }
+        }
         try {
             int numOfRewrittenFiles = 0;
             for (int fileInd = 0; fileInd < bucket.getFiles().size() && (!closeWasRequested() || forceClean); fileInd++) {

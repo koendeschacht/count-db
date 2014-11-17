@@ -27,8 +27,8 @@ import java.util.concurrent.CountDownLatch;
 
 public class BigramTestsMain implements MainClass {
 
-    private static final long MIN_MILLION_ITEMS_TO_PROCESS = 64;
-    private static final long MAX_MILLION_ITEMS_TO_PROCESS = 128;
+    private static final long MIN_MILLION_ITEMS_TO_PROCESS = 1;
+    private static final long MAX_MILLION_ITEMS_TO_PROCESS = 256;
 
     private static final File tmpDbDir = new File("/tmp/testBigramCounts");
 
@@ -97,7 +97,7 @@ public class BigramTestsMain implements MainClass {
     private void runAllTests(DataType dataType) throws InterruptedException, FileNotFoundException {
         UI.write("Testing batch writing / reading for data type " + dataType);
 //        testSeparateWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
-//        testSeparateWritingReading(dataType, new FileDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
+        testSeparateWritingReading(dataType, new FileDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
 //        testSeparateWritingReading(dataType, new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, "localhost", 1208), DatabaseCachingType.CACHED_AND_BLOOM);
 //        testSeparateWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
 //        testSeparateWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
@@ -106,7 +106,7 @@ public class BigramTestsMain implements MainClass {
 
         UI.write("Testing mixed writing / reading for data type " + dataType);
 //        testMixedWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
-        testMixedWritingReading(dataType, new FileDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
+//        testMixedWritingReading(dataType, new FileDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
 //        testMixedWritingReading(dataType, new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, "localhost", 1208), DatabaseCachingType.CACHED_AND_BLOOM);
 //        testMixedWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
 //        testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
@@ -150,13 +150,12 @@ public class BigramTestsMain implements MainClass {
         long endOfWrite = System.nanoTime();
         double writesPerSecond = numberOfItemsWritten.longValue() * 1e9 / (endOfWrite - startOfWrite);
 
-        //read data (we don't read more then 200M of items, since this is plenty to get an accurate estimate of reading speed)
         dataInterface.optimizeForReading();
         MutableLong numberOfItemsRead = new MutableLong(0);
         CountDownLatch readLatch = new CountDownLatch(numberOfThreads);
         long startOfRead = System.nanoTime();
         for (int i = 0; i < numberOfThreads; i++) {
-            new BigramTestsThread(dataType, numberOfItemsRead, Math.min(200 * 1024 * 1024, numberOfItems), inputStream, dataInterface, readLatch, true).start();
+            new BigramTestsThread(dataType, numberOfItemsRead, numberOfItems, inputStream, dataInterface, readLatch, true).start();
         }
         readLatch.await();
         dataInterface.flush();

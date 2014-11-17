@@ -290,12 +290,16 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
 
         private void handleReadKeys() throws IOException {
             CloseableIterator<Long> it = dataInterface.keyIterator();
+            UI.write("Will send keys for " + dataInterface.getName());
+            long numOfKeysSend = 0;
             while (it.hasNext()) {
                 Long key = it.next();
                 connection.writeLong(key);
+                numOfKeysSend++;
             }
             it.close();
             connection.writeLong(LONG_END);
+            UI.write("Send " + numOfKeysSend + " keys for " + dataInterface.getName());
         }
 
         private void handleReadAllValues() throws IOException {

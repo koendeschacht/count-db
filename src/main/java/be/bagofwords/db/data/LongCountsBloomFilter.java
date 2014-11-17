@@ -1,12 +1,14 @@
 package be.bagofwords.db.data;
 
 import be.bagofwords.util.HashUtils;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.hash.Funnel;
 import com.google.common.hash.PrimitiveSink;
 
 import java.io.Serializable;
 import java.util.Arrays;
 
+@JsonIgnoreProperties("dataCheckSum")
 public class LongCountsBloomFilter implements Serializable {
 
     private int numOfHashFunctions;

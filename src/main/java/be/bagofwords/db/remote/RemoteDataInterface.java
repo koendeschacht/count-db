@@ -213,9 +213,8 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
             long response = connection.readLong();
             if (response != LONG_OK) {
                 throw new RuntimeException("Unexpected error while reading approximate size " + connection.readString());
-            } else {
-                releaseConnection(connection);
             }
+            releaseConnection(connection);
         } catch (Exception e) {
             dropConnection(connection);
             throw new RuntimeException(e);
@@ -228,24 +227,27 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
     @Override
     public CloseableIterator<KeyValue<T>> iterator(final Iterator<Long> keyIterator) {
+        Connection connection = null;
         try {
-            final Connection connection = selectLargeReadBufferConnection();
-            doAction(Action.READVALUES, connection);
+            connection = selectLargeReadBufferConnection();
+            Connection thisConnection = connection;
+            doAction(Action.READVALUES, thisConnection);
             executorService.submit(() -> {
                 try {
                     while (keyIterator.hasNext()) {
                         Long nextKey = keyIterator.next();
-                        connection.writeLong(nextKey);
+                        thisConnection.writeLong(nextKey);
                     }
-                    connection.writeLong(LONG_END);
-                    connection.flush();
+                    thisConnection.writeLong(LONG_END);
+                    thisConnection.flush();
                 } catch (Exception e) {
                     UI.writeError("Received exception while sending keys for read(..), for subset " + getName() + ". Closing connection. ", e);
-                    IOUtils.closeQuietly(connection);
+                    dropConnection(thisConnection);
                 }
             });
-            return createNewKeyValueIterator(connection);
+            return createNewKeyValueIterator(thisConnection);
         } catch (Exception e) {
+            dropConnection(connection);
             throw new RuntimeException("Received exception while sending keys for read(..) for subset " + getName(), e);
         }
     }
@@ -280,7 +282,6 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
                         long numOfValues = connection.readLong();
                         if (numOfValues == LONG_END) {
                             nextValues = null;
-                            close();
                         } else if (numOfValues != LONG_ERROR) {
                             byte[] keys = connection.readByteArray();
                             byte[] compressedValues = connection.readByteArray();
@@ -313,6 +314,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
                         }
                     } catch (Exception e) {
+                        dropConnection(connection);
                         throw new RuntimeException(e);
                     }
                 } else {
@@ -322,9 +324,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
             @Override
             public void closeInt() {
-                synchronized (connection) {
-                    releaseConnection(connection);
-                }
+                releaseConnection(connection);
             }
 
             @Override
@@ -380,6 +380,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
                         }
                     } catch (Exception e) {
+                        dropConnection(thisConnection);
                         throw new RuntimeException(e);
                     }
                 }
@@ -398,9 +399,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
                 @Override
                 public void closeInt() {
-                    synchronized (thisConnection) {
-                        releaseConnection(thisConnection);
-                    }
+                    releaseConnection(thisConnection);
                 }
             };
         } catch (Exception e) {
@@ -430,9 +429,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
     @Override
     public synchronized void flush() {
-        ifNotClosed(() -> {
-            doSimpleAction(Action.FLUSH);
-        });
+        ifNotClosed(() -> doSimpleAction(Action.FLUSH));
     }
 
     private void removeUnusedConnections() {

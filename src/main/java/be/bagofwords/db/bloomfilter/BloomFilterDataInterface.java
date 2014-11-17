@@ -159,6 +159,9 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
             bloomFilter.put(key);
             numOfKeys++;
             currentKeyForNewBloomFilterCreation = key;
+            if (numOfKeys > 100 && numOfKeys > numOfValuesForBloomFilter * 10) {
+                throw new RuntimeException("Received " + numOfKeys + " while we only expected " + numOfValuesForBloomFilter);
+            }
         }
         it.close();
         currentKeyForNewBloomFilterCreation = Long.MAX_VALUE;

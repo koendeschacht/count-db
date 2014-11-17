@@ -13,6 +13,7 @@ import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.SafeThread;
+import be.bagofwords.util.Utils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -20,6 +21,7 @@ import java.util.List;
 
 public class CachedDataInterface<T extends Object> extends LayeredDataInterface<T> implements MemoryGobbler {
 
+    private static final int TIME_BETWEEN_FLUSHES_WRITE_BUFFER = 1000;
     private static final int NUM_OF_WRITE_BUFFERS = 10;
 
     private ReadCache<T> readCache;
@@ -27,6 +29,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     private List<SwappableDynamicMap> writeBuffers;
     private final MemoryManager memoryManager;
     private final SafeThread initializeCachesThread;
+    private long timeOfLastFlushOfWriteBuffer;
 
     public CachedDataInterface(MemoryManager memoryManager, CachesManager cachesManager, DataInterface<T> baseInterface, BowTaskScheduler taskScheduler) {
         super(baseInterface);
@@ -40,7 +43,8 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
         }
         this.initializeCachesThread = new InitializeCachesThread(baseInterface);
         this.initializeCachesThread.start();
-        taskScheduler.schedulePeriodicTask(() -> ifNotClosed(this::flushWriteCache), 1000);
+        taskScheduler.schedulePeriodicTask(() -> ifNotClosed(this::flushWriteBuffer), TIME_BETWEEN_FLUSHES_WRITE_BUFFER);
+        timeOfLastFlushOfWriteBuffer = System.currentTimeMillis();
     }
 
     @Override
@@ -72,7 +76,16 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
 
     @Override
     public void write(long key, T value) {
+        checkWriteConditions();
+        unsafeWrite(key, value);
+    }
+
+    private void checkWriteConditions() {
         memoryManager.waitForSufficientMemory();
+        waitForSlowFlushes();
+    }
+
+    private void unsafeWrite(long key, T value) {
         int writeBufferInd = (int) (key % NUM_OF_WRITE_BUFFERS);
         if (writeBufferInd < 0) {
             writeBufferInd += NUM_OF_WRITE_BUFFERS;
@@ -91,6 +104,13 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
                     writeBuffer.getMap().put(key, value);
                 }
             }
+        }
+    }
+
+    private void waitForSlowFlushes() {
+        while (System.currentTimeMillis() - timeOfLastFlushOfWriteBuffer > TIME_BETWEEN_FLUSHES_WRITE_BUFFER * 10) {
+            //exceptionally long time since last flush, let's wait for the flush to finish
+            Utils.threadSleep(10);
         }
     }
 
@@ -117,9 +137,14 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
 
     @Override
     public void write(Iterator<KeyValue<T>> entries) {
+        int numOfEntriesWritten = 0;
         while (entries.hasNext()) {
+            if (numOfEntriesWritten % 100 == 0) {
+                checkWriteConditions();
+            }
             KeyValue<T> next = entries.next();
             write(next.getKey(), next.getValue());
+            numOfEntriesWritten++;
         }
     }
 
@@ -138,7 +163,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     }
 
     public synchronized void flush() {
-        flushWriteCache();
+        flushWriteBuffer();
         baseInterface.flush();
         cleanDirtyReadCache();
     }
@@ -151,7 +176,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
         }
     }
 
-    private synchronized void flushWriteCache() {
+    private synchronized void flushWriteBuffer() {
         //flush values in write cache
         writeBuffers.parallelStream().forEach(buffer -> {
             DynamicMap<T> oldValues;
@@ -163,6 +188,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
                 readCacheDirty = true; //should come after writing values
             }
         });
+        timeOfLastFlushOfWriteBuffer = System.currentTimeMillis();
     }
 
     @Override
@@ -186,7 +212,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
 
     @Override
     public void freeMemory() {
-        flushWriteCache();
+        flushWriteBuffer();
     }
 
     @Override
