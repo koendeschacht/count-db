@@ -474,7 +474,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                             }
                             dos.close();
                             swapTempForReal(file);
-                            file.fileWasRewritten(sample(fileLocations, 200), currentSizeOfFile, currentSizeOfFile);
+                            file.fileWasRewritten(sample(fileLocations, 100), currentSizeOfFile, currentSizeOfFile);
                             fileLocations = new ArrayList<>();
                             file = new FileInfo(key, 0, 0);
                             currentSizeOfFile = 0;
@@ -487,7 +487,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                         currentSizeOfFile += dataToWrite.length;
                     }
                     swapTempForReal(file);
-                    file.fileWasRewritten(sample(fileLocations, 200), currentSizeOfFile, currentSizeOfFile);
+                    file.fileWasRewritten(sample(fileLocations, 100), currentSizeOfFile, currentSizeOfFile);
                     dos.close();
                     numOfRewrittenFiles++;
                 }
