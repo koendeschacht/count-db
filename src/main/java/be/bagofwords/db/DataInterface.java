@@ -6,7 +6,7 @@ import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.DataIterable;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
-import be.bagofwords.text.SimpleString;
+import be.bagofwords.text.BowString;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.HashUtils;
 import be.bagofwords.util.KeyValue;
@@ -41,7 +41,7 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         return read(HashUtils.hashCode(key));
     }
 
-    public T read(SimpleString key) {
+    public T read(BowString key) {
         return read(HashUtils.hashCode(key));
     }
 
@@ -53,7 +53,7 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
             return result;
     }
 
-    public long readCount(SimpleString key) {
+    public long readCount(BowString key) {
         return readCount(HashUtils.hashCode(key));
     }
 
@@ -181,7 +181,7 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
     }
 
 
-    public void write(SimpleString key, T value) {
+    public void write(BowString key, T value) {
         write(HashUtils.hashCode(key.getS()), value);
     }
 

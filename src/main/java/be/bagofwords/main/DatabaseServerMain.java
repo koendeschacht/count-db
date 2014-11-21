@@ -1,7 +1,7 @@
 package be.bagofwords.main;
 
 import be.bagofwords.application.ApplicationManager;
-import be.bagofwords.application.BaseRunnableApplicationContextFactory;
+import be.bagofwords.application.BaseApplicationContextFactory;
 import be.bagofwords.application.EnvironmentProperties;
 import be.bagofwords.application.MainClass;
 import be.bagofwords.application.status.ListUrlsController;
@@ -104,7 +104,7 @@ public class DatabaseServerMain implements MainClass {
         }
     }
 
-    public static class DatabaseServerMainContextFactory extends BaseRunnableApplicationContextFactory {
+    public static class DatabaseServerMainContextFactory extends BaseApplicationContextFactory {
 
         private final EnvironmentProperties environmentProperties;
 

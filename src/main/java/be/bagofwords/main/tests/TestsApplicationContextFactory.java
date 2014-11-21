@@ -1,6 +1,6 @@
 package be.bagofwords.main.tests;
 
-import be.bagofwords.application.BaseRunnableApplicationContextFactory;
+import be.bagofwords.application.BaseApplicationContextFactory;
 import be.bagofwords.application.MainClass;
 import be.bagofwords.application.status.RemoteRegisterUrlsServerProperties;
 import be.bagofwords.web.WebContainer;
@@ -9,7 +9,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/22/14.
  */
-public class TestsApplicationContextFactory extends BaseRunnableApplicationContextFactory {
+public class TestsApplicationContextFactory extends BaseApplicationContextFactory {
 
     public TestsApplicationContextFactory(MainClass mainClass) {
         super(mainClass);
