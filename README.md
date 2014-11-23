@@ -9,7 +9,7 @@ You want to use count-db if you need to write and read billions of counts very e
 
 ## Performance
 
-We compared the performance of count-db to 3 other key-value stores: [levelDB](https://github.com/google/leveldb), [kyoto cabinet](http://fallabs.com/kyotocabinet/) and [rocksDB](http://rocksdb.org/).  count-db outperforms all three, it is for example 45 times faster than levelDB when writing 256M bigram counts and 12 times faster than levelDB when reading from these counts. 
+We compared the performance of count-db to 3 other key-value stores: [levelDB](https://github.com/google/leveldb), [kyoto cabinet](http://fallabs.com/kyotocabinet/) and [rocksDB](http://rocksdb.org/).  count-db outperforms all three, it is for example 80 times faster than levelDB when writing 256M bigram counts and 11 times faster than levelDB when reading from these counts.
 
 ![](https://raw.githubusercontent.com/koendeschacht/count-db/master/doc/write_bigram_counts.png)
 
@@ -38,7 +38,7 @@ DataInterfaceFactory dataInterfaceFactory = new EmbeddedDBContextFactory("/tmp/m
 
 //create data interfaces
 DataInterface<Long> myLogDataInterface = dataInterfaceFactory.createCountDataInterface("myLoginCounts");
-DataInterface<UserObject> myUserDataInterface = dataInterfaceFactory.createDataInterface(DatabaseCachingType.CACHED, "myUsers", UserObject.class, new OverWriteCombinator<UserObject>());
+DataInterface<UserObject> myUserDataInterface = dataInterfaceFactory.createDataInterface("myUsers", UserObject.class, new OverWriteCombinator<>());
 
 //write data
 long userId = 12939;
@@ -52,7 +52,7 @@ myUserDataInterface.flush();
 //read data
 long numOfLogins = myLogDataInterface.readCount("user_" + userId + "_logged_in");
 UserObject user = myUserDataInterface.read(userId);
-System.out.println("User " + user.getFirstName() + " " + user.getSecondName() + " logged in " + numOfLogins + " times.");
+System.out.println("User " + user.getFirstName() + " " + user.getLastName() + " logged in " + numOfLogins + " times.");
 
 //iterate over all data
 CloseableIterator<KeyValue<UserObject>> iterator = myUserDataInterface.iterator();
@@ -60,7 +60,7 @@ while (iterator.hasNext()) {
     KeyValue<UserObject> curr = iterator.next();
     UserObject currUser = curr.getValue();
     long currUserId = curr.getKey();
-    System.out.println("User " + currUser.getFirstName() + " " + currUser.getSecondName() + " with id " + currUserId);
+    System.out.println("User " + currUser.getFirstName() + " " + currUser.getLastName() + " with id " + currUserId);
 }
 iterator.close();
 
