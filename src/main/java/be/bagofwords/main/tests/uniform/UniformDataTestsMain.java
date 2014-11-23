@@ -9,7 +9,10 @@ import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.combinator.LongCombinator;
+import be.bagofwords.db.experimental.kyoto.KyotoDataInterfaceFactory;
+import be.bagofwords.db.experimental.rocksdb.RocksDBDataInterfaceFactory;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
+import be.bagofwords.db.leveldb.LevelDBDataInterfaceFactory;
 import be.bagofwords.main.tests.TestsApplicationContextFactory;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.NumUtils;
@@ -24,7 +27,7 @@ import java.util.concurrent.CountDownLatch;
 
 public class UniformDataTestsMain implements MainClass {
 
-    private static final int MIN_MILLION_ITEMS_TO_PROCESS = 64;
+    private static final int MIN_MILLION_ITEMS_TO_PROCESS = 1;
     private static final int MAX_MILLION_ITEMS_TO_PROCESS = 128;
 
     private static final File tmpDbDir = new File("/tmp/testRandomCounts");
@@ -45,11 +48,11 @@ public class UniformDataTestsMain implements MainClass {
         try {
             prepareTmpDir(tmpDbDir);
 
-//            testWritingReading(new LevelDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
+            testWritingReading(new LevelDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
             testWritingReading(new FileDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
-//            testWritingReading(new KyotoDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
-//            testWritingReading(new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
-//            testWritingReading(new RocksDBDataInterfaceFactory(cachesManager, memoryManager, tmpDbDir.getAbsolutePath() + "/rocksBD", true), DatabaseCachingType.DIRECT);
+            testWritingReading(new KyotoDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
+            testWritingReading(new RocksDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
+            testWritingReading(new RocksDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/rocksBD", true), DatabaseCachingType.DIRECT);
 
         } catch (Exception exp) {
             throw new RuntimeException(exp);
