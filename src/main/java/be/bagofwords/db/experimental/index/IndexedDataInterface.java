@@ -3,7 +3,6 @@ package be.bagofwords.db.experimental.index;
 
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
-import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.LayeredDataInterface;
 import be.bagofwords.db.data.LongList;
 import be.bagofwords.db.data.LongListCombinator;
@@ -25,7 +24,7 @@ public class IndexedDataInterface<T> extends LayeredDataInterface<T> {
     public IndexedDataInterface(DataInterfaceFactory dataInterfaceFactory, DataInterface<T> baseInterface, DataIndexer<T> indexer) {
         super(baseInterface);
         this.indexer = indexer;
-        this.indexedDataInterface = dataInterfaceFactory.createDataInterface(DatabaseCachingType.CACHED_AND_BLOOM, baseInterface.getName() + "_idx", LongList.class, new LongListCombinator());
+        this.indexedDataInterface = dataInterfaceFactory.createDataInterface(baseInterface.getName() + "_idx", LongList.class, new LongListCombinator());
     }
 
     @Override
