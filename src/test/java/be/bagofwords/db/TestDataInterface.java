@@ -51,18 +51,27 @@ public class TestDataInterface extends BaseTestDataInterface {
     @Test
     public void testIterator() throws Exception {
         int numOfExamples = 100;
-        DataInterface<Integer> dataInterface = dataInterfaceFactory.createDataInterface(type, "testIterator", Integer.class, new OverWriteCombinator<Integer>());
+        DataInterface<Integer> dataInterface = dataInterfaceFactory.createDataInterface(type, "testIterator", Integer.class, new OverWriteCombinator<>());
         dataInterface.dropAllData();
         for (int i = 0; i < numOfExamples; i++) {
             dataInterface.write(i, i);
         }
+        dataInterface.flush();
+        assertIteratorReturnsCorrectValues(numOfExamples, dataInterface);
+        assertIteratorReturnsCorrectValues(numOfExamples, dataInterface); //we test this twice because it has happened that a second invocation gave a different iterator
+    }
+
+    private void assertIteratorReturnsCorrectValues(int numOfExamples, DataInterface<Integer> dataInterface) {
         CloseableIterator<KeyValue<Integer>> it = dataInterface.iterator();
+        int numOfValuesInIterator = 0;
         while (it.hasNext()) {
             KeyValue<Integer> next = it.next();
             long key = next.getKey();
             Integer value = next.getValue();
             Assert.assertEquals(value.intValue(), (int) key);
+            numOfValuesInIterator++;
         }
+        Assert.assertEquals(numOfExamples, numOfValuesInIterator);
         it.close();
     }
 

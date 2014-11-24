@@ -270,6 +270,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
         return new CloseableIterator<KeyValue<T>>() {
 
             private Iterator<KeyValue<T>> nextValues;
+            private boolean readAllValuesFromConnection = false;
 
             {
                 //Constructor
@@ -282,6 +283,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
                         long numOfValues = connection.readLong();
                         if (numOfValues == LONG_END) {
                             nextValues = null;
+                            readAllValuesFromConnection = true;
                         } else if (numOfValues != LONG_ERROR) {
                             byte[] keys = connection.readByteArray();
                             byte[] compressedValues = connection.readByteArray();
@@ -324,7 +326,12 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
             @Override
             public void closeInt() {
-                releaseConnection(connection);
+                if (readAllValuesFromConnection) {
+                    releaseConnection(connection);
+                } else {
+                    //server will still be sending data through this connection, so it can not be reused.
+                    dropConnection(connection);
+                }
             }
 
             @Override
@@ -360,6 +367,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
             return new CloseableIterator<Long>() {
 
                 private Long next;
+                private boolean readLastValue = false;
 
                 {
                     //Constructor
@@ -372,7 +380,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
                         if (key == LONG_END) {
                             //End
                             next = null;
-                            close();
+                            readLastValue = true;
                         } else if (key != LONG_ERROR) {
                             next = key;
                         } else {
@@ -399,7 +407,11 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
                 @Override
                 public void closeInt() {
-                    releaseConnection(thisConnection);
+                    if (readLastValue) {
+                        releaseConnection(thisConnection);
+                    } else {
+                        dropConnection(thisConnection);
+                    }
                 }
             };
         } catch (Exception e) {
