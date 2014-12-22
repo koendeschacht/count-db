@@ -1,0 +1,1647 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="617ebc1b-9d5f-4c88-873b-d49f1bed21b7" name="Default" comment="Removed unused code in ApproximateCountsUtils.java">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/be/bagofwords/main/tests/bigrams/BigramTestsMain.java" afterPath="$PROJECT_DIR$/src/main/java/be/bagofwords/main/tests/bigrams/BigramTestsMain.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/be/bagofwords/db/cached/CachedDataInterface.java" afterPath="$PROJECT_DIR$/src/main/java/be/bagofwords/db/cached/CachedDataInterface.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/be/bagofwords/db/DataInterfaceFactory.java" afterPath="$PROJECT_DIR$/src/main/java/be/bagofwords/db/DataInterfaceFactory.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/be/bagofwords/db/memory/InMemoryDataInterface.java" afterPath="$PROJECT_DIR$/src/main/java/be/bagofwords/db/memory/InMemoryDataInterface.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/be/bagofwords/db/memory/InMemoryDataInterfaceFactory.java" afterPath="$PROJECT_DIR$/src/main/java/be/bagofwords/db/memory/InMemoryDataInterfaceFactory.java" />
+    </list>
+    <ignored path="count-db.iws" />
+    <ignored path=".idea/workspace.xml" />
+    <option name="TRACKING_ENABLED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ChangesViewManager" flattened_view="true" show_ignored="false" />
+  <component name="Commander">
+    <leftPanel />
+    <rightPanel />
+    <splitter proportion="0.5" />
+  </component>
+  <component name="CreatePatchCommitExecutor">
+    <option name="PATCH_PATH" value="" />
+  </component>
+  <component name="DaemonCodeAnalyzer">
+    <disable_hints />
+  </component>
+  <component name="DebuggerManager">
+    <ui_properties converted="true" />
+    <breakpoint_any default_suspend_policy="SuspendAll" default_condition_enabled="true" converted="true">
+      <breakpoint>
+        <option name="NOTIFY_CAUGHT" value="true" />
+        <option name="NOTIFY_UNCAUGHT" value="true" />
+        <option name="ENABLED" value="false" />
+        <option name="LOG_ENABLED" value="false" />
+        <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="REMOVE_AFTER_HIT" value="false" />
+        <option name="SUSPEND_POLICY" value="SuspendAll" />
+        <option name="SUSPEND" value="true" />
+        <option name="COUNT_FILTER_ENABLED" value="false" />
+        <option name="COUNT_FILTER" value="0" />
+        <option name="CONDITION_ENABLED" value="true" />
+        <option name="CLASS_FILTERS_ENABLED" value="false" />
+        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
+        <option name="CONDITION" value="" />
+        <option name="LOG_MESSAGE" value="" />
+      </breakpoint>
+      <breakpoint>
+        <option name="NOTIFY_CAUGHT" value="true" />
+        <option name="NOTIFY_UNCAUGHT" value="true" />
+        <option name="ENABLED" value="false" />
+        <option name="LOG_ENABLED" value="false" />
+        <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="REMOVE_AFTER_HIT" value="false" />
+        <option name="SUSPEND_POLICY" value="SuspendAll" />
+        <option name="SUSPEND" value="true" />
+        <option name="COUNT_FILTER_ENABLED" value="false" />
+        <option name="COUNT_FILTER" value="0" />
+        <option name="CONDITION_ENABLED" value="true" />
+        <option name="CLASS_FILTERS_ENABLED" value="false" />
+        <option name="INSTANCE_FILTERS_ENABLED" value="false" />
+        <option name="CONDITION" value="" />
+        <option name="LOG_MESSAGE" value="" />
+      </breakpoint>
+    </breakpoint_any>
+    <breakpoint_rules converted="true" />
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="default_target" />
+  <component name="FavoritesManager">
+    <favorites_list name="count-db" />
+  </component>
+  <component name="FileEditorManager">
+    <leaf>
+      <file leaf-file-name="RemoteDataInterface.java" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/remote/RemoteDataInterface.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.6673937" vertical-offset="1258" max-vertical-offset="9248">
+              <caret line="132" column="0" selection-start-line="132" selection-start-column="0" selection-end-line="132" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="CachedDataInterface.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/cached/CachedDataInterface.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="4352">
+              <caret line="31" column="46" selection-start-line="31" selection-start-column="46" selection-end-line="31" selection-end-column="46" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="pom.xml" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/pom.xml">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="2669" max-vertical-offset="3196">
+              <caret line="157" column="36" selection-start-line="157" selection-start-column="36" selection-end-line="157" selection-end-column="36" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DataInterfaceFactory.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/DataInterfaceFactory.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="1122" max-vertical-offset="3026">
+              <caret line="66" column="0" selection-start-line="66" selection-start-column="0" selection-end-line="66" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="InMemoryDataInterfaceFactory.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/memory/InMemoryDataInterfaceFactory.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="289" max-vertical-offset="442">
+              <caret line="17" column="80" selection-start-line="17" selection-start-column="80" selection-end-line="17" selection-end-column="80" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="InMemoryDataInterface.java" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/memory/InMemoryDataInterface.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2601">
+              <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FindManager">
+    <FindUsagesManager>
+      <setting name="OPEN_NEW_TAB" value="false" />
+    </FindUsagesManager>
+  </component>
+  <component name="Git.Settings">
+    <option name="UPDATE_TYPE" value="MERGE" />
+    <option name="PUSH_AUTO_UPDATE" value="true" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="speed_improvements" />
+      </map>
+    </option>
+  </component>
+  <component name="HierarchyBrowserManager">
+    <option name="SCOPE" value="Production" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="changedFiles">
+      <list>
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/DBUtils.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/bloomfilter/LongBloomFilterWithCheckSum.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/data/CompactCountsIndex.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/data/CountsList.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/data/DoubleCountsList.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/data/CompactIndex.java" />
+        <option value="$MAVEN_REPOSITORY$/be/bagofwords/bow-utils/1.1.0/bow-utils-1.1.0-sources.jar!/be/bagofwords/cache/DynamicMap.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/FlushDataInterfacesThread.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/DataInterfacesCleanupTasks.java" />
+        <option value="$PROJECT_DIR$/src/test/java/be/bagofwords/db/helper/UnitTestContextLoader.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/TestComp.java" />
+        <option value="$PROJECT_DIR$/src/test/java/be/bagofwords/db/TestExecutor.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/CoreDataInterface.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/filedb/FileDataInterfaceFactory.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/remote/RemoteDatabaseInterfaceFactory.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/experimental/lmdb/LMDBDataInterfaceFactory.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/experimental/kyoto/KyotoDataInterfaceFactory.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/leveldb/LevelDBDataInterfaceFactory.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/experimental/rocksdb/RocksDBDataInterfaceFactory.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/LayeredDataInterface.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/filedb/FileInfo.java" />
+        <option value="$PROJECT_DIR$/src/test/java/be/bagofwords/db/helper/DataInterfaceFactoryFactory.java" />
+        <option value="$MAVEN_REPOSITORY$/be/bagofwords/bow-utils/1.1.0/bow-utils-1.1.0-sources.jar!/be/bagofwords/util/ExecutorServiceFactory.java" />
+        <option value="$PROJECT_DIR$/src/test/java/be/bagofwords/db/helper/CountDBUnitTestApplicationContextFactory.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/filedb/FileBucket.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/data/LongCountsBloomFilter.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/bloomfilter/LongBloomFilter.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/bloomfilter/BloomFilterDataInterface.java" />
+        <option value="$PROJECT_DIR$/src/test/java/be/bagofwords/virtualfile/remote/TestRemoteFileService.java" />
+        <option value="$MAVEN_REPOSITORY$/be/bagofwords/bow-utils/1.1.0/bow-utils-1.1.0-sources.jar!/be/bagofwords/cache/ReadCache.java" />
+        <option value="$PROJECT_DIR$/src/test/java/be/bagofwords/db/BaseTestDataInterface.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/main/ExampleUsage.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/main/tests/TestsApplicationContextFactory.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/main/DatabaseServerMain.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/experimental/index/IndexedDataInterface.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/DataInterface.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/main/tests/uniform/UniformDataTestsMain.java" />
+        <option value="$PROJECT_DIR$/README.md" />
+        <option value="$PROJECT_DIR$/doc/performance.md" />
+        <option value="$PROJECT_DIR$/src/test/java/be/bagofwords/db/TestDataInterface.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/filedb/FileDataInterface.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/remote/RemoteDataInterfaceServer.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/data/ApproximateCountsFilter.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/data/ApproximateCountsUtils.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/cached/CachedDataInterface.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/main/tests/bigrams/BigramTestsMain.java" />
+        <option value="$PROJECT_DIR$/pom.xml" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/memory/InMemoryDataInterface.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/DataInterfaceFactory.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/memory/InMemoryDataInterfaceFactory.java" />
+        <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/remote/RemoteDataInterface.java" />
+      </list>
+    </option>
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="importingSettings">
+      <MavenImportingSettings>
+        <option name="importAutomatically" value="true" />
+      </MavenImportingSettings>
+    </option>
+  </component>
+  <component name="MavenProjectNavigator">
+    <treeState>
+      <PATH>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="" />
+          <option name="myItemType" value="org.jetbrains.idea.maven.navigator.MavenProjectsStructure$RootNode" />
+        </PATH_ELEMENT>
+      </PATH>
+    </treeState>
+  </component>
+  <component name="ProjectFrameBounds">
+    <option name="y" value="-4" />
+    <option name="width" value="1920" />
+    <option name="height" value="1084" />
+  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="false">
+    <OptionsSetting value="true" id="Add" />
+    <OptionsSetting value="true" id="Remove" />
+    <OptionsSetting value="true" id="Checkout" />
+    <OptionsSetting value="false" id="Update" />
+    <OptionsSetting value="true" id="Status" />
+    <OptionsSetting value="true" id="Edit" />
+    <ConfirmationsSetting value="2" id="Add" />
+    <ConfirmationsSetting value="0" id="Remove" />
+  </component>
+  <component name="ProjectReloadState">
+    <option name="STATE" value="0" />
+  </component>
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <flattenPackages />
+      <showMembers />
+      <showModules />
+      <showLibraryContents />
+      <hideEmptyPackages />
+      <abbreviatePackageNames />
+      <autoscrollToSource />
+      <autoscrollFromSource ProjectPane="true" />
+      <sortByType />
+    </navigator>
+    <panes />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="GoToClass.includeLibraries" value="false" />
+    <property name="GoToClass.toSaveIncludeLibraries" value="false" />
+    <property name="GoToFile.includeJavaFiles" value="false" />
+    <property name="MemberChooser.sorted" value="false" />
+    <property name="MemberChooser.showClasses" value="true" />
+    <property name="MemberChooser.copyJavadoc" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../bow-utils/src" />
+    <property name="recentsLimit" value="5" />
+    <property name="dynamic.classpath" value="false" />
+    <property name="OverrideImplement.combined" value="true" />
+    <property name="OverrideImplement.overriding.sorted" value="false" />
+    <property name="restartRequiresConfirmation" value="true" />
+    <property name="FullScreen" value="false" />
+    <property name="extract.method.default.visibility" value="private" />
+    <property name="project.structure.last.edited" value="Project" />
+    <property name="project.structure.proportion" value="0.0" />
+    <property name="project.structure.side.proportion" value="0.5344488" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_flatWidth0" value="218" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_flatOrder0" value="0" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_flatWidth1" value="238" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_flatOrder1" value="1" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_flatWidth2" value="245" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_flatOrder2" value="2" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_flatWidth3" value="1143" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_flatOrder3" value="3" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_treeWidth0" value="218" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_treeOrder0" value="0" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_treeWidth1" value="238" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_treeOrder1" value="1" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_treeWidth2" value="245" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_treeOrder2" value="2" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_treeWidth3" value="1143" />
+    <property name="FileHistory.git4idea.history.GitHistoryProvider_treeOrder3" value="3" />
+    <property name="com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary" value="JUnit4" />
+    <property name="com.intellij.testIntegration.createTest.CreateTestDialog.includeInheritedMembers" value="false" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/doc" />
+      <recent name="$PROJECT_DIR$/lib/kyotocabinet-1.24" />
+      <recent name="$PROJECT_DIR$" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/lib/rocksdb/linux-x86_64" />
+      <recent name="$PROJECT_DIR$/lib/kyotocabinet-1.24/linux-x86_64" />
+      <recent name="$PROJECT_DIR$/lib/kyotocabinet-1.24" />
+    </key>
+    <key name="CreateTestDialog.Recents.Supers">
+      <recent name="" />
+    </key>
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="be.bow.main.tests" />
+      <recent name="be.bow.db" />
+      <recent name="be.bow" />
+    </key>
+    <key name="CreateTestDialog.RecentsKey">
+      <recent name="be.bagofwords.virtualfile.remote" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="be.bagofwords.db.combinator" />
+      <recent name="be.bagofwords.db.data" />
+      <recent name="be.bagofwords.main.util" />
+      <recent name="be.bagofwords.db.application" />
+      <recent name="be.bow.main.tests.bigrams" />
+    </key>
+  </component>
+  <component name="RunManager" selected="JUnit.TestDataInterface.testIterator">
+    <configuration default="false" name="TestDataInterface" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="count-db" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" value="be.bagofwords.db" />
+      <option name="MAIN_CLASS_NAME" value="be.bagofwords.db.TestDataInterface" />
+      <option name="METHOD_NAME" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="" />
+        <option name="TRANSPORT" value="0" />
+        <option name="LOCAL" value="true" />
+      </RunnerSettings>
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Debug" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="TestExecutor" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="count-db" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" value="be.bagofwords.db" />
+      <option name="MAIN_CLASS_NAME" value="be.bagofwords.db.TestExecutor" />
+      <option name="METHOD_NAME" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="TestExecutor.testTaskScheduler" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="count-db" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" value="be.bagofwords.db" />
+      <option name="MAIN_CLASS_NAME" value="be.bagofwords.db.TestExecutor" />
+      <option name="METHOD_NAME" value="testTaskScheduler" />
+      <option name="TEST_OBJECT" value="method" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="" />
+        <option name="TRANSPORT" value="0" />
+        <option name="LOCAL" value="true" />
+      </RunnerSettings>
+      <ConfigurationWrapper RunnerId="Debug" />
+      <method />
+    </configuration>
+    <configuration default="false" name="TestRemoteFileService.testWriteAndRead" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="count-db" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" value="be.bagofwords.virtualfile.remote" />
+      <option name="MAIN_CLASS_NAME" value="be.bagofwords.virtualfile.remote.TestRemoteFileService" />
+      <option name="METHOD_NAME" value="testWriteAndRead" />
+      <option name="TEST_OBJECT" value="method" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="TestDataInterface.testIterator" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="count-db" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" value="be.bagofwords.db" />
+      <option name="MAIN_CLASS_NAME" value="be.bagofwords.db.TestDataInterface" />
+      <option name="METHOD_NAME" value="testIterator" />
+      <option name="TEST_OBJECT" value="method" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="true" type="Remote" factoryName="Remote">
+      <option name="USE_SOCKET_TRANSPORT" value="true" />
+      <option name="SERVER_MODE" value="false" />
+      <option name="SHMEM_ADDRESS" value="javadebug" />
+      <option name="HOST" value="localhost" />
+      <option name="PORT" value="5005" />
+      <method />
+    </configuration>
+    <configuration default="true" type="JUnit" factoryName="JUnit">
+      <module name="" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="METHOD_NAME" />
+      <option name="TEST_OBJECT" value="class" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <envs />
+      <patterns />
+      <method />
+    </configuration>
+    <configuration default="true" type="AndroidRunConfigurationType" factoryName="Android Application">
+      <module name="" />
+      <option name="ACTIVITY_CLASS" value="" />
+      <option name="MODE" value="default_activity" />
+      <option name="DEPLOY" value="true" />
+      <option name="ARTIFACT_NAME" value="" />
+      <option name="TARGET_SELECTION_MODE" value="EMULATOR" />
+      <option name="USE_LAST_SELECTED_DEVICE" value="false" />
+      <option name="PREFERRED_AVD" value="" />
+      <option name="USE_COMMAND_LINE" value="true" />
+      <option name="COMMAND_LINE" value="" />
+      <option name="WIPE_USER_DATA" value="false" />
+      <option name="DISABLE_BOOT_ANIMATION" value="false" />
+      <option name="NETWORK_SPEED" value="full" />
+      <option name="NETWORK_LATENCY" value="none" />
+      <option name="CLEAR_LOGCAT" value="false" />
+      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="true" />
+      <option name="FILTER_LOGCAT_AUTOMATICALLY" value="true" />
+      <method />
+    </configuration>
+    <configuration default="true" type="AndroidTestRunConfigurationType" factoryName="Android Tests">
+      <module name="" />
+      <option name="TESTING_TYPE" value="0" />
+      <option name="INSTRUMENTATION_RUNNER_CLASS" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="CLASS_NAME" value="" />
+      <option name="PACKAGE_NAME" value="" />
+      <option name="TARGET_SELECTION_MODE" value="EMULATOR" />
+      <option name="USE_LAST_SELECTED_DEVICE" value="false" />
+      <option name="PREFERRED_AVD" value="" />
+      <option name="USE_COMMAND_LINE" value="true" />
+      <option name="COMMAND_LINE" value="" />
+      <option name="WIPE_USER_DATA" value="false" />
+      <option name="DISABLE_BOOT_ANIMATION" value="false" />
+      <option name="NETWORK_SPEED" value="full" />
+      <option name="NETWORK_LATENCY" value="none" />
+      <option name="CLEAR_LOGCAT" value="false" />
+      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="true" />
+      <option name="FILTER_LOGCAT_AUTOMATICALLY" value="true" />
+      <method />
+    </configuration>
+    <configuration default="true" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType" factoryName="Plugin">
+      <module name="" />
+      <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m -ea" />
+      <option name="PROGRAM_PARAMETERS" />
+      <method />
+    </configuration>
+    <configuration default="true" type="Applet" factoryName="Applet">
+      <module name="" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="HTML_FILE_NAME" />
+      <option name="HTML_USED" value="false" />
+      <option name="WIDTH" value="400" />
+      <option name="HEIGHT" value="300" />
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <option name="VM_PARAMETERS" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <method />
+    </configuration>
+    <configuration default="true" type="TestNG" factoryName="TestNG">
+      <module name="" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="SUITE_NAME" />
+      <option name="PACKAGE_NAME" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="METHOD_NAME" />
+      <option name="GROUP_NAME" />
+      <option name="TEST_OBJECT" value="CLASS" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="OUTPUT_DIRECTORY" />
+      <option name="ANNOTATION_TYPE" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="moduleWithDependencies" />
+      </option>
+      <option name="USE_DEFAULT_REPORTERS" value="false" />
+      <option name="PROPERTIES_FILE" />
+      <envs />
+      <properties />
+      <listeners />
+      <method />
+    </configuration>
+    <configuration default="true" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" />
+      <option name="VM_PARAMETERS" />
+      <option name="PROGRAM_PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="" />
+      <envs />
+      <method />
+    </configuration>
+    <configuration default="false" name="DatabaseServerMain" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="be.bagofwords.main.DatabaseServerMain" />
+      <option name="VM_PARAMETERS" value="" />
+      <option name="PROGRAM_PARAMETERS" value="$PROJECT_DIR$/../../data/ localhost 1208 1209" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="count-db" />
+      <envs />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="" />
+        <option name="TRANSPORT" value="0" />
+        <option name="LOCAL" value="true" />
+      </RunnerSettings>
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Debug" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="BigramTestsMain" type="Application" factoryName="Application">
+      <option name="MAIN_CLASS_NAME" value="be.bagofwords.main.tests.bigrams.BigramTestsMain" />
+      <option name="VM_PARAMETERS" value="-Xmx6000m" />
+      <option name="PROGRAM_PARAMETERS" value="/media/koen/disk/home/koen/f/bow/data/wikipedia/enwiki-latest-pages-articles.xml" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="count-db" />
+      <envs />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="" />
+        <option name="TRANSPORT" value="0" />
+        <option name="LOCAL" value="true" />
+      </RunnerSettings>
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Debug" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="UniformDataTestsMain" type="Application" factoryName="Application" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="be.bagofwords.main.tests.uniform.UniformDataTestsMain" />
+      <option name="VM_PARAMETERS" value="-Xmx4000m" />
+      <option name="PROGRAM_PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="count-db" />
+      <envs />
+      <RunnerSettings RunnerId="Debug">
+        <option name="DEBUG_PORT" value="" />
+        <option name="TRANSPORT" value="0" />
+        <option name="LOCAL" value="true" />
+      </RunnerSettings>
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Debug" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <configuration default="false" name="InspectFile" type="Application" factoryName="Application" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="be.bagofwords.main.util.InspectFile" />
+      <option name="VM_PARAMETERS" value="" />
+      <option name="PROGRAM_PARAMETERS" value="" />
+      <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" value="" />
+      <option name="ENABLE_SWING_INSPECTOR" value="false" />
+      <option name="ENV_VARIABLES" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <module name="count-db" />
+      <envs />
+      <RunnerSettings RunnerId="Run" />
+      <ConfigurationWrapper RunnerId="Run" />
+      <method />
+    </configuration>
+    <list size="9">
+      <item index="0" class="java.lang.String" itemvalue="Application.DatabaseServerMain" />
+      <item index="1" class="java.lang.String" itemvalue="Application.BigramTestsMain" />
+      <item index="2" class="java.lang.String" itemvalue="Application.UniformDataTestsMain" />
+      <item index="3" class="java.lang.String" itemvalue="Application.InspectFile" />
+      <item index="4" class="java.lang.String" itemvalue="JUnit.TestDataInterface" />
+      <item index="5" class="java.lang.String" itemvalue="JUnit.TestExecutor" />
+      <item index="6" class="java.lang.String" itemvalue="JUnit.TestExecutor.testTaskScheduler" />
+      <item index="7" class="java.lang.String" itemvalue="JUnit.TestRemoteFileService.testWriteAndRead" />
+      <item index="8" class="java.lang.String" itemvalue="JUnit.TestDataInterface.testIterator" />
+    </list>
+    <recent_temporary>
+      <list size="5">
+        <item index="0" class="java.lang.String" itemvalue="JUnit.TestDataInterface.testIterator" />
+        <item index="1" class="java.lang.String" itemvalue="JUnit.TestDataInterface" />
+        <item index="2" class="java.lang.String" itemvalue="JUnit.TestRemoteFileService.testWriteAndRead" />
+        <item index="3" class="java.lang.String" itemvalue="JUnit.TestExecutor.testTaskScheduler" />
+        <item index="4" class="java.lang.String" itemvalue="JUnit.TestExecutor" />
+      </list>
+    </recent_temporary>
+    <configuration name="&lt;template&gt;" type="WebApp" default="true" selected="false">
+      <Host>localhost</Host>
+      <Port>5050</Port>
+    </configuration>
+  </component>
+  <component name="ShelveChangesManager" show_recycled="false" />
+  <component name="StructureViewFactory">
+    <option name="ACTIVE_ACTIONS" value="SHOW_NON_PUBLIC," />
+  </component>
+  <component name="SvnConfiguration" myUseAcceleration="nothing">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="617ebc1b-9d5f-4c88-873b-d49f1bed21b7" name="Default" comment="" />
+      <created>1410510114805</created>
+      <updated>1410510114805</updated>
+    </task>
+    <task id="LOCAL-00001" summary="Better registration of FileDataInterface to the memory manager">
+      <created>1410511032214</created>
+      <updated>1410511032214</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Removed resources directory from the project file">
+      <created>1410511070101</created>
+      <updated>1410511070101</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Removed DI abbreviation, removed catch clause in test">
+      <created>1410511252384</created>
+      <updated>1410511252384</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Improved names for some class (removed reference to 'OnionDB', better readability)">
+      <created>1410513294127</created>
+      <updated>1410513294127</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Made ports for database server configurable, moved combinator classes">
+      <created>1410519152567</created>
+      <updated>1410519152567</updated>
+    </task>
+    <task id="LOCAL-00006" summary="Improved locking for InMemoryDataInterface.java">
+      <created>1410531135372</created>
+      <updated>1410531135372</updated>
+    </task>
+    <task id="LOCAL-00007" summary="Improved speed of FileDataInterface">
+      <created>1410559110401</created>
+      <updated>1410559110401</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Use a partially filled bloom filter while it is being created">
+      <created>1410596544059</created>
+      <updated>1410596544059</updated>
+    </task>
+    <task id="LOCAL-00009" summary="Increased number of examples in TestBloomFilter">
+      <created>1410769702611</created>
+      <updated>1410769702612</updated>
+    </task>
+    <task id="LOCAL-00010" summary="Don't use random distribute hash in bloom filters">
+      <created>1410769732969</created>
+      <updated>1410769732969</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Added fastutil maven library">
+      <created>1410769750730</created>
+      <updated>1410769750730</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Added additional fetching">
+      <created>1410771053264</created>
+      <updated>1410771053264</updated>
+    </task>
+    <task id="LOCAL-00013" summary="Better caching of file contents for FileDataInterface">
+      <created>1410799146255</created>
+      <updated>1410799146255</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Make sure that the bloom filter data interface is not created twice">
+      <created>1410799177946</created>
+      <updated>1410799177946</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Added readyForReading method">
+      <created>1410812170177</created>
+      <updated>1410812170177</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Reorganized caching">
+      <created>1410856891694</created>
+      <updated>1410856891694</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Cleanup">
+      <created>1410860051315</created>
+      <updated>1410860051315</updated>
+    </task>
+    <task id="LOCAL-00018" summary="Removed pushing memory pool for LevelDBDataInterfaceFactory because this did not affect performance">
+      <created>1410868163733</created>
+      <updated>1410868163733</updated>
+    </task>
+    <task id="LOCAL-00019" summary="Make sure we don't OOM when caching a lot of values">
+      <created>1410905266965</created>
+      <updated>1410905266965</updated>
+    </task>
+    <task id="LOCAL-00020" summary="Added LMDB">
+      <created>1410944905035</created>
+      <updated>1410944905035</updated>
+    </task>
+    <task id="LOCAL-00021" summary="Added Kyoto datainterface">
+      <created>1410944937447</created>
+      <updated>1410944937447</updated>
+    </task>
+    <task id="LOCAL-00022" summary="Minor cleanup">
+      <created>1410945004906</created>
+      <updated>1410945004906</updated>
+    </task>
+    <task id="LOCAL-00023" summary="Added RocksDB">
+      <created>1411053345289</created>
+      <updated>1411053345289</updated>
+    </task>
+    <task id="LOCAL-00024" summary="Minor fixes in CachedDataInterface">
+      <created>1411053418251</created>
+      <updated>1411053418251</updated>
+    </task>
+    <task id="LOCAL-00025" summary=" Moved  method to add library path to utility class">
+      <created>1411053470064</created>
+      <updated>1411053470064</updated>
+    </task>
+    <task id="LOCAL-00026" summary="improved tests">
+      <created>1411053678652</created>
+      <updated>1411053678652</updated>
+    </task>
+    <task id="LOCAL-00027" summary="Added DataInterfaceUtils">
+      <created>1411136670577</created>
+      <updated>1411136670577</updated>
+    </task>
+    <task id="LOCAL-00028" summary="Added support for int and float primitive types">
+      <created>1411136736481</created>
+      <updated>1411136736481</updated>
+    </task>
+    <task id="LOCAL-00029" summary="improved BloomFilterDataInterface">
+      <created>1411136746997</created>
+      <updated>1411136746997</updated>
+    </task>
+    <task id="LOCAL-00030" summary="adapted CachedDataInterface to new CacheData interface">
+      <created>1411136772998</created>
+      <updated>1411136772998</updated>
+    </task>
+    <task id="LOCAL-00031" summary="Improved BaseReadWriteBigrams test">
+      <created>1411136814304</created>
+      <updated>1411136814304</updated>
+    </task>
+    <task id="LOCAL-00032" summary="Restructured bigram tests">
+      <created>1411379683282</created>
+      <updated>1411379683282</updated>
+    </task>
+    <task id="LOCAL-00033" summary="Pass instance, not class to context factory">
+      <created>1411381972420</created>
+      <updated>1411381972420</updated>
+    </task>
+    <task id="LOCAL-00034" summary="Pass the text file as an argument">
+      <created>1411382034788</created>
+      <updated>1411382034788</updated>
+    </task>
+    <task id="LOCAL-00035" summary="Added test for random reads/writes">
+      <created>1411387099203</created>
+      <updated>1411387099203</updated>
+    </task>
+    <task id="LOCAL-00036" summary="Renamed be.bow package to be.bagofwords">
+      <created>1411465294416</created>
+      <updated>1411465294416</updated>
+    </task>
+    <task id="LOCAL-00037" summary="Better wiring, application lifecycle management">
+      <created>1411474526129</created>
+      <updated>1411474526129</updated>
+    </task>
+    <task id="LOCAL-00038" summary="Added example usage">
+      <created>1411474692226</created>
+      <updated>1411474692226</updated>
+    </task>
+    <task id="LOCAL-00039" summary="Added meta-information to pom.xml">
+      <created>1411478219288</created>
+      <updated>1411478219288</updated>
+    </task>
+    <task id="LOCAL-00040" summary="Added libraries">
+      <created>1411592148010</created>
+      <updated>1411592148010</updated>
+    </task>
+    <task id="LOCAL-00041" summary="Moved less stable data interfaces to experimental package">
+      <created>1411592325580</created>
+      <updated>1411592325580</updated>
+    </task>
+    <task id="LOCAL-00042" summary="Prepared pom.xml for release to maven central">
+      <created>1411592383380</created>
+      <updated>1411592383380</updated>
+    </task>
+    <task id="LOCAL-00043" summary="Adapted to change in SerializationUtils">
+      <created>1411644885004</created>
+      <updated>1411644885004</updated>
+    </task>
+    <task id="LOCAL-00044" summary="Close iterator in TestDataInterface">
+      <created>1411646423453</created>
+      <updated>1411646423453</updated>
+    </task>
+    <task id="LOCAL-00045" summary="Added source, javadoc and gpg plugins to pom.xml">
+      <created>1411646729816</created>
+      <updated>1411646729816</updated>
+    </task>
+    <task id="LOCAL-00046" summary="Improved flushing of cached data interface, better close method for all data interfaces">
+      <created>1411981402678</created>
+      <updated>1411981402678</updated>
+    </task>
+    <task id="LOCAL-00047" summary="Use a byte buffer in FileDataInterface iso DataInputStream">
+      <created>1411988499221</created>
+      <updated>1411988499222</updated>
+    </task>
+    <task id="LOCAL-00048" summary="Some improvements in BloomFilterDataInterface, CachedDataInterface and FileDataInterface">
+      <created>1412063290251</created>
+      <updated>1412063290251</updated>
+    </task>
+    <task id="LOCAL-00049" summary="Expanded example usage">
+      <created>1412158653440</created>
+      <updated>1412158653440</updated>
+    </task>
+    <task id="LOCAL-00050" summary=" Fixed bug in FileDataInterface">
+      <created>1412158667474</created>
+      <updated>1412158667474</updated>
+    </task>
+    <task id="LOCAL-00051" summary="Added extra check to ensure performance of bloom filters for small values">
+      <created>1412158767635</created>
+      <updated>1412158767635</updated>
+    </task>
+    <task id="LOCAL-00052" summary="Use default settings for LevelDBDataInterface">
+      <created>1412158785551</created>
+      <updated>1412158785551</updated>
+    </task>
+    <task id="LOCAL-00053" summary="Reduce time between long flushed in FlushDataInterfacesThread">
+      <created>1412158820620</created>
+      <updated>1412158820620</updated>
+    </task>
+    <task id="LOCAL-00054" summary="Make sure RemoteDatabaseInterfaceFactory can be wired in spring">
+      <created>1412158857544</created>
+      <updated>1412158857545</updated>
+    </task>
+    <task id="LOCAL-00055" summary="Updated benchmarks, added description and images of results">
+      <created>1412168527246</created>
+      <updated>1412168527246</updated>
+    </task>
+    <task id="LOCAL-00056" summary="Minor fix in ExampleUsage">
+      <created>1412169695397</created>
+      <updated>1412169695397</updated>
+    </task>
+    <task id="LOCAL-00057" summary="Removed reference to rocksDB* from test with java objects">
+      <created>1412170883663</created>
+      <updated>1412170883663</updated>
+    </task>
+    <task id="LOCAL-00058" summary="Modified colors in java_objects_performance.png">
+      <created>1412175302272</created>
+      <updated>1412175302272</updated>
+    </task>
+    <task id="LOCAL-00059" summary="Fixed bug in DataInterfaceFactory that broke writing bloom filter when closing BloomFilterDataInterface">
+      <created>1412175346083</created>
+      <updated>1412175346083</updated>
+    </task>
+    <task id="LOCAL-00060" summary="Fixed bug when iterating over files, added locking of directory, close data interface on error">
+      <created>1412773406372</created>
+      <updated>1412773406372</updated>
+    </task>
+    <task id="LOCAL-00061" summary="Make sure we also release write lock on error">
+      <created>1412773449912</created>
+      <updated>1412773449912</updated>
+    </task>
+    <task id="LOCAL-00062" summary="Better flushing of data interfaces">
+      <created>1412773562955</created>
+      <updated>1412773562955</updated>
+    </task>
+    <task id="LOCAL-00063" summary="fix bug: use correct port in RemoteFile.java">
+      <created>1412773589202</created>
+      <updated>1412773589202</updated>
+    </task>
+    <task id="LOCAL-00064" summary="Added class to inspect a binary file written by FileDataInterface">
+      <created>1412773817150</created>
+      <updated>1412773817150</updated>
+    </task>
+    <task id="LOCAL-00065" summary="Better lifecycle management of data interfaces">
+      <created>1412773872354</created>
+      <updated>1412773872354</updated>
+    </task>
+    <task id="LOCAL-00066" summary="Released version 1.0.1">
+      <created>1412773892292</created>
+      <updated>1412773892292</updated>
+    </task>
+    <task id="LOCAL-00067" summary="Minor">
+      <created>1413021548098</created>
+      <updated>1413021548098</updated>
+    </task>
+    <task id="LOCAL-00068" summary="Removed OpenFilesManager, renamed terminate() methods">
+      <created>1413021655376</created>
+      <updated>1413021655376</updated>
+    </task>
+    <task id="LOCAL-00069" summary="Don't use DatabaseServerDataInterfaceFactory, don't keep track of number of reads and writes">
+      <created>1413116154154</created>
+      <updated>1413116154154</updated>
+    </task>
+    <task id="LOCAL-00070" summary="Fixed bug in FileDataInterface">
+      <created>1413152509151</created>
+      <updated>1413152509151</updated>
+    </task>
+    <task id="LOCAL-00071" summary="Bumped version to 1.0.2">
+      <created>1413153220709</created>
+      <updated>1413153220709</updated>
+    </task>
+    <task id="LOCAL-00072" summary="Added some code for inter-vm-traces">
+      <created>1413153252514</created>
+      <updated>1413153252514</updated>
+    </task>
+    <task id="LOCAL-00073" summary="Make sure the bloomfilter is also flushed, don't use WebContainerConfiguration and fixed some issues in the remote file server">
+      <created>1413358620533</created>
+      <updated>1413358620534</updated>
+    </task>
+    <task id="LOCAL-00074" summary="Added DoubleCountsList">
+      <created>1413806056422</created>
+      <updated>1413806056422</updated>
+    </task>
+    <task id="LOCAL-00075" summary="Refactored close method">
+      <created>1413806149319</created>
+      <updated>1413806149319</updated>
+    </task>
+    <task id="LOCAL-00076" summary="Use weak references in DataInterfaceFactory">
+      <created>1413806164296</created>
+      <updated>1413806164297</updated>
+    </task>
+    <task id="LOCAL-00077" summary="Before removing changed listeners">
+      <created>1415198447273</created>
+      <updated>1415198447273</updated>
+    </task>
+    <task id="LOCAL-00078" summary="Various speed improvements">
+      <created>1415292771282</created>
+      <updated>1415292771282</updated>
+    </task>
+    <task id="LOCAL-00079" summary="Various speed improvements with multi-threaded write buffer">
+      <created>1415622194813</created>
+      <updated>1415622194813</updated>
+    </task>
+    <task id="LOCAL-00080" summary="Moved to java 1.8, various speed improvements">
+      <created>1415802305186</created>
+      <updated>1415802305186</updated>
+    </task>
+    <task id="LOCAL-00081" summary="Updated documentation with new benchmark results">
+      <created>1415804461753</created>
+      <updated>1415804461754</updated>
+    </task>
+    <task id="LOCAL-00082" summary="Made LongBloomFilterWithCheckSum byte array serializable, various speed improvements for large datasets">
+      <created>1415995222322</created>
+      <updated>1415995222322</updated>
+    </task>
+    <task id="LOCAL-00083" summary="In CachedDataInterface, only flush write cache to free memory">
+      <created>1416040666211</created>
+      <updated>1416040666212</updated>
+    </task>
+    <task id="LOCAL-00084" summary="Use less memory in FileDataInterface">
+      <created>1416040684897</created>
+      <updated>1416040684897</updated>
+    </task>
+    <task id="LOCAL-00085" summary="Fixed CountDBUnitTestApplicationContextFactory">
+      <created>1416040697016</created>
+      <updated>1416040697016</updated>
+    </task>
+    <task id="LOCAL-00086" summary="Better cached data interfaces">
+      <created>1416251093922</created>
+      <updated>1416251093923</updated>
+    </task>
+    <task id="LOCAL-00087" summary="Minor changes">
+      <created>1416384481366</created>
+      <updated>1416384481366</updated>
+    </task>
+    <task id="LOCAL-00088" summary="No need to specify cached type in ExampleUsage.java">
+      <created>1416396672197</created>
+      <updated>1416396672197</updated>
+    </task>
+    <task id="LOCAL-00089" summary="Renamed SimpleString and ExtendedString to BowString and BowStringImpl">
+      <created>1416577688614</created>
+      <updated>1416577688615</updated>
+    </task>
+    <task id="LOCAL-00090" summary="Neither use a bloom filter in IndexedDataInterface">
+      <created>1416757115914</created>
+      <updated>1416757115914</updated>
+    </task>
+    <task id="LOCAL-00091" summary="Minor in tests">
+      <created>1416761066592</created>
+      <updated>1416761066593</updated>
+    </task>
+    <task id="LOCAL-00092" summary="Updated documentation with latest performance figures">
+      <created>1416764742385</created>
+      <updated>1416764742386</updated>
+    </task>
+    <task id="LOCAL-00093" summary="Fixed bug in RemoteDataInterface.java that for iterators that are not fully iterated">
+      <created>1416842334536</created>
+      <updated>1416842334536</updated>
+    </task>
+    <task id="LOCAL-00094" summary="Removed unused code in ApproximateCountsUtils.java">
+      <created>1417375372994</created>
+      <updated>1417375372995</updated>
+    </task>
+    <option name="localTasksCounter" value="95" />
+    <servers />
+  </component>
+  <component name="TodoView" selected-index="0">
+    <todo-panel id="selected-file">
+      <are-packages-shown value="false" />
+      <are-modules-shown value="false" />
+      <flatten-packages value="false" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <are-modules-shown value="false" />
+      <flatten-packages value="false" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="default-changelist">
+      <are-packages-shown value="false" />
+      <are-modules-shown value="false" />
+      <flatten-packages value="false" />
+      <is-autoscroll-to-source value="false" />
+    </todo-panel>
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="0" y="-4" width="1920" height="1084" extended-state="6" />
+    <editor active="true" />
+    <layout>
+      <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.35520834" sideWeight="0.49972662" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32916668" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.32914162" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.5181347" sideWeight="0.50027335" order="4" side_tool="true" content_ui="tabs" />
+      <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.29295623" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.528125" sideWeight="0.5472936" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.303125" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32953367" sideWeight="0.49972662" order="12" side_tool="false" content_ui="tabs" />
+      <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4375667" sideWeight="0.7681388" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2379936" sideWeight="0.23028392" order="0" side_tool="true" content_ui="tabs" />
+      <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32968834" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.46666667" sideWeight="0.5872061" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24986331" sideWeight="0.50067294" order="2" side_tool="true" content_ui="tabs" />
+      <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.228125" sideWeight="0.51175505" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.36926362" sideWeight="0.5" order="3" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.51875" sideWeight="0.49972662" order="1" side_tool="false" content_ui="tabs" />
+    </layout>
+  </component>
+  <component name="UnknownFeatures">
+    <option featureType="com.intellij.fileTypeFactory" implementationName="*.md" />
+  </component>
+  <component name="Vcs.Log.UiProperties">
+    <option name="RECENTLY_FILTERED_USER_GROUPS">
+      <collection />
+    </option>
+    <option name="RECENTLY_FILTERED_BRANCH_GROUPS">
+      <collection />
+    </option>
+  </component>
+  <component name="VcsContentAnnotationSettings">
+    <option name="myLimit" value="2678400000" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
+    <option name="CHECK_NEW_TODO" value="false" />
+    <option name="myTodoPanelSettings">
+      <TodoPanelSettings />
+    </option>
+    <MESSAGE value="Fixed bug in FileDataInterface" />
+    <MESSAGE value="Bumped version to 1.0.2" />
+    <MESSAGE value="Added some code for inter-vm-traces" />
+    <MESSAGE value="Make sure the bloomfilter is also flushed, don't use WebContainerConfiguration and fixed some issues in the remote file server" />
+    <MESSAGE value="Added DoubleCountsList" />
+    <MESSAGE value="Refactored close method" />
+    <MESSAGE value="Use weak references in DataInterfaceFactory" />
+    <MESSAGE value="Before removing changed listeners" />
+    <MESSAGE value="Various speed improvements" />
+    <MESSAGE value="Various speed improvements with multi-threaded write buffer" />
+    <MESSAGE value="Moved to java 1.8, various speed improvements" />
+    <MESSAGE value="Updated documentation with new benchmark results" />
+    <MESSAGE value="Made LongBloomFilterWithCheckSum byte array serializable, various speed improvements for large datasets" />
+    <MESSAGE value="In CachedDataInterface, only flush write cache to free memory" />
+    <MESSAGE value="Use less memory in FileDataInterface" />
+    <MESSAGE value="Fixed CountDBUnitTestApplicationContextFactory" />
+    <MESSAGE value="Better cached data interfaces" />
+    <MESSAGE value="Minor changes" />
+    <MESSAGE value="No need to specify cached type in ExampleUsage.java" />
+    <MESSAGE value="Renamed SimpleString and ExtendedString to BowString and BowStringImpl" />
+    <MESSAGE value="Neither use a bloom filter in IndexedDataInterface" />
+    <MESSAGE value="Minor in tests" />
+    <MESSAGE value="Updated documentation with latest performance figures" />
+    <MESSAGE value="Fixed bug in RemoteDataInterface.java that for iterators that are not fully iterated" />
+    <MESSAGE value="Removed unused code in ApproximateCountsUtils.java" />
+    <option name="LAST_COMMIT_MESSAGE" value="Removed unused code in ApproximateCountsUtils.java" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>jar://$MAVEN_REPOSITORY$/be/bagofwords/bow-utils/1.0.2/bow-utils-1.0.2-sources.jar!/be/bagofwords/util/WrappedSocketConnection.java</url>
+          <line>71</line>
+          <properties />
+          <option name="timeStamp" value="41" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/remote/RemoteDataInterface.java</url>
+          <line>456</line>
+          <properties />
+          <option name="timeStamp" value="137" />
+        </line-breakpoint>
+      </breakpoints>
+      <breakpoints-dialog>
+        <breakpoints-dialog />
+      </breakpoints-dialog>
+      <option name="time" value="143" />
+    </breakpoint-manager>
+  </component>
+  <component name="antWorkspaceConfiguration">
+    <option name="IS_AUTOSCROLL_TO_SOURCE" value="false" />
+    <option name="FILTER_TARGETS" value="false" />
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/bloomfilter/LongBloomFilter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3247">
+          <caret line="14" column="0" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/LayeredDataInterface.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="545" max-vertical-offset="1377">
+          <caret line="66" column="29" selection-start-line="66" selection-start-column="29" selection-end-line="66" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/be/bagofwords/bow-utils/1.1.0/bow-utils-1.1.0-sources.jar!/be/bagofwords/iterator/CloseableIterator.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="748">
+          <caret line="18" column="16" selection-start-line="18" selection-start-column="16" selection-end-line="18" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/commons-io/commons-io/2.4/commons-io-2.4.jar!/org/apache/commons/io/IOUtils.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="527" max-vertical-offset="4318">
+          <caret line="31" column="23" selection-start-line="31" selection-start-column="23" selection-end-line="31" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/be/bagofwords/virtualfile/remote/TestRemoteFileService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.73593074" vertical-offset="0" max-vertical-offset="561">
+          <caret line="20" column="7" selection-start-line="20" selection-start-column="7" selection-end-line="20" selection-end-column="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/virtualfile/remote/RemoteFileService.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="493">
+          <caret line="9" column="13" selection-start-line="9" selection-start-column="13" selection-end-line="9" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/virtualfile/remote/RemoteFile.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="204" max-vertical-offset="1394">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/lib/jvm/java-8-oracle/src.zip!/java/net/SocketInputStream.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="911" max-vertical-offset="4063">
+          <caret line="93" column="23" selection-start-line="93" selection-start-column="23" selection-end-line="93" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/lib/jvm/java-8-oracle/jre/lib/rt.jar!/sun/misc/Unsafe.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="5267" max-vertical-offset="5882">
+          <caret line="320" column="23" selection-start-line="320" selection-start-column="23" selection-end-line="320" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/be/bagofwords/bow-utils/1.1.0/bow-utils-1.1.0-sources.jar!/be/bagofwords/cache/ReadCache.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="2105" max-vertical-offset="3366">
+          <caret line="154" column="5" selection-start-line="154" selection-start-column="5" selection-end-line="154" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/be/bagofwords/db/BaseTestDataInterface.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="959" max-vertical-offset="1530">
+          <caret line="88" column="0" selection-start-line="88" selection-start-column="0" selection-end-line="88" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/bloomfilter/LongBloomFilterWithCheckSum.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="294" max-vertical-offset="1224">
+          <caret line="70" column="32" selection-start-line="70" selection-start-column="32" selection-end-line="70" selection-end-column="32" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/bloomfilter/BloomFilterDataInterface.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3502">
+          <caret line="25" column="11" selection-start-line="25" selection-start-column="11" selection-end-line="25" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/DatabaseCachingType.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="476">
+          <caret line="24" column="5" selection-start-line="24" selection-start-column="5" selection-end-line="24" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/application/EmbeddedDBContextFactory.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="697">
+          <caret line="15" column="11" selection-start-line="15" selection-start-column="11" selection-end-line="15" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/be/bagofwords/db/helper/CountDBUnitTestApplicationContextFactory.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="374">
+          <caret line="17" column="0" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/main/tests/TestsApplicationContextFactory.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="765">
+          <caret line="11" column="81" selection-start-line="11" selection-start-column="81" selection-end-line="11" selection-end-column="81" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/main/DatabaseServerMain.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2006">
+          <caret line="106" column="94" selection-start-line="106" selection-start-column="94" selection-end-line="106" selection-end-column="94" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/be/bagofwords/db/TestDataInterfacePrimitiveValues.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1615">
+          <caret line="6" column="31" selection-start-line="6" selection-start-column="31" selection-end-line="6" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/be/bagofwords/db/helper/UnitTestContextLoader.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="9" max-vertical-offset="476">
+          <caret line="12" column="13" selection-start-line="12" selection-start-column="13" selection-end-line="12" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/be/bagofwords/db/TestDataInterfaceMultiThreaded.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="323" max-vertical-offset="2567">
+          <caret line="19" column="45" selection-start-line="19" selection-start-column="45" selection-end-line="19" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/be/bagofwords/bow-utils/1.1.0/bow-utils-1.1.0-sources.jar!/be/bagofwords/util/KeyValue.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="799">
+          <caret line="9" column="11" selection-start-line="9" selection-start-column="11" selection-end-line="9" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/experimental/index/IndexedDataInterface.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1326">
+          <caret line="26" column="77" selection-start-line="26" selection-start-column="77" selection-end-line="26" selection-end-column="77" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/main/tests/uniform/UniformDataTestsMain.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1666">
+          <caret line="54" column="108" selection-start-line="54" selection-start-column="108" selection-end-line="54" selection-end-column="108" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/main/ExampleUsage.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1394">
+          <caret line="52" column="42" selection-start-line="19" selection-start-column="8" selection-end-line="52" selection-end-column="42" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/doc/performance.md">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1513">
+          <caret line="81" column="32" selection-start-line="81" selection-start-column="32" selection-end-line="81" selection-end-column="32" />
+          <caret line="82" column="32" selection-start-line="82" selection-start-column="32" selection-end-line="82" selection-end-column="32" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1496">
+          <caret line="41" column="0" selection-start-line="41" selection-start-column="0" selection-end-line="41" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/remote/RemoteDataInterfaceServer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="4899" max-vertical-offset="7225">
+          <caret line="313" column="48" selection-start-line="313" selection-start-column="48" selection-end-line="313" selection-end-column="48" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/test/java/be/bagofwords/db/TestDataInterface.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="605" max-vertical-offset="6137">
+          <caret line="53" column="149" selection-start-line="53" selection-start-column="149" selection-end-line="53" selection-end-column="149" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/data/ApproximateCountsFilter.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1071">
+          <caret line="26" column="21" selection-start-line="26" selection-start-column="21" selection-end-line="26" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/data/CompactCountsIndex.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="1318" max-vertical-offset="2397">
+          <caret line="107" column="76" selection-start-line="107" selection-start-column="76" selection-end-line="107" selection-end-column="76" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/data/ApproximateCountsUtils.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="646">
+          <caret line="2" column="52" selection-start-line="2" selection-start-column="52" selection-end-line="2" selection-end-column="52" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/DataInterface.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="3039" max-vertical-offset="4386">
+          <caret line="261" column="16" selection-start-line="261" selection-start-column="16" selection-end-line="261" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/filedb/FileDataInterface.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="2210" max-vertical-offset="18071">
+          <caret line="152" column="29" selection-start-line="152" selection-start-column="29" selection-end-line="152" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/main/tests/bigrams/BigramTestsMain.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="714" max-vertical-offset="3502">
+          <caret line="101" column="78" selection-start-line="101" selection-start-column="78" selection-end-line="101" selection-end-column="78" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/lib/jvm/java-8-oracle/src.zip!/java/io/BufferedInputStream.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="2614" max-vertical-offset="7956">
+          <caret line="197" column="11" selection-start-line="197" selection-start-column="11" selection-end-line="197" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///usr/lib/jvm/java-8-oracle/src.zip!/java/io/BufferedOutputStream.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="200" max-vertical-offset="2108">
+          <caret line="70" column="11" selection-start-line="70" selection-start-column="11" selection-end-line="70" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/be/bagofwords/bow-utils/1.1.0/bow-utils-1.1.0-sources.jar!/be/bagofwords/util/WrappedSocketConnection.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3757">
+          <caret line="22" column="11" selection-start-line="22" selection-start-column="11" selection-end-line="22" selection-end-column="11" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/higherfrequencytrading/chronicle/1.9.1/chronicle-1.9.1.jar!/com/higherfrequencytrading/chronicle/Chronicle.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.20662983" vertical-offset="0" max-vertical-offset="905">
+          <caret line="12" column="0" selection-start-line="12" selection-start-column="0" selection-end-line="12" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/higherfrequencytrading/chronicle/1.9.1/chronicle-1.9.1-sources.jar!/com/higherfrequencytrading/chronicle/tcp/InProcessChronicleSource.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="693" max-vertical-offset="4250">
+          <caret line="115" column="19" selection-start-line="115" selection-start-column="19" selection-end-line="115" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/higherfrequencytrading/chronicle/1.9.1/chronicle-1.9.1-sources.jar!/com/higherfrequencytrading/chronicle/Chronicle.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="64" max-vertical-offset="1258">
+          <caret line="40" column="12" selection-start-line="40" selection-start-column="12" selection-end-line="40" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/higherfrequencytrading/chronicle/1.9.1/chronicle-1.9.1-sources.jar!/com/higherfrequencytrading/chronicle/impl/IndexedChronicle.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3774">
+          <caret line="123" column="6" selection-start-line="123" selection-start-column="6" selection-end-line="123" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/higherfrequencytrading/chronicle/1.9.1/chronicle-1.9.1-sources.jar!/com/higherfrequencytrading/chronicle/Excerpt.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="2849" max-vertical-offset="3808">
+          <caret line="196" column="71" selection-start-line="196" selection-start-column="71" selection-end-line="196" selection-end-column="71" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/higherfrequencytrading/chronicle/1.9.1/chronicle-1.9.1-sources.jar!/com/higherfrequencytrading/chronicle/impl/AbstractExcerpt.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="30732" max-vertical-offset="34391">
+          <caret line="1929" column="15" selection-start-line="1929" selection-start-column="15" selection-end-line="1929" selection-end-column="15" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/memory/InMemoryDataInterfaceFactory.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="357">
+          <caret line="17" column="80" selection-start-line="17" selection-start-column="80" selection-end-line="17" selection-end-column="80" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/DataInterfaceFactory.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="527" max-vertical-offset="2635">
+          <caret line="66" column="0" selection-start-line="66" selection-start-column="0" selection-end-line="66" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pom.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="2198" max-vertical-offset="3196">
+          <caret line="157" column="36" selection-start-line="157" selection-start-column="36" selection-end-line="157" selection-end-column="36" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/com/higherfrequencytrading/chronicle/1.9.1/chronicle-1.9.1-sources.jar!/com/higherfrequencytrading/chronicle/RandomDataOutput.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="1.2010753" vertical-offset="1161" max-vertical-offset="2414">
+          <caret line="153" column="9" selection-start-line="153" selection-start-column="9" selection-end-line="153" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/memory/InMemoryDataInterface.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2329">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/cached/CachedDataInterface.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="4352">
+          <caret line="31" column="46" selection-start-line="31" selection-start-column="46" selection-end-line="31" selection-end-column="46" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/remote/RemoteDataInterface.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.6673937" vertical-offset="1258" max-vertical-offset="9248">
+          <caret line="132" column="0" selection-start-line="132" selection-start-column="0" selection-end-line="132" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+  </component>
+  <component name="masterDetails">
+    <states>
+      <state key="ArtifactsStructureConfigurable.UI">
+        <settings>
+          <artifact-editor />
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="FacetStructureConfigurable.UI">
+        <settings>
+          <last-edited>No facets are configured</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="GlobalLibrariesConfigurable.UI">
+        <settings>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="JdkListConfigurable.UI">
+        <settings>
+          <last-edited>1.7</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ModuleStructureConfigurable.UI">
+        <settings>
+          <last-edited>count-db</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+                <option value="0.6" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+      <state key="ProjectLibrariesConfigurable.UI">
+        <settings>
+          <last-edited>Maven: it.unimi.dsi:fastutil:6.5.15</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.5344488" />
+              </list>
+            </option>
+          </splitter-proportions>
+        </settings>
+      </state>
+    </states>
+  </component>
+</project>
+

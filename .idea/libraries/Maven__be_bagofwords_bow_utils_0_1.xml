@@ -1,0 +1,14 @@
+<component name="libraryTable">
+  <library name="Maven: be.bagofwords:bow-utils:0.1">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/be/bagofwords/bow-utils/0.1/bow-utils-0.1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/be/bagofwords/bow-utils/0.1/bow-utils-0.1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/be/bagofwords/bow-utils/0.1/bow-utils-0.1-sources.jar!/" />
+      <root url="file://$PROJECT_DIR$/../bow-utils/src/main/java" />
+    </SOURCES>
+  </library>
+</component>

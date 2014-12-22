@@ -10,6 +10,7 @@ import be.bagofwords.db.cached.CachedDataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.combinator.OverWriteCombinator;
+import be.bagofwords.db.memory.InMemoryDataInterface;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
@@ -50,20 +51,35 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
         return createDataInterface(DatabaseCachingType.CACHED, subset, objectClass, combinator, false);
     }
 
-    public <T extends Object> DataInterface<T> createDataInterface(DatabaseCachingType type, String subset, Class<T> objectClass, Combinator<T> combinator) {
-        return createDataInterface(type, subset, objectClass, combinator, false);
+    public <T extends Object> DataInterface<T> createDataInterface(DatabaseCachingType cachingType, String subset, Class<T> objectClass, Combinator<T> combinator) {
+        return createDataInterface(cachingType, subset, objectClass, combinator, false);
+    }
+
+    public DataInterface<Long> createInMemoryCountDataInterface(String name) {
+        return createInMemoryDataInterface(DatabaseCachingType.CACHED, name, Long.class, new LongCombinator());
+    }
+
+    public <T extends Object> DataInterface<T> createInMemoryDataInterface(DatabaseCachingType cachingType, String name, Class<T> objectClass, Combinator<T> combinator) {
+        DataInterface<T> result = new InMemoryDataInterface<>(name, objectClass, combinator);
+        result = decorateAndAdd(cachingType, result);
+        return result;
     }
 
     public <T extends Object> DataInterface<T> createTmpDataInterface(String subset, Class<T> objectClass, Combinator<T> combinator) {
         return createDataInterface(DatabaseCachingType.CACHED, createNameForTemporaryInterface(subset), objectClass, combinator, true);
     }
 
-    public <T extends Object> DataInterface<T> createTmpDataInterface(DatabaseCachingType type, String subset, Class<T> objectClass, Combinator<T> combinator) {
-        return createDataInterface(type, createNameForTemporaryInterface(subset), objectClass, combinator, true);
+    public <T extends Object> DataInterface<T> createTmpDataInterface(DatabaseCachingType cachingType, String subset, Class<T> objectClass, Combinator<T> combinator) {
+        return createDataInterface(cachingType, createNameForTemporaryInterface(subset), objectClass, combinator, true);
     }
 
-    public <T extends Object> DataInterface<T> createDataInterface(DatabaseCachingType type, String subset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
+    public <T extends Object> DataInterface<T> createDataInterface(DatabaseCachingType cachingType, String subset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
         DataInterface<T> result = createBaseDataInterface(subset, objectClass, combinator, isTemporaryDataInterface);
+        result = decorateAndAdd(cachingType, result);
+        return result;
+    }
+
+    private <T extends Object> DataInterface<T> decorateAndAdd(DatabaseCachingType type, DataInterface<T> result) {
         if (type.useCache()) {
             result = cached(result);
         }
@@ -153,6 +169,4 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
         }
     }
 
-    public class BLOOM_FILTER_DI {
-    }
 }
