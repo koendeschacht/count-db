@@ -103,7 +103,7 @@
         <dependency>
             <groupId>be.bagofwords</groupId>
             <artifactId>bow-utils</artifactId>
-            <version>1.1.2</version>
+            <version>1.1.10</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
