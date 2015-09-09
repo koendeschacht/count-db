@@ -20,7 +20,8 @@ public class UnitTestContextLoader implements ContextLoader {
     @Override
     public ApplicationContext loadContext(String... locations) throws Exception {
         ApplicationContextFactory applicationContextFactory = new CountDBUnitTestApplicationContextFactory();
-        AnnotationConfigApplicationContext applicationContext = applicationContextFactory.createApplicationContext();
+        applicationContextFactory.wireApplicationContext();
+        AnnotationConfigApplicationContext applicationContext = applicationContextFactory.getApplicationContext();
         applicationContext.refresh();
         return applicationContext;
     }

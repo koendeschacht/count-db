@@ -18,7 +18,7 @@ public class EmbeddedDBContextFactory extends BaseApplicationContextFactory {
     }
 
     @Override
-    public AnnotationConfigApplicationContext createApplicationContext() {
+    public void wireApplicationContext() {
         scan("be.bagofwords");
         singleton("environmentProperties", new FileCountDBEnvironmentProperties() {
             @Override
@@ -43,7 +43,7 @@ public class EmbeddedDBContextFactory extends BaseApplicationContextFactory {
         });
         bean(FileDataInterfaceFactory.class);
         bean(LocalFileService.class);
-        return super.createApplicationContext();
+        super.wireApplicationContext();
     }
 
 }

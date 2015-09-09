@@ -16,7 +16,7 @@ public class TestsApplicationContextFactory extends BaseApplicationContextFactor
     }
 
     @Override
-    public AnnotationConfigApplicationContext createApplicationContext() {
+    public void wireApplicationContext() {
         scan("be.bagofwords");
         singleton("environmentProperties", new RemoteRegisterUrlsServerProperties() {
             @Override
@@ -45,7 +45,7 @@ public class TestsApplicationContextFactory extends BaseApplicationContextFactor
             }
         });
         singleton("webContainer", new WebContainer(getApplicationName()));
-        return super.createApplicationContext();
+        super.wireApplicationContext();
     }
 
 }

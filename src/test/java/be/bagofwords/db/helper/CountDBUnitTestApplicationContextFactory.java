@@ -9,9 +9,8 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 public class CountDBUnitTestApplicationContextFactory extends UnitTestApplicationContextFactory {
 
     @Override
-    public AnnotationConfigApplicationContext createApplicationContext() {
-        AnnotationConfigApplicationContext applicationContext = super.createApplicationContext();
-        applicationContext.getBeanFactory().registerSingleton("environmentProperties", new UnitTestEnvironmentProperties());
-        return applicationContext;
+    public void wireApplicationContext() {
+        getApplicationContext().getBeanFactory().registerSingleton("environmentProperties", new UnitTestEnvironmentProperties());
+        super.wireApplicationContext();
     }
 }

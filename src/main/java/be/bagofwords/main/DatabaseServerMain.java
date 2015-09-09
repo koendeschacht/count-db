@@ -114,7 +114,7 @@ public class DatabaseServerMain implements MainClass {
         }
 
         @Override
-        public AnnotationConfigApplicationContext createApplicationContext() {
+        public void wireApplicationContext() {
             scan("be.bagofwords");
             singleton("webContainer", new WebContainer(getApplicationName()));
             singleton("environmentProperties", environmentProperties);
@@ -122,7 +122,7 @@ public class DatabaseServerMain implements MainClass {
             bean(LocalFileService.class);
             //Register urls with central url list
             bean(RegisterUrlsClient.class);
-            return super.createApplicationContext();
+            super.wireApplicationContext();
         }
     }
 }
