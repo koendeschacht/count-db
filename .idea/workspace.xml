@@ -1,22 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="617ebc1b-9d5f-4c88-873b-d49f1bed21b7" name="Default" comment="Release v1.1.12. Improved auto-wiring and support for streams">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__be_bagofwords_bow_utils_1_1_15.xml" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/.idea/libraries/Maven__org_xerial_snappy_snappy_java_1_1_0.xml" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_xerial_snappy_snappy_java_1_1_1_7.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/encodings.xml" afterPath="$PROJECT_DIR$/.idea/encodings.xml" />
+    <list default="true" id="617ebc1b-9d5f-4c88-873b-d49f1bed21b7" name="Default" comment="">
+      <change type="DELETED" beforePath="$PROJECT_DIR$/.idea/libraries/Maven__be_bagofwords_bow_utils_1_1_10.xml" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/count-db.iml" afterPath="$PROJECT_DIR$/count-db.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pom.xml" afterPath="$PROJECT_DIR$/pom.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/be/bagofwords/db/DataInterface.java" afterPath="$PROJECT_DIR$/src/main/java/be/bagofwords/db/DataInterface.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/be/bagofwords/db/application/EmbeddedDBContextFactory.java" afterPath="$PROJECT_DIR$/src/main/java/be/bagofwords/db/application/EmbeddedDBContextFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/be/bagofwords/db/cached/CachedDataInterface.java" afterPath="$PROJECT_DIR$/src/main/java/be/bagofwords/db/cached/CachedDataInterface.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/be/bagofwords/db/filedb/FileDataInterface.java" afterPath="$PROJECT_DIR$/src/main/java/be/bagofwords/db/filedb/FileDataInterface.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/be/bagofwords/main/DatabaseServerMain.java" afterPath="$PROJECT_DIR$/src/main/java/be/bagofwords/main/DatabaseServerMain.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/be/bagofwords/main/ExampleUsage.java" afterPath="$PROJECT_DIR$/src/main/java/be/bagofwords/main/ExampleUsage.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/java/be/bagofwords/main/tests/TestsApplicationContextFactory.java" afterPath="$PROJECT_DIR$/src/main/java/be/bagofwords/main/tests/TestsApplicationContextFactory.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/test/java/be/bagofwords/db/helper/CountDBUnitTestApplicationContextFactory.java" afterPath="$PROJECT_DIR$/src/test/java/be/bagofwords/db/helper/CountDBUnitTestApplicationContextFactory.java" />
     </list>
     <ignored path="count-db.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -103,11 +91,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="README.md" pinned="false" current-in-tab="false">
+      <file leaf-file-name="README.md" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/README.md">
           <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.5673759">
+              <caret line="42" column="12" selection-start-line="42" selection-start-column="12" selection-end-line="42" selection-end-column="12" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ExampleUsage.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/main/ExampleUsage.java">
+          <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="27" column="19" selection-start-line="27" selection-start-column="19" selection-end-line="27" selection-end-column="19" />
+              <caret line="53" column="0" selection-start-line="22" selection-start-column="0" selection-end-line="53" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -178,7 +176,26 @@
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
               <caret line="369" column="19" selection-start-line="369" selection-start-column="19" selection-end-line="369" selection-end-column="19" />
-              <folding />
+              <folding>
+                <element signature="e#0#37768#0" expanded="false" />
+                <element signature="imports" expanded="false" />
+                <element signature="e#15942#15943#0" expanded="false" />
+                <element signature="e#15991#15992#0" expanded="false" />
+                <element signature="e#19746#19747#0" expanded="false" />
+                <element signature="e#19824#19825#0" expanded="false" />
+                <element signature="e#21440#21441#0" expanded="false" />
+                <element signature="e#21519#21520#0" expanded="false" />
+                <element signature="e#22239#22240#0" expanded="false" />
+                <element signature="e#22288#22289#0" expanded="false" />
+                <element signature="e#30287#30288#0" expanded="false" />
+                <element signature="e#30344#30345#0" expanded="false" />
+                <element signature="e#30711#30712#0" expanded="false" />
+                <element signature="e#30768#30769#0" expanded="false" />
+                <element signature="e#33148#33149#0" expanded="false" />
+                <element signature="e#33205#33206#0" expanded="false" />
+                <element signature="e#35617#35618#0" expanded="false" />
+                <element signature="e#35674#35675#0" expanded="false" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -188,26 +205,19 @@
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
               <caret line="66" column="32" selection-start-line="66" selection-start-column="32" selection-end-line="66" selection-end-column="32" />
-              <folding />
+              <folding>
+                <element signature="e#0#16251#0" expanded="false" />
+                <element signature="imports" expanded="false" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="CountDBUnitTestApplicationContextFactory.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="CountDBUnitTestApplicationContextFactory.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/test/java/be/bagofwords/db/helper/CountDBUnitTestApplicationContextFactory.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.23474178">
-              <caret line="11" column="30" selection-start-line="11" selection-start-column="30" selection-end-line="11" selection-end-column="30" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="UnitTestApplicationContextFactory.java" pinned="false" current-in-tab="false">
-        <entry file="jar://$MAVEN_REPOSITORY$/be/bagofwords/bow-utils/1.1.11/bow-utils-1.1.11-sources.jar!/be/bagofwords/util/UnitTestApplicationContextFactory.java">
-          <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="14" column="59" selection-start-line="14" selection-start-column="59" selection-end-line="14" selection-end-column="59" />
+              <caret line="15" column="1" selection-start-line="15" selection-start-column="1" selection-end-line="15" selection-end-column="1" />
               <folding />
             </state>
           </provider>
@@ -250,12 +260,12 @@
         <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/main/tests/TestsApplicationContextFactory.java" />
         <option value="$MAVEN_REPOSITORY$/be/bagofwords/bow-utils/1.1.11/bow-utils-1.1.11-sources.jar!/be/bagofwords/util/UnitTestApplicationContextFactory.java" />
         <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/DataInterface.java" />
-        <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/filedb/FileDataInterface.java" />
         <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/application/EmbeddedDBContextFactory.java" />
         <option value="$PROJECT_DIR$/src/main/java/be/bagofwords/db/cached/CachedDataInterface.java" />
         <option value="$PROJECT_DIR$/src/test/java/be/bagofwords/db/helper/CountDBUnitTestApplicationContextFactory.java" />
+        <option value="$PROJECT_DIR$/README.md" />
       </list>
     </option>
   </component>
@@ -870,7 +880,7 @@
       <recent name="be.bow.main.tests.bigrams" />
     </key>
   </component>
-  <component name="RunManager" selected="JUnit.TestRemoteFileService">
+  <component name="RunManager" selected="Application.DatabaseServerMain">
     <configuration default="false" name="TestDataInterface" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
       <module name="count-db" />
@@ -1290,12 +1300,6 @@
       <option name="number" value="Default" />
       <updated>1410510114805</updated>
     </task>
-    <task id="LOCAL-00049" summary="Expanded example usage">
-      <created>1412158653440</created>
-      <option name="number" value="00049" />
-      <option name="project" value="LOCAL" />
-      <updated>1412158653440</updated>
-    </task>
     <task id="LOCAL-00050" summary=" Fixed bug in FileDataInterface">
       <created>1412158667474</created>
       <option name="number" value="00050" />
@@ -1584,7 +1588,13 @@
       <option name="project" value="LOCAL" />
       <updated>1441833133927</updated>
     </task>
-    <option name="localTasksCounter" value="98" />
+    <task id="LOCAL-00098" summary="Release v1.1.12. Improved auto-wiring and support for streams">
+      <created>1475320258075</created>
+      <option name="number" value="00098" />
+      <option name="project" value="LOCAL" />
+      <updated>1475320258077</updated>
+    </task>
+    <option name="localTasksCounter" value="99" />
     <servers />
   </component>
   <component name="TodoView" selected-index="0">
@@ -1613,28 +1623,28 @@
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32916668" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.228125" sideWeight="0.51175505" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Palette&#9;" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.5181347" sideWeight="0.50027335" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.29295623" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.30239832" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.38998958" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.52763295" sideWeight="0.5472936" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32953367" sideWeight="0.49972662" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.47705442" sideWeight="0.7681388" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.29082176" sideWeight="0.7681388" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.51875" sideWeight="0.49972662" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2379936" sideWeight="0.23028392" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32968834" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24986331" sideWeight="0.50067294" order="0" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.46666667" sideWeight="0.5872061" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.35520834" sideWeight="0.49972662" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.228125" sideWeight="0.51175505" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" show_stripe_button="true" weight="0.32914162" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Application Servers" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="12" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.528125" sideWeight="0.5472936" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.36926362" sideWeight="0.5" order="4" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.51875" sideWeight="0.49972662" order="8" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.46666667" sideWeight="0.5872061" order="7" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="UnknownFeatures">
@@ -1655,7 +1665,6 @@
     <option name="OFFER_MOVE_TO_ANOTHER_CHANGELIST_ON_PARTIAL_COMMIT" value="false" />
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_NEW_TODO" value="false" />
-    <MESSAGE value="Added some code for inter-vm-traces" />
     <MESSAGE value="Make sure the bloomfilter is also flushed, don't use WebContainerConfiguration and fixed some issues in the remote file server" />
     <MESSAGE value="Added DoubleCountsList" />
     <MESSAGE value="Refactored close method" />
@@ -1680,7 +1689,8 @@
     <MESSAGE value="Removed unused code in ApproximateCountsUtils.java" />
     <MESSAGE value="Updated to bow-utils v1.1.10" />
     <MESSAGE value="Modified application context factories to style of bow-utils v1.1.10, fixed TestRemoteFileService.java" />
-    <option name="LAST_COMMIT_MESSAGE" value="Modified application context factories to style of bow-utils v1.1.10, fixed TestRemoteFileService.java" />
+    <MESSAGE value="Release v1.1.12. Improved auto-wiring and support for streams" />
+    <option name="LAST_COMMIT_MESSAGE" value="Release v1.1.12. Improved auto-wiring and support for streams" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1987,13 +1997,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/main/ExampleUsage.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="54" column="0" selection-start-line="54" selection-start-column="0" selection-end-line="54" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/main/tests/TestsApplicationContextFactory.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -2020,7 +2023,15 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="14" column="59" selection-start-line="14" selection-start-column="59" selection-end-line="14" selection-end-column="59" />
-          <folding />
+          <folding>
+            <element signature="imports" expanded="false" />
+            <element signature="e#492#493#0" expanded="false" />
+            <element signature="e#558#559#0" expanded="false" />
+            <element signature="e#873#874#0" expanded="false" />
+            <element signature="e#903#904#0" expanded="false" />
+            <element signature="e#959#960#0" expanded="false" />
+            <element signature="e#992#993#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -2028,7 +2039,10 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="66" column="32" selection-start-line="66" selection-start-column="32" selection-end-line="66" selection-end-column="32" />
-          <folding />
+          <folding>
+            <element signature="e#0#16251#0" expanded="false" />
+            <element signature="imports" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -2036,7 +2050,26 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="369" column="19" selection-start-line="369" selection-start-column="19" selection-end-line="369" selection-end-column="19" />
-          <folding />
+          <folding>
+            <element signature="e#0#37768#0" expanded="false" />
+            <element signature="imports" expanded="false" />
+            <element signature="e#15942#15943#0" expanded="false" />
+            <element signature="e#15991#15992#0" expanded="false" />
+            <element signature="e#19746#19747#0" expanded="false" />
+            <element signature="e#19824#19825#0" expanded="false" />
+            <element signature="e#21440#21441#0" expanded="false" />
+            <element signature="e#21519#21520#0" expanded="false" />
+            <element signature="e#22239#22240#0" expanded="false" />
+            <element signature="e#22288#22289#0" expanded="false" />
+            <element signature="e#30287#30288#0" expanded="false" />
+            <element signature="e#30344#30345#0" expanded="false" />
+            <element signature="e#30711#30712#0" expanded="false" />
+            <element signature="e#30768#30769#0" expanded="false" />
+            <element signature="e#33148#33149#0" expanded="false" />
+            <element signature="e#33205#33206#0" expanded="false" />
+            <element signature="e#35617#35618#0" expanded="false" />
+            <element signature="e#35674#35675#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -2078,14 +2111,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="27" column="19" selection-start-line="27" selection-start-column="19" selection-end-line="27" selection-end-column="19" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/db/filedb/FileDataInterface.java">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -2120,8 +2145,24 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/test/java/be/bagofwords/db/helper/CountDBUnitTestApplicationContextFactory.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.23474178">
-          <caret line="11" column="30" selection-start-line="11" selection-start-column="30" selection-end-line="11" selection-end-column="30" />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="15" column="1" selection-start-line="15" selection-start-column="1" selection-end-line="15" selection-end-column="1" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/be/bagofwords/main/ExampleUsage.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="53" column="0" selection-start-line="22" selection-start-column="0" selection-end-line="53" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/README.md">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.5673759">
+          <caret line="42" column="12" selection-start-line="42" selection-start-column="12" selection-end-line="42" selection-end-column="12" />
           <folding />
         </state>
       </provider>

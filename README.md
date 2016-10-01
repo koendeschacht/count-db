@@ -34,7 +34,7 @@ Create a data interface and use it:
 ``` java
 
 //create data interface factory that stores all data in /tmp/myData (This factory is wired with spring)
-DataInterfaceFactory dataInterfaceFactory = new EmbeddedDBContextFactory("/tmp/myData").createApplicationContext().getBean(DataInterfaceFactory.class);
+DataInterfaceFactory dataInterfaceFactory = new EmbeddedDBContextFactory("/tmp/myData").wireApplicationContext().getBean(DataInterfaceFactory.class);
 
 //create data interfaces
 DataInterface<Long> myLogDataInterface = dataInterfaceFactory.createCountDataInterface("myLoginCounts");
