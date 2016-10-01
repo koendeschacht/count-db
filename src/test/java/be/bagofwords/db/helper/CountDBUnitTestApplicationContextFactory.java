@@ -1,7 +1,7 @@
 package be.bagofwords.db.helper;
 
 import be.bagofwords.util.UnitTestApplicationContextFactory;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.ApplicationContext;
 
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/5/14.
@@ -9,8 +9,8 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 public class CountDBUnitTestApplicationContextFactory extends UnitTestApplicationContextFactory {
 
     @Override
-    public void wireApplicationContext() {
+    public ApplicationContext wireApplicationContext() {
         getApplicationContext().getBeanFactory().registerSingleton("environmentProperties", new UnitTestEnvironmentProperties());
-        super.wireApplicationContext();
+        return super.wireApplicationContext();
     }
 }

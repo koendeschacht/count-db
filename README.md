@@ -25,7 +25,7 @@ Include the following maven dependency in your project
 <dependency>
     <groupId>be.bagofwords</groupId>
     <artifactId>count-db</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.12</version>
 </dependency>
 ```
 

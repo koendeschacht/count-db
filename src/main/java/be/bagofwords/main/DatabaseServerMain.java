@@ -16,6 +16,7 @@ import be.bagofwords.virtualfile.local.LocalFileService;
 import be.bagofwords.virtualfile.remote.RemoteFileServer;
 import be.bagofwords.web.WebContainer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.io.IOException;
@@ -114,7 +115,7 @@ public class DatabaseServerMain implements MainClass {
         }
 
         @Override
-        public void wireApplicationContext() {
+        public ApplicationContext wireApplicationContext() {
             scan("be.bagofwords");
             singleton("webContainer", new WebContainer(getApplicationName()));
             singleton("environmentProperties", environmentProperties);
@@ -122,7 +123,7 @@ public class DatabaseServerMain implements MainClass {
             bean(LocalFileService.class);
             //Register urls with central url list
             bean(RegisterUrlsClient.class);
-            super.wireApplicationContext();
+            return super.wireApplicationContext();
         }
     }
 }

@@ -10,10 +10,9 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: be.bagofwords:bow-utils:1.1.10" level="project" />
+    <orderEntry type="library" name="Maven: be.bagofwords:bow-utils:1.1.15" level="project" />
     <orderEntry type="library" name="Maven: org.tmatesoft.sqljet:sqljet:1.1.4" level="project" />
     <orderEntry type="library" name="Maven: org.antlr:antlr-runtime:3.4" level="project" />
-    <orderEntry type="library" name="Maven: org.xerial.snappy:snappy-java:1.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.sparkjava:spark-core:2.2" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.7" level="project" />
     <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-server:9.0.2.v20130417" level="project" />
@@ -50,6 +49,7 @@
     <orderEntry type="library" name="Maven: org.deephacks.lmdb:lmdb-linux64:0.1.1" level="project" />
     <orderEntry type="library" name="Maven: org.deephacks.lmdbjni:lmdbjni:0.2.0" level="project" />
     <orderEntry type="library" name="Maven: org.fusesource.hawtjni:hawtjni-runtime:1.9" level="project" />
+    <orderEntry type="library" name="Maven: org.xerial.snappy:snappy-java:1.1.1.7" level="project" />
     <orderEntry type="module-library">
       <library name="Maven: extraLibs:kyotocabinet:1.24">
         <CLASSES>

@@ -18,6 +18,7 @@ import be.bagofwords.util.Utils;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class CachedDataInterface<T extends Object> extends LayeredDataInterface<T> implements MemoryGobbler {
 
@@ -176,19 +177,23 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
         }
     }
 
-    private synchronized void flushWriteBuffer() {
+    private synchronized long flushWriteBuffer() {
         //flush values in write cache
-        writeBuffers.parallelStream().forEach(buffer -> {
-            DynamicMap<T> oldValues;
-            synchronized (buffer) {
-                oldValues = buffer.putNew();
-            }
-            if (oldValues.size() > 0) {
-                baseInterface.write(oldValues.iterator());
-                readCacheDirty = true; //should come after writing values
-            }
-        });
+        long valuesRemoved = writeBuffers.parallelStream().collect(Collectors.summingLong(
+                buffer -> {
+                    DynamicMap<T> oldValues;
+                    synchronized (buffer) {
+                        oldValues = buffer.putNew();
+                    }
+                    if (oldValues.size() > 0) {
+                        baseInterface.write(oldValues.iterator());
+                        readCacheDirty = true; //should come after writing values
+                    }
+                    return oldValues.size();
+                }
+        ));
         timeOfLastFlushOfWriteBuffer = System.currentTimeMillis();
+        return valuesRemoved;
     }
 
     @Override
@@ -211,8 +216,8 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     }
 
     @Override
-    public void freeMemory() {
-        flushWriteBuffer();
+    public long freeMemory() {
+        return flushWriteBuffer();
     }
 
     @Override
@@ -251,7 +256,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
                 UI.write("Could not add (all) values to cache of " + baseInterface.getName() + " because memory was full");
             } else {
                 UI.write("Added " + numOfValuesWritten + " values to cache of " + baseInterface.getName() + " in " + (System.currentTimeMillis() - start) + " ms");
-                }
+            }
             iterator.close();
         }
     }

@@ -4,6 +4,7 @@ import be.bagofwords.application.BaseApplicationContextFactory;
 import be.bagofwords.application.MainClass;
 import be.bagofwords.application.status.RemoteRegisterUrlsServerProperties;
 import be.bagofwords.web.WebContainer;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 /**
@@ -16,7 +17,7 @@ public class TestsApplicationContextFactory extends BaseApplicationContextFactor
     }
 
     @Override
-    public void wireApplicationContext() {
+    public ApplicationContext wireApplicationContext() {
         scan("be.bagofwords");
         singleton("environmentProperties", new RemoteRegisterUrlsServerProperties() {
             @Override
@@ -45,7 +46,7 @@ public class TestsApplicationContextFactory extends BaseApplicationContextFactor
             }
         });
         singleton("webContainer", new WebContainer(getApplicationName()));
-        super.wireApplicationContext();
+        return super.wireApplicationContext();
     }
 
 }

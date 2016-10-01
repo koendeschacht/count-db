@@ -18,7 +18,7 @@ public class ExampleUsage {
 
     public static void main(String[] args) throws ParseException {
         //create data interface factory that stores all data in /tmp/myData (This factory is wired with spring)
-        DataInterfaceFactory dataInterfaceFactory = createDataInterfaceFactory();
+        DataInterfaceFactory dataInterfaceFactory = new EmbeddedDBContextFactory("/tmp/myData").wireApplicationContext().getBean(DataInterfaceFactory.class);
 
         //create data interfaces
         DataInterface<Long> myLogDataInterface = dataInterfaceFactory.createCountDataInterface("myLoginCounts");
@@ -51,12 +51,6 @@ public class ExampleUsage {
         //drop all data
         myLogDataInterface.dropAllData();
         myUserDataInterface.dropAllData();
-    }
-
-    private static DataInterfaceFactory createDataInterfaceFactory() {
-        EmbeddedDBContextFactory contextFactory = new EmbeddedDBContextFactory("/tmp/myData");
-        contextFactory.wireApplicationContext();
-        return contextFactory.getApplicationContext().getBean(DataInterfaceFactory.class);
     }
 
     public static class UserObject {

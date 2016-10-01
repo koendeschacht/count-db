@@ -16,6 +16,7 @@ import be.bagofwords.util.MappedLists;
 import be.bagofwords.util.Pair;
 import be.bagofwords.util.SerializationUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.mutable.MutableLong;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -318,17 +319,20 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     @Override
-    public void freeMemory() {
+    public long freeMemory() {
+        MutableLong totalBytesReleased = new MutableLong(0);
         ifNotClosed(() -> {
             for (FileBucket bucket : fileBuckets) {
                 bucket.lockRead();
                 for (FileInfo fileInfo : bucket.getFiles()) {
                     long bytesReleased = fileInfo.discardFileContents();
                     updateSizeOfCachedFileContents(-bytesReleased);
+                    totalBytesReleased.add(bytesReleased);
                 }
                 bucket.unlockRead();
             }
         });
+        return totalBytesReleased.longValue();
     }
 
     @Override

@@ -13,6 +13,12 @@ import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.StringUtils;
 
 import java.util.Iterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public abstract class DataInterface<T extends Object> implements DataIterable<KeyValue<T>> {
 
@@ -263,6 +269,30 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
         }
     }
 
+    /**
+     * This method can be overwritten in a subclass to improve efficiency
+     */
+
+    public Stream<KeyValue<T>> stream() {
+        return IterableUtils.stream(this, true);
+    }
+
+    /**
+     * This method can be overwritten in a subclass to improve efficiency
+     */
+
+    public Stream<T> streamValues() {
+        return IterableUtils.stream(valueIterator(), apprSize(), false);
+    }
+
+    /**
+     * This method can be overwritten in a subclass to improve efficiency
+     */
+
+    public Stream<Long> streamKeys() {
+        return IterableUtils.stream(keyIterator(), apprSize(), true);
+    }
+
     public final void close() {
         requestClose();
         ifNotClosed(() -> {
@@ -317,5 +347,6 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
     public boolean isTemporaryDataInterface() {
         return isTemporaryDataInterface;
     }
+
 
 }

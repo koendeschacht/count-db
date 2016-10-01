@@ -4,7 +4,7 @@ import be.bagofwords.application.BaseApplicationContextFactory;
 import be.bagofwords.db.application.environment.FileCountDBEnvironmentProperties;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.virtualfile.local.LocalFileService;
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.ApplicationContext;
 
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/22/14.
@@ -18,7 +18,7 @@ public class EmbeddedDBContextFactory extends BaseApplicationContextFactory {
     }
 
     @Override
-    public void wireApplicationContext() {
+    public ApplicationContext wireApplicationContext() {
         scan("be.bagofwords");
         singleton("environmentProperties", new FileCountDBEnvironmentProperties() {
             @Override
@@ -43,7 +43,7 @@ public class EmbeddedDBContextFactory extends BaseApplicationContextFactory {
         });
         bean(FileDataInterfaceFactory.class);
         bean(LocalFileService.class);
-        super.wireApplicationContext();
+        return super.wireApplicationContext();
     }
 
 }
