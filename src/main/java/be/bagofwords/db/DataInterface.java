@@ -7,44 +7,19 @@ import be.bagofwords.iterator.DataIterable;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
 import be.bagofwords.text.BowString;
-import be.bagofwords.ui.UI;
 import be.bagofwords.util.HashUtils;
 import be.bagofwords.util.KeyValue;
-import be.bagofwords.util.StringUtils;
 
 import java.util.Iterator;
 import java.util.stream.Stream;
 
-public abstract class DataInterface<T extends Object> implements DataIterable<KeyValue<T>> {
-
-    private final Combinator<T> combinator;
-    private final Class<T> objectClass;
-    private final String name;
-
-    private final Object closeLock = new Object();
-    private boolean wasClosed;
-    private boolean closeWasRequested;
-    private final boolean isTemporaryDataInterface;
+public abstract class DataInterface<T extends Object> extends BaseDataInterface<T> implements DataIterable<KeyValue<T>> {
 
     protected DataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
-        if (StringUtils.isEmpty(name)) {
-            throw new IllegalArgumentException("Name can not be null or empty");
-        }
-        this.name = name;
-        this.objectClass = objectClass;
-        this.combinator = combinator;
-        this.isTemporaryDataInterface = isTemporaryDataInterface;
+        super(objectClass, name, isTemporaryDataInterface, combinator);
     }
 
     public abstract T read(long key);
-
-    public T read(String key) {
-        return read(HashUtils.hashCode(key));
-    }
-
-    public T read(BowString key) {
-        return read(HashUtils.hashCode(key));
-    }
 
     public long readCount(long key) {
         Long result = (Long) read(key);
@@ -52,6 +27,14 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
             return 0;
         else
             return result;
+    }
+
+    public T read(String key) {
+        return read(HashUtils.hashCode(key));
+    }
+
+    public T read(BowString key) {
+        return read(HashUtils.hashCode(key));
     }
 
     public long readCount(BowString key) {
@@ -165,21 +148,7 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
 
     public abstract void optimizeForReading();
 
-    public abstract void dropAllData();
-
-    public abstract void flush();
-
     public abstract long apprSize();
-
-    public Combinator<T> getCombinator() {
-        return combinator;
-    }
-
-    public abstract DataInterface getCoreDataInterface();
-
-    public Class<T> getObjectClass() {
-        return objectClass;
-    }
 
 
     public void write(BowString key, T value) {
@@ -206,10 +175,6 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
 
     public void increaseCount(long key) {
         increaseCount(key, 1l);
-    }
-
-    public String getName() {
-        return name;
     }
 
     public void remove(String key) {
@@ -286,61 +251,6 @@ public abstract class DataInterface<T extends Object> implements DataIterable<Ke
 
     public Stream<Long> streamKeys() {
         return IterableUtils.stream(keyIterator(), apprSize(), true);
-    }
-
-    public final void close() {
-        requestClose();
-        ifNotClosed(() -> {
-                    if (isTemporaryDataInterface) {
-                        dropAllData();
-                    }
-                    flush();
-                    doClose();
-                    wasClosed = true;
-                }
-        );
-    }
-
-    protected void requestClose() {
-        closeWasRequested = true;
-    }
-
-    protected abstract void doClose();
-
-    public final boolean wasClosed() {
-        return wasClosed;
-    }
-
-    protected final boolean closeWasRequested() {
-        return closeWasRequested;
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        ifNotClosed(() -> {
-            if (!isTemporaryDataInterface()) {
-                //the user did not close the data interface himself?
-                UI.write("Closing data interface " + getName() + " because it is about to be garbage collected.");
-            }
-            close();
-        });
-        super.finalize();
-    }
-
-    public void ifNotClosed(ActionIfNotClosed action) {
-        synchronized (closeLock) {
-            if (!wasClosed()) {
-                action.doAction();
-            }
-        }
-    }
-
-    public interface ActionIfNotClosed {
-        public void doAction();
-    }
-
-    public boolean isTemporaryDataInterface() {
-        return isTemporaryDataInterface;
     }
 
 
