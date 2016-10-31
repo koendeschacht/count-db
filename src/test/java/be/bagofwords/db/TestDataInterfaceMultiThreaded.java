@@ -1,7 +1,6 @@
 package be.bagofwords.db;
 
 import be.bagofwords.db.combinator.LongCombinator;
-import be.bagofwords.db.helper.UnitTestContextLoader;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.util.HashUtils;
 import be.bagofwords.util.KeyValue;
@@ -12,12 +11,10 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.springframework.test.context.ContextConfiguration;
 
 import java.util.Random;
 
-@RunWith(value = Parameterized.class)
-@ContextConfiguration(loader = UnitTestContextLoader.class)
+@RunWith(Parameterized.class)
 public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
 
     public TestDataInterfaceMultiThreaded(DatabaseCachingType type, DatabaseBackendType backendType) throws Exception {

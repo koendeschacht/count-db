@@ -1,8 +1,6 @@
 package be.bagofwords.db.experimental.lmdb;
 
-import be.bagofwords.application.BowTaskScheduler;
-import be.bagofwords.application.memory.MemoryManager;
-import be.bagofwords.cache.CachesManager;
+import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.combinator.Combinator;
@@ -18,8 +16,9 @@ public class LMDBDataInterfaceFactory extends DataInterfaceFactory {
     private Env env;
     private String directory;
 
-    public LMDBDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, BowTaskScheduler taskScheduler, String directory) {
-        super(cachesManager, memoryManager, taskScheduler);
+    public LMDBDataInterfaceFactory(ApplicationContext context) {
+        super(context);
+        directory = context.getConfig("data_directory");
         env = new Env();
         env.setMaxDbs(100);
         env.setMapSize(200 * 1024 * 1024); //needs to be quite high, otherwise we get EINVAL or MDB_MAP_FULL errors

@@ -1,14 +1,13 @@
 package be.bagofwords.db.remote;
 
+import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.application.BaseServer;
-import be.bagofwords.application.annotations.BowComponent;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.application.memory.MemoryStatus;
 import be.bagofwords.application.status.StatusViewable;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseCachingType;
-import be.bagofwords.db.application.environment.RemoteCountDBEnvironmentProperties;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
@@ -16,7 +15,6 @@ import be.bagofwords.iterator.SimpleIterator;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.*;
 import org.apache.commons.io.IOUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.xerial.snappy.Snappy;
 
 import java.io.ByteArrayOutputStream;
@@ -25,7 +23,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.*;
 
-@BowComponent
+
 public class RemoteDataInterfaceServer extends BaseServer implements StatusViewable {
 
     private static final long CLONE_BATCH_SIZE_PRIMITIVE = 100000;
@@ -42,12 +40,11 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
     private final Object createNewInterfaceLock = new Object();
     private final MemoryManager memoryManager;
 
-    @Autowired
-    public RemoteDataInterfaceServer(MemoryManager memoryManager, DataInterfaceFactory dataInterfaceFactory, RemoteCountDBEnvironmentProperties properties) throws IOException {
-        super("RemoteDataInterfaceServer", properties.getDataInterfaceServerPort());
-        this.dataInterfaceFactory = dataInterfaceFactory;
+    public RemoteDataInterfaceServer(ApplicationContext context) {
+        super("RemoteDataInterfaceServer", Integer.parseInt(context.getConfig("remote_interface_port", "1208")));
+        this.dataInterfaceFactory = context.getBean(DataInterfaceFactory.class);
+        this.memoryManager = context.getBean(MemoryManager.class);
         this.createdInterfaces = new ArrayList<>();
-        this.memoryManager = memoryManager;
     }
 
     @Override

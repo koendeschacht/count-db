@@ -1,8 +1,6 @@
 package be.bagofwords.db.experimental.kyoto;
 
-import be.bagofwords.application.BowTaskScheduler;
-import be.bagofwords.application.memory.MemoryManager;
-import be.bagofwords.cache.CachesManager;
+import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.combinator.Combinator;
@@ -17,9 +15,9 @@ public class KyotoDataInterfaceFactory extends DataInterfaceFactory {
 
     private final String directory;
 
-    public KyotoDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, BowTaskScheduler taskScheduler, String directory) {
-        super(cachesManager, memoryManager, taskScheduler);
-        this.directory = directory;
+    public KyotoDataInterfaceFactory(ApplicationContext context) {
+        super(context);
+        this.directory = context.getConfig("data_directory");
         File libFile = findLibFile();
         if (libFile == null) {
             throw new RuntimeException("Could not find libkyotocabinet.so.16");

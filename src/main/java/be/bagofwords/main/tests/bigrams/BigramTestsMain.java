@@ -1,18 +1,15 @@
 package be.bagofwords.main.tests.bigrams;
 
+import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.application.ApplicationManager;
-import be.bagofwords.application.BowTaskScheduler;
 import be.bagofwords.application.MainClass;
-import be.bagofwords.application.memory.MemoryManager;
-import be.bagofwords.cache.CachesManager;
+import be.bagofwords.application.MinimalApplicationContextFactory;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.experimental.kyoto.KyotoDataInterfaceFactory;
-import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.remote.RemoteDatabaseInterfaceFactory;
-import be.bagofwords.main.tests.TestsApplicationContextFactory;
 import be.bagofwords.text.WordIterator;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.HashUtils;
@@ -20,10 +17,10 @@ import be.bagofwords.util.NumUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.*;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
 public class BigramTestsMain implements MainClass {
@@ -33,12 +30,6 @@ public class BigramTestsMain implements MainClass {
 
     private static final File tmpDbDir = new File("/tmp/testBigramCounts");
 
-    @Autowired
-    private CachesManager cachesManager;
-    @Autowired
-    private MemoryManager memoryManager;
-    @Autowired
-    private BowTaskScheduler taskScheduler;
 
     private final File largeTextFile;
     private final File bigramFile;
@@ -52,16 +43,17 @@ public class BigramTestsMain implements MainClass {
         if (args.length != 1) {
             UI.writeError("Please provide the path to a large text file");
         } else {
-            ApplicationManager.runSafely(new TestsApplicationContextFactory(new BigramTestsMain(new File(args[0]), new File("/tmp/bigrams.bin"))));
+            BigramTestsMain main = new BigramTestsMain(new File(args[0]), new File("/tmp/bigrams.bin"));
+            ApplicationManager.runSafely(main, new HashMap<>(), new MinimalApplicationContextFactory());
         }
     }
 
-    public void run() {
+    public void run(ApplicationContext context) {
         try {
             prepareTmpDir(tmpDbDir);
             prepareBigrams();
 
-            runAllTests(DataType.LONG_COUNT);
+            runAllTests(DataType.LONG_COUNT, context);
 //            runAllTests(DataType.SERIALIZED_OBJECT);
 
         } catch (Exception exp) {
@@ -95,11 +87,11 @@ public class BigramTestsMain implements MainClass {
         }
     }
 
-    private void runAllTests(DataType dataType) throws InterruptedException, FileNotFoundException {
+    private void runAllTests(DataType dataType, ApplicationContext applicationContext) throws InterruptedException, FileNotFoundException {
         UI.write("Testing batch writing / reading for data type " + dataType);
 //        testSeparateWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
 //        testSeparateWritingReading(dataType, new FileDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
-        testSeparateWritingReading(dataType, new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, taskScheduler, "localhost", 1208), DatabaseCachingType.CACHED_AND_BLOOM);
+        testSeparateWritingReading(dataType, new RemoteDatabaseInterfaceFactory(applicationContext), DatabaseCachingType.CACHED_AND_BLOOM);
 //        testSeparateWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
 //        testSeparateWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
 

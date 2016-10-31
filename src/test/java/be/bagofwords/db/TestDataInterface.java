@@ -2,7 +2,6 @@ package be.bagofwords.db;
 
 import be.bagofwords.db.combinator.OverWriteCombinator;
 import be.bagofwords.db.helper.TestObject;
-import be.bagofwords.db.helper.UnitTestContextLoader;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.Utils;
@@ -10,12 +9,10 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.springframework.test.context.ContextConfiguration;
 
 import java.util.*;
 
-@RunWith(value = Parameterized.class)
-@ContextConfiguration(loader = UnitTestContextLoader.class)
+@RunWith(Parameterized.class)
 public class TestDataInterface extends BaseTestDataInterface {
 
     public TestDataInterface(DatabaseCachingType type, DatabaseBackendType backendType) throws Exception {

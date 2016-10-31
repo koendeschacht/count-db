@@ -1,29 +1,26 @@
 package be.bagofwords.virtualfile.remote;
 
+import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.application.BaseServer;
-import be.bagofwords.application.annotations.BowComponent;
-import be.bagofwords.db.application.environment.RemoteCountDBEnvironmentProperties;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.WrappedSocketConnection;
 import be.bagofwords.virtualfile.VirtualFile;
 import be.bagofwords.virtualfile.VirtualFileService;
 import org.apache.commons.io.IOUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
-@BowComponent
+
 public class RemoteFileServer extends BaseServer {
 
     private VirtualFileService virtualFileService;
 
-    @Autowired
-    public RemoteFileServer(VirtualFileService virtualFileService, RemoteCountDBEnvironmentProperties properties) {
-        super("RemoteFileServer", properties.getVirtualFileServerPort());
-        this.virtualFileService = virtualFileService;
+    public RemoteFileServer(ApplicationContext applicationContext) {
+        super("RemoteFileServer", Integer.parseInt(applicationContext.getConfig("virtual_file_server_port", "1209")));
+        this.virtualFileService = applicationContext.getBean(VirtualFileService.class);
     }
 
     @Override

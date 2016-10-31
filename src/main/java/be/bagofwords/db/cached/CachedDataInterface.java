@@ -254,9 +254,10 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
             }
             if (iterator.hasNext()) {
                 UI.write("Could not add (all) values to cache of " + baseInterface.getName() + " because memory was full");
-            } else {
-                UI.write("Added " + numOfValuesWritten + " values to cache of " + baseInterface.getName() + " in " + (System.currentTimeMillis() - start) + " ms");
             }
+            /*else {
+                UI.write("Added " + numOfValuesWritten + " values to cache of " + baseInterface.getName() + " in " + (System.currentTimeMillis() - start) + " ms");
+            }*/
             iterator.close();
         }
     }

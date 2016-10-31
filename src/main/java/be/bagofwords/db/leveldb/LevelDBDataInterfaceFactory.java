@@ -1,8 +1,6 @@
 package be.bagofwords.db.leveldb;
 
-import be.bagofwords.application.BowTaskScheduler;
-import be.bagofwords.application.memory.MemoryManager;
-import be.bagofwords.cache.CachesManager;
+import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.combinator.Combinator;
@@ -13,9 +11,9 @@ public class LevelDBDataInterfaceFactory extends DataInterfaceFactory {
 
     private final String directory;
 
-    public LevelDBDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, BowTaskScheduler taskScheduler, String directory) {
-        super(cachesManager, memoryManager, taskScheduler);
-        this.directory = directory;
+    public LevelDBDataInterfaceFactory(ApplicationContext context) {
+        super(context);
+        this.directory = context.getConfig("data_directory");
         File dirFile = new File(directory);
         if (!dirFile.exists()) {
             dirFile.mkdirs();

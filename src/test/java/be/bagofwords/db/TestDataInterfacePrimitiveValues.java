@@ -4,19 +4,16 @@ import be.bagofwords.db.combinator.DoubleCombinator;
 import be.bagofwords.db.combinator.FloatCombinator;
 import be.bagofwords.db.combinator.IntegerCombinator;
 import be.bagofwords.db.combinator.LongCombinator;
-import be.bagofwords.db.helper.UnitTestContextLoader;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
-import org.springframework.test.context.ContextConfiguration;
 
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/19/14.
  */
 
-@RunWith(value = Parameterized.class)
-@ContextConfiguration(loader = UnitTestContextLoader.class)
+@RunWith(Parameterized.class)
 public class TestDataInterfacePrimitiveValues extends BaseTestDataInterface {
 
     public TestDataInterfacePrimitiveValues(DatabaseCachingType type, DatabaseBackendType backendType) throws Exception {

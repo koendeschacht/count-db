@@ -17,8 +17,8 @@ import java.util.Date;
 public class ExampleUsage {
 
     public static void main(String[] args) throws ParseException {
-        //create data interface factory that stores all data in /tmp/myData (This factory is wired with spring)
-        DataInterfaceFactory dataInterfaceFactory = new EmbeddedDBContextFactory("/tmp/myData").wireApplicationContext().getBean(DataInterfaceFactory.class);
+        //create data interface factory that stores all data in /tmp/myData
+        DataInterfaceFactory dataInterfaceFactory = EmbeddedDBContextFactory.createDataInterfaceFactory("/tmp/myData");
 
         //create data interfaces
         DataInterface<Long> myLogDataInterface = dataInterfaceFactory.createCountDataInterface("myLoginCounts");

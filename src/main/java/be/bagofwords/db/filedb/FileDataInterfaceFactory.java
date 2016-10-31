@@ -1,28 +1,20 @@
 package be.bagofwords.db.filedb;
 
-import be.bagofwords.application.BowTaskScheduler;
+import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.application.memory.MemoryManager;
-import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
-import be.bagofwords.db.application.environment.FileCountDBEnvironmentProperties;
 import be.bagofwords.db.combinator.Combinator;
-import org.springframework.beans.factory.annotation.Autowired;
 
 public class FileDataInterfaceFactory extends DataInterfaceFactory {
 
     private final MemoryManager memoryManager;
     private final String directory;
 
-    @Autowired
-    public FileDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, BowTaskScheduler taskScheduler, FileCountDBEnvironmentProperties fileCountDBEnvironmentProperties) {
-        this(cachesManager, memoryManager, taskScheduler, fileCountDBEnvironmentProperties.getDataDirectory() + "server/");
-    }
-
-    public FileDataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, BowTaskScheduler taskScheduler, String directory) {
-        super(cachesManager, memoryManager, taskScheduler);
-        this.memoryManager = memoryManager;
-        this.directory = directory;
+    public FileDataInterfaceFactory(ApplicationContext context) {
+        super(context);
+        this.memoryManager = context.getBean(MemoryManager.class);
+        this.directory = context.getConfig("data_directory");
     }
 
     @Override

@@ -1,9 +1,8 @@
 package be.bagofwords.virtualfile.remote;
 
-import be.bagofwords.db.application.environment.RemoteCountDBEnvironmentProperties;
+import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.virtualfile.VirtualFile;
 import be.bagofwords.virtualfile.VirtualFileService;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.File;
 
@@ -12,14 +11,9 @@ public class RemoteFileService extends VirtualFileService {
     private String host;
     private int port;
 
-    public RemoteFileService(String remoteServerAddress, int remoteServerPort) {
-        this.host = remoteServerAddress;
-        this.port = remoteServerPort;
-    }
-
-    @Autowired
-    public RemoteFileService(RemoteCountDBEnvironmentProperties environmentProperties) {
-        this(environmentProperties.getDatabaseServerAddress(), environmentProperties.getVirtualFileServerPort());
+    public RemoteFileService(ApplicationContext context) {
+        this.host = context.getConfig("remote_file_service_host", "localhost");
+        this.port = Integer.parseInt(context.getConfig("remote_file_server_port", "1209"));
     }
 
     @Override

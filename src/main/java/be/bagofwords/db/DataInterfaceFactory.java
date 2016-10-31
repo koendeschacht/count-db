@@ -1,5 +1,6 @@
 package be.bagofwords.db;
 
+import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.application.BowTaskScheduler;
 import be.bagofwords.application.LateCloseableComponent;
 import be.bagofwords.application.memory.MemoryManager;
@@ -29,10 +30,10 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
 
     private DataInterface<LongBloomFilterWithCheckSum> cachedBloomFilters;
 
-    public DataInterfaceFactory(CachesManager cachesManager, MemoryManager memoryManager, BowTaskScheduler taskScheduler) {
-        this.cachesManager = cachesManager;
-        this.memoryManager = memoryManager;
-        this.taskScheduler = taskScheduler;
+    public DataInterfaceFactory(ApplicationContext context) {
+        this.cachesManager = context.getBean(CachesManager.class);
+        this.memoryManager = context.getBean(MemoryManager.class);
+        this.taskScheduler = context.getBean(BowTaskScheduler.class);
         this.allInterfaces = new ArrayList<>();
         this.allInterfacesReferenceQueue = new ReferenceQueue<>();
     }
