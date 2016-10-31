@@ -1,8 +1,8 @@
 package be.bagofwords.virtualfile.remote;
 
-import be.bagofwords.virtualfile.VirtualFile;
 import be.bagofwords.application.BaseServer;
 import be.bagofwords.util.WrappedSocketConnection;
+import be.bagofwords.virtualfile.VirtualFile;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;

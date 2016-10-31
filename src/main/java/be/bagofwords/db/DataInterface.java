@@ -13,12 +13,7 @@ import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.StringUtils;
 
 import java.util.Iterator;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public abstract class DataInterface<T extends Object> implements DataIterable<KeyValue<T>> {
 

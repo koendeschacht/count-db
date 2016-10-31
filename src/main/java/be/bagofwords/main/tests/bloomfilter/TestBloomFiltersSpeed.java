@@ -4,8 +4,6 @@ import be.bagofwords.db.bloomfilter.LongBloomFilter;
 import be.bagofwords.db.data.LongCountsBloomFilter;
 import be.bagofwords.ui.UI;
 import com.google.common.hash.BloomFilter;
-import com.google.common.hash.Funnel;
-import com.google.common.hash.PrimitiveSink;
 
 public class TestBloomFiltersSpeed {
 
