@@ -22,7 +22,10 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-import static be.bagofwords.application.BaseServer.*;
+import static be.bagofwords.application.SocketServer.LONG_END;
+import static be.bagofwords.application.SocketServer.LONG_ERROR;
+import static be.bagofwords.application.SocketServer.LONG_OK;
+
 
 public class RemoteDataInterface<T> extends DataInterface<T> {
 
@@ -542,6 +545,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
         }
 
         private void initializeSubset(RemoteDataInterfaceServer.ConnectionType connectionType) throws IOException {
+            writeString(RemoteDataInterfaceServer.NAME);
             writeByte((byte) connectionType.ordinal());
             writeString(getName());
             writeBoolean(isTemporaryDataInterface());

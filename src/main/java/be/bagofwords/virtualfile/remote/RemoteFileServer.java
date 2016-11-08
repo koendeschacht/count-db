@@ -1,9 +1,11 @@
 package be.bagofwords.virtualfile.remote;
 
 import be.bagofwords.application.ApplicationContext;
-import be.bagofwords.application.BaseServer;
+import be.bagofwords.application.SocketRequestHandler;
+import be.bagofwords.application.SocketRequestHandlerFactory;
+import be.bagofwords.application.SocketServer;
 import be.bagofwords.ui.UI;
-import be.bagofwords.util.WrappedSocketConnection;
+import be.bagofwords.util.SocketConnection;
 import be.bagofwords.virtualfile.VirtualFile;
 import be.bagofwords.virtualfile.VirtualFileService;
 import org.apache.commons.io.IOUtils;
@@ -13,32 +15,42 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import static be.bagofwords.application.SocketServer.LONG_ERROR;
+import static be.bagofwords.application.SocketServer.LONG_OK;
 
-public class RemoteFileServer extends BaseServer {
+
+public class RemoteFileServer implements SocketRequestHandlerFactory {
+
+    public static final String NAME = "RemoteFileServer";
 
     private VirtualFileService virtualFileService;
 
     public RemoteFileServer(ApplicationContext applicationContext) {
-        super("RemoteFileServer", Integer.parseInt(applicationContext.getConfig("virtual_file_server_port", "1209")));
         this.virtualFileService = applicationContext.getBean(VirtualFileService.class);
+        applicationContext.getBean(SocketServer.class).registerSocketRequestHandlerFactory(this);
     }
 
     @Override
-    protected BaseServer.SocketRequestHandler createSocketRequestHandler(Socket socket) throws IOException {
-        return new SocketRequestHandler(new WrappedSocketConnection(socket));
+    public String getName() {
+        return NAME;
+    }
+
+    @Override
+    public SocketRequestHandler createSocketRequestHandler(Socket socket) throws IOException {
+        return new RemoteFileSocketRequestHandler(new SocketConnection(socket));
     }
 
 
-    private class SocketRequestHandler extends BaseServer.SocketRequestHandler {
+    private class RemoteFileSocketRequestHandler extends SocketRequestHandler {
 
         private long totalNumberOfRequests = 0;
 
-        public SocketRequestHandler(WrappedSocketConnection connection) throws IOException {
-            super(connection);
+        public RemoteFileSocketRequestHandler(SocketConnection connection) throws IOException {
+            super("remote_file_socket_handler", connection);
         }
 
         @Override
-        protected void reportUnexpectedError(Exception ex) {
+        public void reportUnexpectedError(Exception ex) {
             UI.writeError("Exception in socket request handler of remote file server", ex);
         }
 
@@ -48,7 +60,7 @@ public class RemoteFileServer extends BaseServer {
         }
 
         @Override
-        protected void handleRequests() throws Exception {
+        public void handleRequests() throws Exception {
             //We only handle a single request:
             byte actionAsByte = connection.readByte();
             try {
@@ -94,7 +106,7 @@ public class RemoteFileServer extends BaseServer {
         }
     }
 
-    public static enum Action {
+    public enum Action {
         INPUT_STREAM, OUTPUT_STREAM, EXISTS
     }
 }

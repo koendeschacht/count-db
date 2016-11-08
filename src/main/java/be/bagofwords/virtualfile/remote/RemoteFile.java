@@ -1,6 +1,6 @@
 package be.bagofwords.virtualfile.remote;
 
-import be.bagofwords.application.BaseServer;
+import be.bagofwords.application.SocketServer;
 import be.bagofwords.util.WrappedSocketConnection;
 import be.bagofwords.virtualfile.VirtualFile;
 import org.apache.commons.io.IOUtils;
@@ -32,11 +32,12 @@ public class RemoteFile implements VirtualFile {
     public InputStream createInputStream() {
         try {
             WrappedSocketConnection connection = new WrappedSocketConnection(host, port);
+            connection.writeString(RemoteFileServer.NAME);
             connection.writeByte((byte) RemoteFileServer.Action.INPUT_STREAM.ordinal());
             connection.writeString(relPath.getPath());
             connection.flush();
             long answer = connection.readLong();
-            if (answer == BaseServer.LONG_OK) {
+            if (answer == SocketServer.LONG_OK) {
                 return connection.getIs();
             } else {
                 String message = connection.readString();
@@ -51,11 +52,12 @@ public class RemoteFile implements VirtualFile {
     public OutputStream createOutputStream() {
         try {
             WrappedSocketConnection connection = new WrappedSocketConnection(host, port);
+            connection.writeString(RemoteFileServer.NAME);
             connection.writeByte((byte) RemoteFileServer.Action.OUTPUT_STREAM.ordinal());
             connection.writeString(relPath.getPath());
             connection.flush();
             long answer = connection.readLong();
-            if (answer == BaseServer.LONG_OK) {
+            if (answer == SocketServer.LONG_OK) {
                 return connection.getOs();
             } else {
                 String message = connection.readString();

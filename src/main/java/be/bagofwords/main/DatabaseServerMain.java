@@ -1,9 +1,6 @@
 package be.bagofwords.main;
 
-import be.bagofwords.application.ApplicationContext;
-import be.bagofwords.application.ApplicationManager;
-import be.bagofwords.application.MainClass;
-import be.bagofwords.application.MinimalApplicationContextFactory;
+import be.bagofwords.application.*;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer;
 import be.bagofwords.ui.UI;
@@ -44,12 +41,9 @@ public class DatabaseServerMain implements MainClass {
 
     @Override
     public void run(ApplicationContext context) {
-        RemoteDataInterfaceServer remoteDataInterfaceServer = context.getBean(RemoteDataInterfaceServer.class);
-        RemoteFileServer remoteFileServer = context.getBean(RemoteFileServer.class);
-        remoteDataInterfaceServer.start();
-        remoteFileServer.start();
-        remoteDataInterfaceServer.waitForFinish();
-        remoteFileServer.waitForFinish();
+        SocketServer socketServer = context.getBean(SocketServer.class);
+        socketServer.start();
+        socketServer.waitForFinish();
     }
 
 

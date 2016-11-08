@@ -86,7 +86,7 @@ public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
     @Test
     public void testCounts() {
         int numOfThreads = 10;
-        final int numOfWritesPerThread = 500;
+        final int numOfWritesPerThread = 50 ;
         final DataInterface<Long> db = createCountDataInterface("testCounts");
         db.dropAllData();
         SafeThread[] threads = new SafeThread[numOfThreads];

@@ -1,6 +1,7 @@
 package be.bagofwords.db.filedb;
 
 import be.bagofwords.application.ApplicationContext;
+import be.bagofwords.application.SocketServer;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;

@@ -13,7 +13,7 @@ public class RemoteFileService extends VirtualFileService {
 
     public RemoteFileService(ApplicationContext context) {
         this.host = context.getConfig("remote_file_service_host", "localhost");
-        this.port = Integer.parseInt(context.getConfig("remote_file_server_port", "1209"));
+        this.port = Integer.parseInt(context.getConfig("remote_file_server_port", "1208"));
     }
 
     @Override

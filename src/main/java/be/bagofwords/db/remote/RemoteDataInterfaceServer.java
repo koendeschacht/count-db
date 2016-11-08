@@ -1,10 +1,11 @@
 package be.bagofwords.db.remote;
 
 import be.bagofwords.application.ApplicationContext;
-import be.bagofwords.application.BaseServer;
+import be.bagofwords.application.SocketRequestHandler;
+import be.bagofwords.application.SocketRequestHandlerFactory;
+import be.bagofwords.application.SocketServer;
 import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.application.memory.MemoryStatus;
-import be.bagofwords.application.status.StatusViewable;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseCachingType;
@@ -13,7 +14,10 @@ import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
 import be.bagofwords.ui.UI;
-import be.bagofwords.util.*;
+import be.bagofwords.util.KeyValue;
+import be.bagofwords.util.ReflectionUtils;
+import be.bagofwords.util.SerializationUtils;
+import be.bagofwords.util.SocketConnection;
 import org.apache.commons.io.IOUtils;
 import org.xerial.snappy.Snappy;
 
@@ -21,10 +25,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import static be.bagofwords.application.SocketServer.*;
 
 
-public class RemoteDataInterfaceServer extends BaseServer implements StatusViewable {
+public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
+
+    public static final String NAME = "RemoteDataInterfaceServer";
 
     private static final long CLONE_BATCH_SIZE_PRIMITIVE = 100000;
     private static final long CLONE_BATCH_SIZE_NON_PRIMITIVE = 100;
@@ -41,36 +51,42 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
     private final MemoryManager memoryManager;
 
     public RemoteDataInterfaceServer(ApplicationContext context) {
-        super("RemoteDataInterfaceServer", Integer.parseInt(context.getConfig("remote_interface_port", "1208")));
         this.dataInterfaceFactory = context.getBean(DataInterfaceFactory.class);
         this.memoryManager = context.getBean(MemoryManager.class);
         this.createdInterfaces = new ArrayList<>();
+        SocketServer socketServer = context.getBean(SocketServer.class);
+        socketServer.registerSocketRequestHandlerFactory(this);
     }
 
     @Override
-    protected SocketRequestHandler createSocketRequestHandler(Socket socket) throws IOException {
+    public String getName() {
+        return NAME;
+    }
+
+    @Override
+    public SocketRequestHandler createSocketRequestHandler(Socket socket) throws IOException {
         byte connectionTypeAsByte = (byte) socket.getInputStream().read();
         if (connectionTypeAsByte < ConnectionType.values().length) {
             ConnectionType connectionType = ConnectionType.values()[connectionTypeAsByte];
             if (connectionType == ConnectionType.CONNECT_TO_INTERFACE) {
-                return new DataInterfaceSocketRequestHandler(new WrappedSocketConnection(socket));
+                return new DataInterfaceSocketRequestHandler(new SocketConnection(socket));
             } else if (connectionType == ConnectionType.BATCH_READ_FROM_INTERFACE) {
-                return new DataInterfaceSocketRequestHandler(new WrappedSocketConnection(socket, true, false));
+                return new DataInterfaceSocketRequestHandler(new SocketConnection(socket, true, false));
             } else if (connectionType == ConnectionType.BATCH_WRITE_TO_INTERFACE) {
-                return new DataInterfaceSocketRequestHandler(new WrappedSocketConnection(socket, false, true));
+                return new DataInterfaceSocketRequestHandler(new SocketConnection(socket, false, true));
             }
         }
         throw new RuntimeException("Unknown connection type " + connectionTypeAsByte);
     }
 
-    public class DataInterfaceSocketRequestHandler extends BaseServer.SocketRequestHandler {
+    public class DataInterfaceSocketRequestHandler extends SocketRequestHandler {
 
         private DataInterface dataInterface;
         private long startTime;
         private long totalNumberOfRequests;
 
-        private DataInterfaceSocketRequestHandler(WrappedSocketConnection wrappedSocketConnection) throws IOException {
-            super(wrappedSocketConnection);
+        private DataInterfaceSocketRequestHandler(SocketConnection wrappedSocketConnection) throws IOException {
+            super("data_interface_request_handler", wrappedSocketConnection);
         }
 
         private void prepareHandler() throws Exception {
@@ -113,7 +129,7 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
         }
 
         @Override
-        protected void handleRequests() throws Exception {
+        public void handleRequests() throws Exception {
             prepareHandler();
             connection.getOs().flush();
             boolean keepReadingCommands = true;
@@ -180,7 +196,7 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
         }
 
         @Override
-        protected void reportUnexpectedError(Exception ex) {
+        public void reportUnexpectedError(Exception ex) {
             if (dataInterface != null) {
                 UI.writeError("Unexpected exception in request handler for data interface " + dataInterface.getName(), ex);
             } else {
@@ -384,49 +400,14 @@ public class RemoteDataInterfaceServer extends BaseServer implements StatusViewa
         }
     }
 
-    public static enum Action {
+    public enum Action {
         READVALUE, WRITEVALUE, READVALUES, READKEYS, WRITEVALUES, DROPALLDATA, CLOSE_CONNECTION, FLUSH,
         READALLVALUES, READ_CACHED_VALUES, APPROXIMATE_SIZE, MIGHT_CONTAIN, EXACT_SIZE, OPTMIZE_FOR_READING,
     }
 
-    public static enum ConnectionType {
+    public enum ConnectionType {
         CONNECT_TO_INTERFACE, BATCH_WRITE_TO_INTERFACE, BATCH_READ_FROM_INTERFACE
     }
 
-    @Override
-    public void doTerminate() {
-        super.doTerminate();
-    }
-
-    @Override
-    public void printHtmlStatus(StringBuilder sb) {
-        sb.append("<h1>Printing database server statistics</h1>");
-        ln(sb, "<table>");
-        ln(sb, "<tr><td>Used memory is </td><td>" + UI.getMemoryUsage() + "</td></tr>");
-        ln(sb, "<tr><td>Total number of connections </td><td>" + getTotalNumberOfConnections() + "</td></tr>");
-        List<RemoteDataInterfaceServer.SocketRequestHandler> runningRequestHandlers = getRunningRequestHandlers();
-        ln(sb, "<tr><td>Current number of handlers </td><td>" + runningRequestHandlers.size() + "</td></tr>");
-        List<RemoteDataInterfaceServer.SocketRequestHandler> sortedRequestHandlers;
-        synchronized (runningRequestHandlers) {
-            sortedRequestHandlers = new ArrayList<>(runningRequestHandlers);
-        }
-        Collections.sort(sortedRequestHandlers, (o1, o2) -> -Double.compare(o1.getTotalNumberOfRequests(), o2.getTotalNumberOfRequests()));
-        for (int i = 0; i < sortedRequestHandlers.size(); i++) {
-            DataInterfaceSocketRequestHandler handler = (DataInterfaceSocketRequestHandler) sortedRequestHandlers.get(i);
-            if (handler.getDataInterface() != null) {
-                ln(sb, "<tr><td>" + i + " subset </td><td>" + handler.getDataInterface().getName() + "</td></tr>");
-            }
-            ln(sb, "<tr><td>" + i + " Started at </td><td>" + new Date(handler.getStartTime()) + "</td></tr>");
-            ln(sb, "<tr><td>" + i + " Total number of requests </td><td>" + handler.getTotalNumberOfRequests() + "</td></tr>");
-            double requestsPerSec = handler.getTotalNumberOfRequests() * 1000.0 / (System.currentTimeMillis() - handler.getStartTime());
-            ln(sb, "<tr><td>" + i + " Average requests/s</td><td>" + NumUtils.fmt(requestsPerSec) + "</td></tr>");
-        }
-        ln(sb, "</table>");
-    }
-
-    private void ln(StringBuilder sb, String s) {
-        sb.append(s);
-        sb.append("\n");
-    }
 
 }

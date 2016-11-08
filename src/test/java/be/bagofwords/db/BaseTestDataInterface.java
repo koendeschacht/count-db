@@ -1,7 +1,9 @@
 package be.bagofwords.db;
 
 import be.bagofwords.application.ApplicationContext;
+import be.bagofwords.application.BaseApplicationContextFactory;
 import be.bagofwords.application.MinimalApplicationContextFactory;
+import be.bagofwords.application.SocketServer;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.helper.DataInterfaceFactoryFactory;
@@ -47,12 +49,12 @@ public class BaseTestDataInterface {
 
     private RemoteDataInterfaceServer remoteDataInterfaceServer; //only created for remote backend
     private FileDataInterfaceFactory dataInterfaceServerFactory; //only created for remote backend
+    private ApplicationContext context;
 
     public BaseTestDataInterface(DatabaseCachingType type, DatabaseBackendType backendType) throws Exception {
         this.backendType = backendType;
         this.type = type;
     }
-
 
     @Before
     public void setUp() throws Exception {
@@ -60,24 +62,26 @@ public class BaseTestDataInterface {
         config.put("data_directory", "/tmp/dbServer_" + System.currentTimeMillis());
         config.put("remote_interface_host", "localhost");
         config.put("remote_interface_port", "1208");
-        ApplicationContext context = new MinimalApplicationContextFactory().createApplicationContext(config);
+        BaseApplicationContextFactory factory;
+        if (backendType == DatabaseBackendType.REMOTE) {
+            factory = new RemoteDatabaseApplicationContextFactor();
+        } else {
+            factory = new MinimalApplicationContextFactory();
+        }
+        context = factory.createApplicationContext(config);
         DataInterfaceFactoryFactory dataInterfaceFactoryFactory = new DataInterfaceFactoryFactory(context);
         dataInterfaceFactory = dataInterfaceFactoryFactory.createFactory(backendType);
         if (backendType == DatabaseBackendType.REMOTE) {
             dataInterfaceServerFactory = new FileDataInterfaceFactory(context);
             context.registerBean(dataInterfaceServerFactory);
             remoteDataInterfaceServer = new RemoteDataInterfaceServer(context);
-            remoteDataInterfaceServer.start();
         }
     }
 
     @After
     public void closeFactory() {
-        dataInterfaceFactory.terminate();
-        if (remoteDataInterfaceServer != null) {
-            remoteDataInterfaceServer.terminate();
-            dataInterfaceServerFactory.terminate();
-        }
+        context.terminateApplication();
+        context.waitUntilTerminated();
     }
 
     public void createDataInterfaceFactory(DataInterfaceFactoryFactory dataInterfaceFactoryFactory) {
@@ -88,5 +92,14 @@ public class BaseTestDataInterface {
         return dataInterfaceFactory.createDataInterface(type, subsetName + "_" + System.currentTimeMillis(), Long.class, new LongCombinator());
     }
 
+    private static class RemoteDatabaseApplicationContextFactor extends MinimalApplicationContextFactory {
+        @Override
+        public void wireApplicationContext(ApplicationContext context) {
+            super.wireApplicationContext(context);
+            SocketServer socketServer = new SocketServer(1208);
+            context.registerBean(socketServer);
+            socketServer.start();
+        }
+    }
 
 }
