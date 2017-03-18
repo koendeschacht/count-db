@@ -1,7 +1,7 @@
 package be.bagofwords.virtualfile.remote;
 
 import be.bagofwords.application.SocketServer;
-import be.bagofwords.util.WrappedSocketConnection;
+import be.bagofwords.util.SocketConnection;
 import be.bagofwords.virtualfile.VirtualFile;
 import org.apache.commons.io.IOUtils;
 
@@ -31,7 +31,7 @@ public class RemoteFile implements VirtualFile {
     @Override
     public InputStream createInputStream() {
         try {
-            WrappedSocketConnection connection = new WrappedSocketConnection(host, port);
+            SocketConnection connection = new SocketConnection(host, port);
             connection.writeString(RemoteFileServer.NAME);
             connection.writeByte((byte) RemoteFileServer.Action.INPUT_STREAM.ordinal());
             connection.writeString(relPath.getPath());
@@ -51,7 +51,7 @@ public class RemoteFile implements VirtualFile {
     @Override
     public OutputStream createOutputStream() {
         try {
-            WrappedSocketConnection connection = new WrappedSocketConnection(host, port);
+            SocketConnection connection = new SocketConnection(host, port);
             connection.writeString(RemoteFileServer.NAME);
             connection.writeByte((byte) RemoteFileServer.Action.OUTPUT_STREAM.ordinal());
             connection.writeString(relPath.getPath());
@@ -70,9 +70,9 @@ public class RemoteFile implements VirtualFile {
 
     @Override
     public boolean exists() {
-        WrappedSocketConnection connection = null;
+        SocketConnection connection = null;
         try {
-            connection = new WrappedSocketConnection(host, port);
+            connection = new SocketConnection(host, port);
             connection.writeByte((byte) RemoteFileServer.Action.EXISTS.ordinal());
             connection.writeString(relPath.getPath());
             connection.flush();

@@ -9,13 +9,14 @@ import be.bagofwords.ui.UI;
 import be.bagofwords.util.ExecutorServiceFactory;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.SerializationUtils;
-import be.bagofwords.util.WrappedSocketConnection;
+import be.bagofwords.util.SocketConnection;
 import org.apache.commons.io.IOUtils;
 import org.xerial.snappy.Snappy;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -534,13 +535,13 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
         }
     }
 
-    private class Connection extends WrappedSocketConnection {
+    private class Connection extends SocketConnection {
 
         private boolean isTaken;
         private long lastUsage;
 
         public Connection(String host, int port, boolean useLargeOutputBuffer, boolean useLargeInputBuffer, RemoteDataInterfaceServer.ConnectionType connectionType) throws IOException {
-            super(host, port, useLargeOutputBuffer, useLargeInputBuffer);
+            super(new Socket(host, port), useLargeOutputBuffer, useLargeInputBuffer);
             initializeSubset(connectionType);
         }
 
