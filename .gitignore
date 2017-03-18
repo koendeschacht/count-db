@@ -1,3 +1,4 @@
 *.class
 hs_err_pid*
 target/
+.idea/workspace.xml
