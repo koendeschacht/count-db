@@ -1,11 +1,7 @@
 package be.bagofwords.db.remote;
 
-import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.application.SocketRequestHandler;
 import be.bagofwords.application.SocketRequestHandlerFactory;
-import be.bagofwords.application.SocketServer;
-import be.bagofwords.application.memory.MemoryManager;
-import be.bagofwords.application.memory.MemoryStatus;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseCachingType;
@@ -13,24 +9,24 @@ import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
+import be.bagofwords.memory.MemoryManager;
+import be.bagofwords.memory.MemoryStatus;
+import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.ReflectionUtils;
 import be.bagofwords.util.SerializationUtils;
 import be.bagofwords.util.SocketConnection;
-import org.apache.commons.io.IOUtils;
 import org.xerial.snappy.Snappy;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import static be.bagofwords.application.SocketServer.*;
-
 
 public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
 
@@ -54,8 +50,6 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
         this.dataInterfaceFactory = context.getBean(DataInterfaceFactory.class);
         this.memoryManager = context.getBean(MemoryManager.class);
         this.createdInterfaces = new ArrayList<>();
-        SocketServer socketServer = context.getBean(SocketServer.class);
-        socketServer.registerSocketRequestHandlerFactory(this);
     }
 
     @Override
@@ -64,19 +58,19 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
     }
 
     @Override
-    public SocketRequestHandler createSocketRequestHandler(Socket socket) throws IOException {
-        byte connectionTypeAsByte = (byte) socket.getInputStream().read();
+    public SocketRequestHandler createSocketRequestHandler(SocketConnection socketConnection) throws IOException {
+        byte connectionTypeAsByte = socketConnection.readByte();
         if (connectionTypeAsByte < ConnectionType.values().length) {
             ConnectionType connectionType = ConnectionType.values()[connectionTypeAsByte];
-            if (connectionType == ConnectionType.CONNECT_TO_INTERFACE) {
-                return new DataInterfaceSocketRequestHandler(new SocketConnection(socket));
-            } else if (connectionType == ConnectionType.BATCH_READ_FROM_INTERFACE) {
-                return new DataInterfaceSocketRequestHandler(new SocketConnection(socket, true, false));
+            if (connectionType == ConnectionType.BATCH_READ_FROM_INTERFACE) {
+                socketConnection.useLargeOutputBuffer();
             } else if (connectionType == ConnectionType.BATCH_WRITE_TO_INTERFACE) {
-                return new DataInterfaceSocketRequestHandler(new SocketConnection(socket, false, true));
+                socketConnection.useLargeInputBuffer();
+            } else if (connectionType != ConnectionType.CONNECT_TO_INTERFACE) {
+                throw new RuntimeException("Unknown connection type " + connectionTypeAsByte);
             }
         }
-        throw new RuntimeException("Unknown connection type " + connectionTypeAsByte);
+        return new DataInterfaceSocketRequestHandler(socketConnection);
     }
 
     public class DataInterfaceSocketRequestHandler extends SocketRequestHandler {
@@ -85,8 +79,8 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
         private long startTime;
         private long totalNumberOfRequests;
 
-        private DataInterfaceSocketRequestHandler(SocketConnection wrappedSocketConnection) throws IOException {
-            super("data_interface_request_handler", wrappedSocketConnection);
+        private DataInterfaceSocketRequestHandler(SocketConnection socketConnection) throws IOException {
+            super(socketConnection);
         }
 
         private void prepareHandler() throws Exception {
@@ -133,7 +127,7 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
             prepareHandler();
             connection.getOs().flush();
             boolean keepReadingCommands = true;
-            while (keepReadingCommands && !isTerminateRequested()) {
+            while (keepReadingCommands && connection.isOpen()) {
                 keepReadingCommands = handleRequest();
                 totalNumberOfRequests++;
                 connection.getOs().flush();
@@ -143,7 +137,7 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
         private boolean handleRequest() throws Exception {
             Action action = readNextAction();
             if (action == Action.CLOSE_CONNECTION) {
-                terminate();
+                connection.close();
             } else {
                 if (action == Action.EXACT_SIZE) {
                     handleExactSize();
@@ -365,7 +359,7 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
             dos.close();
             byte[] origValues = bos.toByteArray();
             byte[] compressedValues = Snappy.compress(origValues);
-//            UI.write("Compressed values from " + origValues.length + " to " + compressedValues.length);
+            //            UI.write("Compressed values from " + origValues.length + " to " + compressedValues.length);
             connection.writeByteArray(compressedValues);
         }
 
@@ -381,7 +375,6 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
             connection.writeBoolean(mightContain);
         }
 
-
         private void handleWriteValue() throws IOException {
             long key = connection.readLong();
             Object value = connection.readValue(dataInterface.getObjectClass());
@@ -394,10 +387,6 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
             return Class.forName(className);
         }
 
-        @Override
-        public void doTerminate() {
-            IOUtils.closeQuietly(connection);
-        }
     }
 
     public enum Action {
@@ -408,6 +397,5 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
     public enum ConnectionType {
         CONNECT_TO_INTERFACE, BATCH_WRITE_TO_INTERFACE, BATCH_READ_FROM_INTERFACE
     }
-
 
 }

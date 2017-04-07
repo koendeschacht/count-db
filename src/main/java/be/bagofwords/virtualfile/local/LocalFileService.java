@@ -1,6 +1,6 @@
 package be.bagofwords.virtualfile.local;
 
-import be.bagofwords.application.ApplicationContext;
+import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.virtualfile.VirtualFile;
 import be.bagofwords.virtualfile.VirtualFileService;
 
@@ -11,7 +11,7 @@ public class LocalFileService extends VirtualFileService {
     private File rootDirectory;
 
     public LocalFileService(ApplicationContext context) {
-        this.rootDirectory = new File(context.getConfig("data_directory"), "virtualFiles");
+        this.rootDirectory = new File(context.getProperty("data_directory"), "virtualFiles");
         if (this.rootDirectory.exists()) {
             if (!this.rootDirectory.isDirectory()) {
                 throw new RuntimeException("Expected " + this.rootDirectory.getAbsolutePath() + " to be a directory");

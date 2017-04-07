@@ -1,8 +1,11 @@
 package be.bagofwords.main;
 
-import be.bagofwords.application.*;
+import be.bagofwords.application.SocketServer;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer;
+import be.bagofwords.minidepi.ApplicationContext;
+import be.bagofwords.minidepi.ApplicationManager;
+import be.bagofwords.minidepi.annotations.Inject;
 import be.bagofwords.ui.UI;
 import be.bagofwords.virtualfile.local.LocalFileService;
 import be.bagofwords.virtualfile.remote.RemoteFileServer;
@@ -11,8 +14,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DatabaseServerMain implements MainClass {
-
+public class DatabaseServerMain implements Runnable {
 
     public static void main(String[] args) throws IOException {
         if (args.length != 4) {
@@ -22,29 +24,28 @@ public class DatabaseServerMain implements MainClass {
             config.put("application_name", "database_server_main");
             config.put("data_directory", args[0]);
             config.put("server_url", args[1]);
-            config.put("remote_interface_port", args[2]);
+            config.put("socket_port", args[2]);
             config.put("virtual_file_server_port", args[3]);
-            ApplicationManager.runSafely(new DatabaseServerMain(), config, new DatabaseServerContextFactory());
+            ApplicationManager.run(new DatabaseServerMain(), config);
         }
     }
 
-    private static class DatabaseServerContextFactory extends MinimalApplicationContextFactory {
-        @Override
-        public void wireApplicationContext(ApplicationContext context) {
-            super.wireApplicationContext(context);
-            context.registerBean(new FileDataInterfaceFactory(context));
-            context.registerBean(new LocalFileService(context));
-            context.registerBean(new RemoteFileServer(context));
-            context.registerBean(new RemoteDataInterfaceServer(context));
-        }
-    }
+    @Inject
+    private FileDataInterfaceFactory fileDataInterfaceFactory;
+    @Inject
+    private LocalFileService localFileService;
+    @Inject
+    private RemoteFileServer remoteFileServer;
+    @Inject
+    private RemoteDataInterfaceServer remoteDataInterfaceServer;
+    @Inject
+    private SocketServer socketServer;
+    @Inject
+    private ApplicationContext applicationContext;
 
     @Override
-    public void run(ApplicationContext context) {
-        SocketServer socketServer = context.getBean(SocketServer.class);
-        socketServer.start();
-        socketServer.waitForFinish();
+    public void run() {
+        applicationContext.waitUntilTerminated();
     }
-
 
 }

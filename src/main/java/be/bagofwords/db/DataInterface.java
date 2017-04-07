@@ -9,6 +9,7 @@ import be.bagofwords.iterator.SimpleIterator;
 import be.bagofwords.text.BowString;
 import be.bagofwords.util.HashUtils;
 import be.bagofwords.util.KeyValue;
+import be.bagofwords.util.StreamUtils;
 
 import java.util.Iterator;
 import java.util.stream.Stream;
@@ -234,7 +235,7 @@ public abstract class DataInterface<T extends Object> extends BaseDataInterface<
      */
 
     public Stream<KeyValue<T>> stream() {
-        return IterableUtils.stream(this, true);
+        return StreamUtils.stream(this, true);
     }
 
     /**
@@ -242,7 +243,7 @@ public abstract class DataInterface<T extends Object> extends BaseDataInterface<
      */
 
     public Stream<T> streamValues() {
-        return IterableUtils.stream(valueIterator(), apprSize(), false);
+        return StreamUtils.stream(valueIterator(), apprSize(), false);
     }
 
     /**
@@ -250,7 +251,7 @@ public abstract class DataInterface<T extends Object> extends BaseDataInterface<
      */
 
     public Stream<Long> streamKeys() {
-        return IterableUtils.stream(keyIterator(), apprSize(), true);
+        return StreamUtils.stream(keyIterator(), apprSize(), true);
     }
 
 

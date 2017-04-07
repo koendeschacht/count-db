@@ -1,9 +1,9 @@
 package be.bagofwords.virtualfile.remote;
 
-import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.application.SocketRequestHandler;
 import be.bagofwords.application.SocketRequestHandlerFactory;
 import be.bagofwords.application.SocketServer;
+import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.SocketConnection;
 import be.bagofwords.virtualfile.VirtualFile;
@@ -13,11 +13,9 @@ import org.apache.commons.io.IOUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.Socket;
 
 import static be.bagofwords.application.SocketServer.LONG_ERROR;
 import static be.bagofwords.application.SocketServer.LONG_OK;
-
 
 public class RemoteFileServer implements SocketRequestHandlerFactory {
 
@@ -36,17 +34,16 @@ public class RemoteFileServer implements SocketRequestHandlerFactory {
     }
 
     @Override
-    public SocketRequestHandler createSocketRequestHandler(Socket socket) throws IOException {
-        return new RemoteFileSocketRequestHandler(new SocketConnection(socket));
+    public SocketRequestHandler createSocketRequestHandler(SocketConnection socketConnection) throws IOException {
+        return new RemoteFileSocketRequestHandler(socketConnection);
     }
-
 
     private class RemoteFileSocketRequestHandler extends SocketRequestHandler {
 
         private long totalNumberOfRequests = 0;
 
         public RemoteFileSocketRequestHandler(SocketConnection connection) throws IOException {
-            super("remote_file_socket_handler", connection);
+            super(connection);
         }
 
         @Override

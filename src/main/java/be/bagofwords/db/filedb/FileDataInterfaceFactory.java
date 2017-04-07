@@ -1,11 +1,10 @@
 package be.bagofwords.db.filedb;
 
-import be.bagofwords.application.ApplicationContext;
-import be.bagofwords.application.SocketServer;
-import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.memory.MemoryManager;
+import be.bagofwords.minidepi.ApplicationContext;
 
 public class FileDataInterfaceFactory extends DataInterfaceFactory {
 
@@ -15,7 +14,7 @@ public class FileDataInterfaceFactory extends DataInterfaceFactory {
     public FileDataInterfaceFactory(ApplicationContext context) {
         super(context);
         this.memoryManager = context.getBean(MemoryManager.class);
-        this.directory = context.getConfig("data_directory");
+        this.directory = context.getProperty("data_directory");
     }
 
     @Override

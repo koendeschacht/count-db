@@ -1,9 +1,9 @@
 package be.bagofwords.db.memory;
 
-import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.minidepi.ApplicationContext;
 
 public class InMemoryDataInterfaceFactory extends DataInterfaceFactory {
 

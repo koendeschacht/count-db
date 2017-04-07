@@ -1,15 +1,15 @@
 package be.bagofwords.db.filedb;
 
 import be.bagofwords.application.BowTaskScheduler;
-import be.bagofwords.application.memory.MemoryGobbler;
-import be.bagofwords.application.memory.MemoryManager;
-import be.bagofwords.application.memory.MemoryStatus;
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.DBUtils;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
+import be.bagofwords.memory.MemoryGobbler;
+import be.bagofwords.memory.MemoryManager;
+import be.bagofwords.memory.MemoryStatus;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.MappedLists;
@@ -382,7 +382,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         updateShouldBeCleanedInfo();
     }
 
-
     @Override
     public void optimizeForReading() {
         rewriteAllFiles(true);
@@ -458,7 +457,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     targetSize = MAX_FILE_SIZE_READ;
                 }
                 if (needsRewrite) {
-//                    UI.write("Will rewrite file " + file.getFirstKey() + " " + getName() + " clean=" + file.isClean() + " force=" + forceClean + " readSize=" + file.getReadSize() + " writeSize=" + file.getWriteSize() + " targetSize=" + targetSize);
+                    //                    UI.write("Will rewrite file " + file.getFirstKey() + " " + getName() + " clean=" + file.isClean() + " force=" + forceClean + " readSize=" + file.getReadSize() + " writeSize=" + file.getWriteSize() + " targetSize=" + targetSize);
                     List<KeyValue<T>> values = readAllValues(file);
                     int filesMergedWithThisFile = inWritePhase() ? 0 : mergeFileIfTooSmall(bucket.getFiles(), fileInd, file.getWriteSize(), targetSize, values);
                     DataOutputStream dos = getOutputStreamToTempFile(file);

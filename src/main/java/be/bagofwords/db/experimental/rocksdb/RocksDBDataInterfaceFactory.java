@@ -1,9 +1,9 @@
 package be.bagofwords.db.experimental.rocksdb;
 
-import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.util.Utils;
 import org.rocksdb.RocksDB;
 
@@ -19,7 +19,7 @@ public class RocksDBDataInterfaceFactory extends DataInterfaceFactory {
 
     public RocksDBDataInterfaceFactory(ApplicationContext applicationContext, boolean usePatch) {
         super(applicationContext);
-        this.directory = applicationContext.getConfig("data_directory");
+        this.directory = applicationContext.getProperty("data_directory");
         this.usePatch = usePatch;
         File libFile = findLibFile();
         if (libFile == null) {

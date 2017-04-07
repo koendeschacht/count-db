@@ -1,6 +1,5 @@
 package be.bagofwords.db.helper;
 
-import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseBackendType;
 import be.bagofwords.db.experimental.kyoto.KyotoDataInterfaceFactory;
@@ -10,11 +9,11 @@ import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.leveldb.LevelDBDataInterfaceFactory;
 import be.bagofwords.db.memory.InMemoryDataInterfaceFactory;
 import be.bagofwords.db.remote.RemoteDatabaseInterfaceFactory;
+import be.bagofwords.minidepi.ApplicationContext;
 
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/4/14.
  */
-
 
 public class DataInterfaceFactoryFactory {
 

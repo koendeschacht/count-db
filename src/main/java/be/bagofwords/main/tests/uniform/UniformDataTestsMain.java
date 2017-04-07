@@ -1,9 +1,6 @@
 package be.bagofwords.main.tests.uniform;
 
-import be.bagofwords.application.ApplicationContext;
-import be.bagofwords.application.ApplicationManager;
-import be.bagofwords.application.MainClass;
-import be.bagofwords.application.MinimalApplicationContextFactory;
+import be.bagofwords.application.MinimalApplicationDependencies;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseCachingType;
@@ -12,6 +9,9 @@ import be.bagofwords.db.experimental.kyoto.KyotoDataInterfaceFactory;
 import be.bagofwords.db.experimental.rocksdb.RocksDBDataInterfaceFactory;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.leveldb.LevelDBDataInterfaceFactory;
+import be.bagofwords.minidepi.ApplicationContext;
+import be.bagofwords.minidepi.ApplicationManager;
+import be.bagofwords.minidepi.annotations.Inject;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.NumUtils;
 import org.apache.commons.io.FileUtils;
@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 
-public class UniformDataTestsMain implements MainClass {
+public class UniformDataTestsMain implements Runnable {
 
     private static final int MIN_MILLION_ITEMS_TO_PROCESS = 1;
     private static final int MAX_MILLION_ITEMS_TO_PROCESS = 128;
@@ -31,10 +31,15 @@ public class UniformDataTestsMain implements MainClass {
     private static final File tmpDbDir = new File("/tmp/testRandomCounts");
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        ApplicationManager.runSafely(new UniformDataTestsMain(), new HashMap<>(), new MinimalApplicationContextFactory());
+        ApplicationManager.run(new UniformDataTestsMain(), new HashMap<>());
     }
 
-    public void run(ApplicationContext context) {
+    @Inject
+    private ApplicationContext context;
+    @Inject
+    private MinimalApplicationDependencies minimalApplicationDependencies;
+
+    public void run() {
         try {
             prepareTmpDir(tmpDbDir);
 

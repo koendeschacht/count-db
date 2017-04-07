@@ -98,7 +98,7 @@ public class TestDataInterface extends BaseTestDataInterface {
         }
         dataInterface.flush();
         Utils.threadSleep(1000); //Give the cleanup threads time to run
-        for (int i = 0; i < numOfExamples; i++) {
+        for (int i = 0; i < numOfExamples; i += 73) {
             long val = dataInterface.readCount(i);
             if (val != 2l * i) {
                 dataInterface.readCount(i);
@@ -223,7 +223,6 @@ public class TestDataInterface extends BaseTestDataInterface {
         keyIterator.close();
     }
 
-
     @Test
     public void testDataChecksumIsConsistent() throws Exception {
         int numOfExamples = 10;
@@ -290,7 +289,6 @@ public class TestDataInterface extends BaseTestDataInterface {
         Assert.assertFalse(db.mightContain("someothervalue2"));
     }
 
-
     @Test
     public void testAccents() {
         DataInterface<String> dataInterface = dataInterfaceFactory.createDataInterface(type, "testAccents", String.class, new OverWriteCombinator<String>());
@@ -324,7 +322,7 @@ public class TestDataInterface extends BaseTestDataInterface {
     private boolean findValue(DataInterface<Long> dataInterface, long key, Long targetValue) {
         long started = System.currentTimeMillis();
         boolean foundValue = false;
-        while (!foundValue && System.currentTimeMillis() - started < 5000) {
+        while (!foundValue && System.currentTimeMillis() - started < 2000) {
             foundValue = targetValue.equals(dataInterface.read(key));
             Utils.threadSleep(10);
         }
@@ -349,6 +347,5 @@ public class TestDataInterface extends BaseTestDataInterface {
         obj.setValue2(Integer.toString(random.nextInt()));
         return obj;
     }
-
 
 }

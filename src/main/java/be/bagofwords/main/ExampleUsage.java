@@ -17,28 +17,28 @@ import java.util.Date;
 public class ExampleUsage {
 
     public static void main(String[] args) throws ParseException {
-        //create data interface factory that stores all data in /tmp/myData
+        // Create data interface factory that stores all data in /tmp/myData
         DataInterfaceFactory dataInterfaceFactory = EmbeddedDBContextFactory.createDataInterfaceFactory("/tmp/myData");
 
-        //create data interfaces
+        // Create data interfaces
         DataInterface<Long> myLogDataInterface = dataInterfaceFactory.createCountDataInterface("myLoginCounts");
         DataInterface<UserObject> myUserDataInterface = dataInterfaceFactory.createDataInterface("myUsers", UserObject.class, new OverWriteCombinator<>());
 
-        //write data
+        // Write data
         long userId = 12939;
         myLogDataInterface.increaseCount("user_" + userId + "_logged_in");
         myUserDataInterface.write(userId, new UserObject("koen", "deschacht", DateUtils.parseDate("1983-04-12", "yyyy-MM-dd")));
 
-        //flush data (necessary to make the written data visible on next read)
+        // Flush data (necessary to make the written data visible on next read)
         myLogDataInterface.flush();
         myUserDataInterface.flush();
 
-        //read data
+        // Read data
         long numOfLogins = myLogDataInterface.readCount("user_" + userId + "_logged_in");
         UserObject user = myUserDataInterface.read(userId);
         System.out.println("User " + user.getFirstName() + " " + user.getLastName() + " logged in " + numOfLogins + " times.");
 
-        //iterate over all data
+        // Iterate over all data
         CloseableIterator<KeyValue<UserObject>> iterator = myUserDataInterface.iterator();
         while (iterator.hasNext()) {
             KeyValue<UserObject> curr = iterator.next();
@@ -48,7 +48,7 @@ public class ExampleUsage {
         }
         iterator.close();
 
-        //drop all data
+        // Drop all data
         myLogDataInterface.dropAllData();
         myUserDataInterface.dropAllData();
     }

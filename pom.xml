@@ -6,7 +6,7 @@
 
     <groupId>be.bagofwords</groupId>
     <artifactId>count-db</artifactId>
-    <version>1.2.0</version>
+    <version>2017.1.0</version>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>A fast key-value store written in Java that outperforms levelDB, kyoto cabinet and rocksDB
@@ -103,7 +103,17 @@
         <dependency>
             <groupId>be.bagofwords</groupId>
             <artifactId>bow-utils</artifactId>
-            <version>1.2.0</version>
+            <version>2017.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>be.bagofwords</groupId>
+            <artifactId>bow-utils-extra</artifactId>
+            <version>2017.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>be.bagofwords</groupId>
+            <artifactId>mini-dep-i</artifactId>
+            <version>2017.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>

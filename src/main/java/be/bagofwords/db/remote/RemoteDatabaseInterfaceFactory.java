@@ -1,9 +1,9 @@
 package be.bagofwords.db.remote;
 
-import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.minidepi.ApplicationContext;
 
 public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
 
@@ -12,8 +12,8 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
 
     public RemoteDatabaseInterfaceFactory(ApplicationContext context) {
         super(context);
-        this.host = context.getConfig("remote_interface_host", "localhost");
-        this.port = Integer.parseInt(context.getConfig("remote_interface_port", "1208"));
+        this.host = context.getProperty("socket_host", "localhost");
+        this.port = Integer.parseInt(context.getProperty("socket_port", "1208"));
     }
 
     @Override

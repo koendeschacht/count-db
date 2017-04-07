@@ -16,17 +16,13 @@ import org.xerial.snappy.Snappy;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-import static be.bagofwords.application.SocketServer.LONG_END;
-import static be.bagofwords.application.SocketServer.LONG_ERROR;
-import static be.bagofwords.application.SocketServer.LONG_OK;
-
+import static be.bagofwords.application.SocketServer.*;
 
 public class RemoteDataInterface<T> extends DataInterface<T> {
 
@@ -494,7 +490,6 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
         connection.writeByte((byte) action.ordinal());
     }
 
-
     private void doSimpleAction(Action action) {
         Connection connection = null;
         try {
@@ -541,7 +536,13 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
         private long lastUsage;
 
         public Connection(String host, int port, boolean useLargeOutputBuffer, boolean useLargeInputBuffer, RemoteDataInterfaceServer.ConnectionType connectionType) throws IOException {
-            super(new Socket(host, port), useLargeOutputBuffer, useLargeInputBuffer);
+            super(host, port, false, false);
+            if (useLargeOutputBuffer) {
+                useLargeOutputBuffer();
+            }
+            if (useLargeInputBuffer) {
+                useLargeInputBuffer();
+            }
             initializeSubset(connectionType);
         }
 

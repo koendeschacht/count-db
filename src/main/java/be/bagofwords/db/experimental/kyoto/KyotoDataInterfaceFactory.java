@@ -1,9 +1,9 @@
 package be.bagofwords.db.experimental.kyoto;
 
-import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.util.Utils;
 
 import java.io.File;
@@ -17,7 +17,7 @@ public class KyotoDataInterfaceFactory extends DataInterfaceFactory {
 
     public KyotoDataInterfaceFactory(ApplicationContext context) {
         super(context);
-        this.directory = context.getConfig("data_directory");
+        this.directory = context.getProperty("data_directory");
         File libFile = findLibFile();
         if (libFile == null) {
             throw new RuntimeException("Could not find libkyotocabinet.so.16");
@@ -37,7 +37,6 @@ public class KyotoDataInterfaceFactory extends DataInterfaceFactory {
         }
         return null;
     }
-
 
     @Override
     public <T extends Object> CoreDataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {

@@ -1,8 +1,8 @@
 package be.bagofwords.virtualfile.remote;
 
-import be.bagofwords.application.ApplicationContext;
-import be.bagofwords.application.MinimalApplicationContextFactory;
+import be.bagofwords.application.MinimalApplicationDependencies;
 import be.bagofwords.application.SocketServer;
+import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.util.Utils;
 import be.bagofwords.virtualfile.VirtualFile;
 import be.bagofwords.virtualfile.local.LocalFileService;
@@ -23,12 +23,12 @@ public class TestRemoteFileService {
     public void testWriteAndRead() throws IOException {
         Map<String, String> config = new HashMap<>();
         config.put("data_directory", "/tmp/myFiles");
-        ApplicationContext context = new MinimalApplicationContextFactory().createApplicationContext(config);
-        SocketServer socketServer = new SocketServer(1208);
-        context.registerBean(socketServer);
-        context.registerBean(new LocalFileService(context));
-        context.registerBean(new RemoteFileServer(context));
-        socketServer.start();
+        config.put("socket_port", "1208");
+        ApplicationContext context = new ApplicationContext(config);
+        context.registerBean(MinimalApplicationDependencies.class);
+        context.registerBean(SocketServer.class);
+        context.registerBean(LocalFileService.class);
+        context.registerBean(RemoteFileServer.class);
         Utils.threadSleep(1000); //Make sure server has started
         RemoteFileService remoteFileService = new RemoteFileService(context);
         VirtualFile dir = remoteFileService.getRootDirectory();
@@ -39,7 +39,7 @@ public class TestRemoteFileService {
         BufferedReader rdr = new BufferedReader(new InputStreamReader(file.createInputStream()));
         Assert.assertEquals("test", rdr.readLine());
         rdr.close();
-        socketServer.terminate();
+        context.terminate();
     }
 
 }

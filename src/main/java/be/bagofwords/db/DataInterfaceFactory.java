@@ -1,9 +1,6 @@
 package be.bagofwords.db;
 
-import be.bagofwords.application.ApplicationContext;
 import be.bagofwords.application.BowTaskScheduler;
-import be.bagofwords.application.LateCloseableComponent;
-import be.bagofwords.application.memory.MemoryManager;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.bloomfilter.BloomFilterDataInterface;
 import be.bagofwords.db.bloomfilter.LongBloomFilterWithCheckSum;
@@ -12,13 +9,16 @@ import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.combinator.OverWriteCombinator;
 import be.bagofwords.db.memory.InMemoryDataInterface;
+import be.bagofwords.memory.MemoryManager;
+import be.bagofwords.minidepi.ApplicationContext;
+import be.bagofwords.minidepi.LifeCycleBean;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class DataInterfaceFactory implements LateCloseableComponent {
+public abstract class DataInterfaceFactory implements LifeCycleBean {
 
     private int tmpDataInterfaceCount = 0;
 
@@ -116,6 +116,15 @@ public abstract class DataInterfaceFactory implements LateCloseableComponent {
     }
 
     @Override
+    public void startBean() {
+
+    }
+
+    @Override
+    public synchronized void stopBean() {
+        terminate();
+    }
+
     public synchronized void terminate() {
         closeAllInterfaces();
     }
