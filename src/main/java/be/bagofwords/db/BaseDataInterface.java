@@ -1,7 +1,7 @@
 package be.bagofwords.db;
 
 import be.bagofwords.db.combinator.Combinator;
-import be.bagofwords.ui.UI;
+import be.bagofwords.logging.Log;
 import be.bagofwords.util.StringUtils;
 
 /**
@@ -76,7 +76,7 @@ public abstract class BaseDataInterface<T> {
         ifNotClosed(() -> {
             if (!isTemporaryDataInterface()) {
                 //the user did not close the data interface himself?
-                UI.write("Closing data interface " + getName() + " because it is about to be garbage collected.");
+                Log.i("Closing data interface " + getName() + " because it is about to be garbage collected.");
             }
             close();
         });

@@ -12,8 +12,8 @@ public class RemoteFileService extends VirtualFileService {
     private int port;
 
     public RemoteFileService(ApplicationContext context) {
-        this.host = context.getProperty("remote_file_service_host", "localhost");
-        this.port = Integer.parseInt(context.getProperty("remote_file_server_port", "1208"));
+        this.host = context.getProperty("remote_file_service_host", "count-db.properties");
+        this.port = Integer.parseInt(context.getProperty("remote_file_server_port", "count-db.properties"));
     }
 
     @Override

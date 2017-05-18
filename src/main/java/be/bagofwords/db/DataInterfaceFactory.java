@@ -1,6 +1,6 @@
 package be.bagofwords.db;
 
-import be.bagofwords.application.BowTaskScheduler;
+import be.bagofwords.application.TaskSchedulerService;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.bloomfilter.BloomFilterDataInterface;
 import be.bagofwords.db.bloomfilter.LongBloomFilterWithCheckSum;
@@ -24,7 +24,7 @@ public abstract class DataInterfaceFactory implements LifeCycleBean {
 
     private CachesManager cachesManager;
     private MemoryManager memoryManager;
-    protected BowTaskScheduler taskScheduler;
+    protected TaskSchedulerService taskScheduler;
     private List<DataInterfaceReference> allInterfaces;
     private ReferenceQueue<DataInterface> allInterfacesReferenceQueue;
 
@@ -33,7 +33,7 @@ public abstract class DataInterfaceFactory implements LifeCycleBean {
     public DataInterfaceFactory(ApplicationContext context) {
         this.cachesManager = context.getBean(CachesManager.class);
         this.memoryManager = context.getBean(MemoryManager.class);
-        this.taskScheduler = context.getBean(BowTaskScheduler.class);
+        this.taskScheduler = context.getBean(TaskSchedulerService.class);
         this.allInterfaces = new ArrayList<>();
         this.allInterfacesReferenceQueue = new ReferenceQueue<>();
     }

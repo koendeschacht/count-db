@@ -1,6 +1,6 @@
 package be.bagofwords.db.filedb;
 
-import be.bagofwords.ui.UI;
+import be.bagofwords.logging.Log;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,12 +48,12 @@ public class FileBucket implements Comparable<FileBucket> {
                 pos = -(pos + 2);
             }
             if (pos == -1) {
-                UI.write("ARRAY INDEX OUT OF BOUNDS!!!!");
-                UI.write("Was looking for key " + key);
-                UI.write("In bucket starting with key " + getFirstKey());
-                UI.write("In files ");
+                Log.i("ARRAY INDEX OUT OF BOUNDS!!!!");
+                Log.i("Was looking for key " + key);
+                Log.i("In bucket starting with key " + getFirstKey());
+                Log.i("In files ");
                 for (FileInfo file : files) {
-                    UI.write("   " + file.getFirstKey());
+                    Log.i("   " + file.getFirstKey());
                 }
             }
             return pos;

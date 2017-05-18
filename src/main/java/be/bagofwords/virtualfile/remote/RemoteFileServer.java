@@ -1,21 +1,21 @@
 package be.bagofwords.virtualfile.remote;
 
-import be.bagofwords.application.SocketRequestHandler;
-import be.bagofwords.application.SocketRequestHandlerFactory;
-import be.bagofwords.application.SocketServer;
+import be.bagofwords.logging.Log;
 import be.bagofwords.minidepi.ApplicationContext;
-import be.bagofwords.ui.UI;
 import be.bagofwords.util.SocketConnection;
 import be.bagofwords.virtualfile.VirtualFile;
 import be.bagofwords.virtualfile.VirtualFileService;
+import be.bagofwords.web.SocketRequestHandler;
+import be.bagofwords.web.SocketRequestHandlerFactory;
+import be.bagofwords.web.SocketServer;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import static be.bagofwords.application.SocketServer.LONG_ERROR;
-import static be.bagofwords.application.SocketServer.LONG_OK;
+import static be.bagofwords.db.remote.Protocol.LONG_ERROR;
+import static be.bagofwords.db.remote.Protocol.LONG_OK;
 
 public class RemoteFileServer implements SocketRequestHandlerFactory {
 
@@ -48,7 +48,7 @@ public class RemoteFileServer implements SocketRequestHandlerFactory {
 
         @Override
         public void reportUnexpectedError(Exception ex) {
-            UI.writeError("Exception in socket request handler of remote file server", ex);
+            Log.e("Exception in socket request handler of remote file server", ex);
         }
 
         @Override
@@ -93,7 +93,7 @@ public class RemoteFileServer implements SocketRequestHandlerFactory {
                     connection.flush();
                 }
             } catch (Exception exp) {
-                UI.writeError("Unexpected exception while trying to handle request in RemoteFileServer, will try to send error message to client.", exp);
+                Log.e("Unexpected exception while trying to handle request in RemoteFileServer, will try to send error message to client.", exp);
                 //try to send error message to client (only works if the client happens to be checking for LONG_ERROR)
                 connection.writeLong(LONG_ERROR);
                 connection.writeString(exp.getMessage());

@@ -43,12 +43,12 @@ public class LMDBDataInterface<T> extends CoreDataInterface<T> {
             if (numberOfValuesWritten > 1000) {
                 transaction.commit();
                 transaction = env.createTransaction();
-//                UI.write("Wrote " + numberOfValuesWritten + " values");
+//                Log.i("Wrote " + numberOfValuesWritten + " values");
                 numberOfValuesWritten = 0;
             }
         }
         transaction.commit();
-//        UI.write("Wrote " + numberOfValuesWritten + " values");
+//        Log.i("Wrote " + numberOfValuesWritten + " values");
     }
 
     @Override

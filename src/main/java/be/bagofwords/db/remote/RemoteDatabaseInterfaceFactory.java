@@ -12,8 +12,8 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactory {
 
     public RemoteDatabaseInterfaceFactory(ApplicationContext context) {
         super(context);
-        this.host = context.getProperty("socket_host", "localhost");
-        this.port = Integer.parseInt(context.getProperty("socket_port", "1208"));
+        this.host = context.getProperty("socket.host", "count-db.properties");
+        this.port = Integer.parseInt(context.getProperty("socket.port", "count-db.properties"));
     }
 
     @Override

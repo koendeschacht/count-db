@@ -1,16 +1,16 @@
 package be.bagofwords.db.filedb;
 
-import be.bagofwords.application.BowTaskScheduler;
+import be.bagofwords.application.TaskSchedulerService;
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.DBUtils;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
+import be.bagofwords.logging.Log;
 import be.bagofwords.memory.MemoryGobbler;
 import be.bagofwords.memory.MemoryManager;
 import be.bagofwords.memory.MemoryStatus;
-import be.bagofwords.ui.UI;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.MappedLists;
 import be.bagofwords.util.Pair;
@@ -53,7 +53,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     private boolean metaFileOutOfSync;
 
-    public FileDataInterface(MemoryManager memoryManager, Combinator<T> combinator, Class<T> objectClass, String directory, String nameOfSubset, boolean isTemporaryDataInterface, BowTaskScheduler taskScheduler) {
+    public FileDataInterface(MemoryManager memoryManager, Combinator<T> combinator, Class<T> objectClass, String directory, String nameOfSubset, boolean isTemporaryDataInterface, TaskSchedulerService taskScheduler) {
         super(nameOfSubset, objectClass, combinator, isTemporaryDataInterface);
         this.directory = new File(directory, nameOfSubset);
         this.sizeOfValues = SerializationUtils.getWidth(objectClass);
@@ -359,7 +359,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     numOfObjects += keys.size();
                     sizeOfSampledFiles += fileSize;
                     if (fileSize == 0 && !keys.isEmpty()) {
-                        UI.writeError("Something is wrong with file " + file.getFirstKey());
+                        Log.e("Something is wrong with file " + file.getFirstKey());
                     }
                     numOfSampledFiles++;
                 }
@@ -427,7 +427,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             writeMetaFile();
         }
         if (DBUtils.DEBUG && numOfFilesRewritten > 0) {
-            UI.write("Rewritten " + numOfFilesRewritten + " files for " + getName());
+            Log.i("Rewritten " + numOfFilesRewritten + " files for " + getName());
         }
     }
 
@@ -457,7 +457,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     targetSize = MAX_FILE_SIZE_READ;
                 }
                 if (needsRewrite) {
-                    //                    UI.write("Will rewrite file " + file.getFirstKey() + " " + getName() + " clean=" + file.isClean() + " force=" + forceClean + " readSize=" + file.getReadSize() + " writeSize=" + file.getWriteSize() + " targetSize=" + targetSize);
+                    //                    Log.i("Will rewrite file " + file.getFirstKey() + " " + getName() + " clean=" + file.isClean() + " force=" + forceClean + " readSize=" + file.getReadSize() + " writeSize=" + file.getWriteSize() + " targetSize=" + targetSize);
                     List<KeyValue<T>> values = readAllValues(file);
                     int filesMergedWithThisFile = inWritePhase() ? 0 : mergeFileIfTooSmall(bucket.getFiles(), fileInd, file.getWriteSize(), targetSize, values);
                     DataOutputStream dos = getOutputStreamToTempFile(file);
@@ -504,7 +504,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             }
             return numOfRewrittenFiles;
         } catch (Exception exp) {
-            UI.writeError("Unexpected exception while rewriting files", exp);
+            Log.e("Unexpected exception while rewriting files", exp);
             throw new RuntimeException("Unexpected exception while rewriting files", exp);
         } finally {
             bucket.unlockWrite();
@@ -669,7 +669,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             timeOfLastRead = timeOfLastWrite = 0;
             fileBuckets = createEmptyFileBuckets();
             if (filesInDir.length > 0) {
-                UI.write("Missing (up-to-date) meta information for " + getName() + " will reconstruct data structures from files found in directory.");
+                Log.i("Missing (up-to-date) meta information for " + getName() + " will reconstruct data structures from files found in directory.");
                 updateBucketsFromFiles(filesInDir);
             }
             makeSureAllFileBucketsHaveAtLeastOneFile();
@@ -756,7 +756,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 IOUtils.closeQuietly(fis);
                 return result;
             } catch (Exception exp) {
-                UI.writeError("Received exception while reading " + cleanFilesFile.getAbsolutePath(), exp);
+                Log.e("Received exception while reading " + cleanFilesFile.getAbsolutePath(), exp);
             }
         }
         return null;
@@ -986,7 +986,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             IOUtils.closeQuietly(dis);
             if (randomId != id) {
                 writeLockFile(new Random().nextLong()); //try to notify other data interface that something is fucked up
-                UI.writeError("The lock in " + lockFile.getAbsolutePath() + " was obtained by another data interface! Closing data interface. This will probably cause a lot of other errors...");
+                Log.e("The lock in " + lockFile.getAbsolutePath() + " was obtained by another data interface! Closing data interface. This will probably cause a lot of other errors...");
                 close();
             }
         } catch (Exception exp) {

@@ -1,11 +1,11 @@
 package be.bagofwords.db.bloomfilter;
 
-import be.bagofwords.application.BowTaskScheduler;
+import be.bagofwords.application.TaskSchedulerService;
 import be.bagofwords.db.DBUtils;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.LayeredDataInterface;
 import be.bagofwords.iterator.CloseableIterator;
-import be.bagofwords.ui.UI;
+import be.bagofwords.logging.Log;
 import be.bagofwords.util.KeyValue;
 
 import java.util.Iterator;
@@ -23,7 +23,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
     private long actualWriteCount;
     private long writeCountOfSavedFilter;
 
-    public BloomFilterDataInterface(DataInterface<T> baseInterface, DataInterface<LongBloomFilterWithCheckSum> bloomFilterDataInterface, BowTaskScheduler taskScheduler) {
+    public BloomFilterDataInterface(DataInterface<T> baseInterface, DataInterface<LongBloomFilterWithCheckSum> bloomFilterDataInterface, TaskSchedulerService taskScheduler) {
         super(baseInterface);
         this.bloomFilterDataInterface = bloomFilterDataInterface;
         this.modifyBloomFilterLock = new ReentrantLock();
@@ -166,7 +166,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
         it.close();
         currentKeyForNewBloomFilterCreation = Long.MAX_VALUE;
         long taken = (System.currentTimeMillis() - start);
-        UI.write("Created bloomfilter " + getName() + " in " + taken + " ms for " + numOfKeys + " keys, size is " + bloomFilter.getBits().size() / (8 * 1024) + " kbytes.");
+        Log.i("Created bloomfilter " + getName() + " in " + taken + " ms for " + numOfKeys + " keys, size is " + bloomFilter.getBits().size() / (8 * 1024) + " kbytes.");
     }
 
     private void createNewBloomFilter() {
@@ -199,7 +199,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
                 writeCountOfSavedFilter = bloomFilter.getDataCheckSum();
             }
             if (DBUtils.DEBUG) {
-                UI.write("Written bloom filter to disk, " + actualWriteCount + " " + (bloomFilter != null ? bloomFilter.getDataCheckSum() : -Long.MAX_VALUE) + " " + writeCountOfSavedFilter + " took " + (System.currentTimeMillis() - start));
+                Log.i("Written bloom filter to disk, " + actualWriteCount + " " + (bloomFilter != null ? bloomFilter.getDataCheckSum() : -Long.MAX_VALUE) + " " + writeCountOfSavedFilter + " took " + (System.currentTimeMillis() - start));
             }
         }
         modifyBloomFilterLock.unlock();

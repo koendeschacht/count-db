@@ -1,7 +1,5 @@
 package be.bagofwords.db.remote;
 
-import be.bagofwords.application.SocketRequestHandler;
-import be.bagofwords.application.SocketRequestHandlerFactory;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseCachingType;
@@ -12,11 +10,13 @@ import be.bagofwords.iterator.SimpleIterator;
 import be.bagofwords.memory.MemoryManager;
 import be.bagofwords.memory.MemoryStatus;
 import be.bagofwords.minidepi.ApplicationContext;
-import be.bagofwords.ui.UI;
+import be.bagofwords.logging.Log;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.ReflectionUtils;
 import be.bagofwords.util.SerializationUtils;
 import be.bagofwords.util.SocketConnection;
+import be.bagofwords.web.SocketRequestHandler;
+import be.bagofwords.web.SocketRequestHandlerFactory;
 import org.xerial.snappy.Snappy;
 
 import java.io.ByteArrayOutputStream;
@@ -26,7 +26,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import static be.bagofwords.application.SocketServer.*;
+import static be.bagofwords.db.remote.Protocol.LONG_END;
+import static be.bagofwords.db.remote.Protocol.LONG_ERROR;
+import static be.bagofwords.db.remote.Protocol.LONG_OK;
 
 public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
 
@@ -192,9 +194,9 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
         @Override
         public void reportUnexpectedError(Exception ex) {
             if (dataInterface != null) {
-                UI.writeError("Unexpected exception in request handler for data interface " + dataInterface.getName(), ex);
+                Log.e("Unexpected exception in request handler for data interface " + dataInterface.getName(), ex);
             } else {
-                UI.writeError("Unexpected exception in request handler", ex);
+                Log.e("Unexpected exception in request handler", ex);
             }
         }
 
@@ -359,7 +361,7 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
             dos.close();
             byte[] origValues = bos.toByteArray();
             byte[] compressedValues = Snappy.compress(origValues);
-            //            UI.write("Compressed values from " + origValues.length + " to " + compressedValues.length);
+            //            Log.i("Compressed values from " + origValues.length + " to " + compressedValues.length);
             connection.writeByteArray(compressedValues);
         }
 

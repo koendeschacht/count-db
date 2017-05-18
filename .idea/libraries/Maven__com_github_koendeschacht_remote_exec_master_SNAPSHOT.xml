@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.github.koendeschacht:remote-exec:master-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/koendeschacht/remote-exec/master-SNAPSHOT/remote-exec-master-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/koendeschacht/remote-exec/master-SNAPSHOT/remote-exec-master-SNAPSHOT-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/koendeschacht/remote-exec/master-SNAPSHOT/remote-exec-master-SNAPSHOT-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

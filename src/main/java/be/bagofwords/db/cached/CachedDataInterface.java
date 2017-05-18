@@ -1,16 +1,16 @@
 package be.bagofwords.db.cached;
 
-import be.bagofwords.application.BowTaskScheduler;
-import be.bagofwords.application.memory.MemoryGobbler;
-import be.bagofwords.application.memory.MemoryManager;
-import be.bagofwords.application.memory.MemoryStatus;
+import be.bagofwords.application.TaskSchedulerService;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.cache.DynamicMap;
 import be.bagofwords.cache.ReadCache;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.LayeredDataInterface;
 import be.bagofwords.iterator.CloseableIterator;
-import be.bagofwords.ui.UI;
+import be.bagofwords.memory.MemoryGobbler;
+import be.bagofwords.memory.MemoryManager;
+import be.bagofwords.memory.MemoryStatus;
+import be.bagofwords.logging.Log;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.SafeThread;
 import be.bagofwords.util.Utils;
@@ -32,7 +32,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     private final SafeThread initializeCachesThread;
     private long timeOfLastFlushOfWriteBuffer;
 
-    public CachedDataInterface(MemoryManager memoryManager, CachesManager cachesManager, DataInterface<T> baseInterface, BowTaskScheduler taskScheduler) {
+    public CachedDataInterface(MemoryManager memoryManager, CachesManager cachesManager, DataInterface<T> baseInterface, TaskSchedulerService taskScheduler) {
         super(baseInterface);
         this.memoryManager = memoryManager;
         this.memoryManager.registerMemoryGobbler(this);
@@ -210,7 +210,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
 
     private void stopInitializeCachesThread() {
         if (!initializeCachesThread.isFinished()) {
-            initializeCachesThread.terminate();
+            initializeCachesThread.interrupt();
             initializeCachesThread.waitForFinish();
         }
     }
@@ -235,7 +235,6 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
         return result;
     }
 
-
     private class InitializeCachesThread extends SafeThread {
 
         public InitializeCachesThread(DataInterface<T> baseInterface) {
@@ -243,7 +242,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
         }
 
         @Override
-        protected void runInt() throws Exception {
+        protected void runImpl() throws Exception {
             CloseableIterator<KeyValue<T>> iterator = baseInterface.cachedValueIterator();
             int numOfValuesWritten = 0;
             long start = System.currentTimeMillis();
@@ -253,10 +252,10 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
                 numOfValuesWritten++;
             }
             if (iterator.hasNext()) {
-                UI.write("Could not add (all) values to cache of " + baseInterface.getName() + " because memory was full");
+                Log.i("Could not add (all) values to cache of " + baseInterface.getName() + " because memory was full");
             }
             /*else {
-                UI.write("Added " + numOfValuesWritten + " values to cache of " + baseInterface.getName() + " in " + (System.currentTimeMillis() - start) + " ms");
+                Log.i("Added " + numOfValuesWritten + " values to cache of " + baseInterface.getName() + " in " + (System.currentTimeMillis() - start) + " ms");
             }*/
             iterator.close();
         }

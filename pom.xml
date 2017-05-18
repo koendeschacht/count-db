@@ -99,21 +99,28 @@
         </plugins>
     </build>
 
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
-            <groupId>be.bagofwords</groupId>
+            <groupId>com.github.koendeschacht</groupId>
             <artifactId>bow-utils</artifactId>
-            <version>2017.1.0</version>
+            <version>master-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>be.bagofwords</groupId>
+            <groupId>com.github.koendeschacht</groupId>
             <artifactId>bow-utils-extra</artifactId>
-            <version>2017.1.0</version>
+            <version>master-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>be.bagofwords</groupId>
+            <groupId>com.github.koendeschacht</groupId>
             <artifactId>mini-dep-i</artifactId>
-            <version>2017.1.0</version>
+            <version>master-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -171,6 +178,12 @@
             <version>99-master-SNAPSHOT</version>
             <scope>system</scope>
             <systemPath>${basedir}/lib/leveldb/leveldbjni-all-99-master-SNAPSHOT.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.7.24</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

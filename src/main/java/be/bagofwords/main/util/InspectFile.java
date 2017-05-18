@@ -1,5 +1,6 @@
 package be.bagofwords.main.util;
 
+import be.bagofwords.logging.Log;
 import be.bagofwords.ui.UI;
 import be.bagofwords.util.SerializationUtils;
 import org.apache.commons.lang3.CharUtils;
@@ -77,7 +78,7 @@ public class InspectFile {
                 }
                 valueToPrint = stringValueToPrint;
             }
-            UI.write(value.getStart() + "-->" + value.getEnd() + "=" + valueToPrint);
+            Log.i(value.getStart() + "-->" + value.getEnd() + "=" + valueToPrint);
         }
     }
 

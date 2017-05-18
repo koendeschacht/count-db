@@ -1,7 +1,7 @@
 package be.bagofwords.virtualfile.remote;
 
 import be.bagofwords.application.MinimalApplicationDependencies;
-import be.bagofwords.application.SocketServer;
+import be.bagofwords.web.SocketServer;
 import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.util.Utils;
 import be.bagofwords.virtualfile.VirtualFile;
@@ -23,7 +23,7 @@ public class TestRemoteFileService {
     public void testWriteAndRead() throws IOException {
         Map<String, String> config = new HashMap<>();
         config.put("data_directory", "/tmp/myFiles");
-        config.put("socket_port", "1208");
+        config.put("socket.port", "1208");
         ApplicationContext context = new ApplicationContext(config);
         context.registerBean(MinimalApplicationDependencies.class);
         context.registerBean(SocketServer.class);

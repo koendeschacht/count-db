@@ -12,7 +12,7 @@ import be.bagofwords.db.leveldb.LevelDBDataInterfaceFactory;
 import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.minidepi.ApplicationManager;
 import be.bagofwords.minidepi.annotations.Inject;
-import be.bagofwords.ui.UI;
+import be.bagofwords.logging.Log;
 import be.bagofwords.util.NumUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.mutable.MutableLong;
@@ -98,7 +98,7 @@ public class UniformDataTestsMain implements Runnable {
         long endOfRead = System.nanoTime();
         double readsPerSecond = numberOfItemsRead.longValue() * 1e9 / (endOfRead - startOfRead);
 
-        UI.write(factory.getClass().getSimpleName() + " threads " + numberOfThreads + " items " + numberOfItems + " write " + NumUtils.fmt(writesPerSecond) + " read " + NumUtils.fmt(readsPerSecond));
+        Log.i(factory.getClass().getSimpleName() + " threads " + numberOfThreads + " items " + numberOfItems + " write " + NumUtils.fmt(writesPerSecond) + " read " + NumUtils.fmt(readsPerSecond));
         dataInterface.close();
     }
 

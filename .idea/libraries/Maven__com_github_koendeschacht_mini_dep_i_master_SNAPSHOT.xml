@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.github.koendeschacht:mini-dep-i:master-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/koendeschacht/mini-dep-i/master-SNAPSHOT/mini-dep-i-master-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/koendeschacht/mini-dep-i/master-SNAPSHOT/mini-dep-i-master-SNAPSHOT-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/koendeschacht/mini-dep-i/master-SNAPSHOT/mini-dep-i-master-SNAPSHOT-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

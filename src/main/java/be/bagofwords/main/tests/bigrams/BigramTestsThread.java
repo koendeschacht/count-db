@@ -34,7 +34,7 @@ class BigramTestsThread extends SafeThread {
         this.dataType = dataType;
     }
 
-    public void runInt() throws IOException {
+    public void runImpl() throws IOException {
         while (numberOfItemsWritten.longValue() < numberOfItems) {
             List<Long> bigrams = new ArrayList<>(10000);
             synchronized (inputStream) {

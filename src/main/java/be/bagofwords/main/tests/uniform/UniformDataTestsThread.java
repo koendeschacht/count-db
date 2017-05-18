@@ -28,7 +28,7 @@ class UniformDataTestsThread extends SafeThread {
         this.writeValues = writeValues;
     }
 
-    public void runInt() throws IOException {
+    public void runImpl() throws IOException {
         Random random = new Random();
         while (numberOfItemsProcessed.longValue() < numberOfItems) {
             long numberOfItemsPerIteration = numberOfItems / 10000;

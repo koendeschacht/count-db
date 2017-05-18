@@ -1,11 +1,11 @@
 package be.bagofwords.db.remote;
 
-import be.bagofwords.application.BowTaskScheduler;
+import be.bagofwords.application.TaskSchedulerService;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer.Action;
 import be.bagofwords.iterator.CloseableIterator;
-import be.bagofwords.ui.UI;
+import be.bagofwords.logging.Log;
 import be.bagofwords.util.ExecutorServiceFactory;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.SerializationUtils;
@@ -22,7 +22,9 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-import static be.bagofwords.application.SocketServer.*;
+import static be.bagofwords.db.remote.Protocol.LONG_END;
+import static be.bagofwords.db.remote.Protocol.LONG_ERROR;
+import static be.bagofwords.db.remote.Protocol.LONG_OK;
 
 public class RemoteDataInterface<T> extends DataInterface<T> {
 
@@ -36,7 +38,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     private final List<Connection> largeReadBufferConnections;
     private final ExecutorService executorService;
 
-    public RemoteDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, String host, int port, boolean isTemporaryDataInterface, BowTaskScheduler taskScheduler) {
+    public RemoteDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, String host, int port, boolean isTemporaryDataInterface, TaskSchedulerService taskScheduler) {
         super(name, objectClass, combinator, isTemporaryDataInterface);
         this.host = host;
         this.port = port;
@@ -241,7 +243,7 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
                     thisConnection.writeLong(LONG_END);
                     thisConnection.flush();
                 } catch (Exception e) {
-                    UI.writeError("Received exception while sending keys for read(..), for subset " + getName() + ". Closing connection. ", e);
+                    Log.e("Received exception while sending keys for read(..), for subset " + getName() + ". Closing connection. ", e);
                     dropConnection(thisConnection);
                 }
             });

@@ -2,7 +2,7 @@ package be.bagofwords.main.tests.bloomfilter;
 
 import be.bagofwords.db.bloomfilter.LongBloomFilter;
 import be.bagofwords.db.data.LongCountsBloomFilter;
-import be.bagofwords.ui.UI;
+import be.bagofwords.logging.Log;
 import com.google.common.hash.BloomFilter;
 
 public class TestBloomFiltersSpeed {
@@ -15,13 +15,13 @@ public class TestBloomFiltersSpeed {
         BloomFilter<Long> bloomFilter2 = BloomFilter.create((from, into) -> into.putLong(from), NUM_OF_VALUES, 0.001);
 
         LongCountsBloomFilter bloomFilter3 = new LongCountsBloomFilter(NUM_OF_VALUES, 0.001);
-        UI.write("Writing values for filter 1 took " + putValues(bloomFilter1));
-        UI.write("Writing values for filter 2 took " + putValues(bloomFilter2));
-        UI.write("Writing values for filter 3 took " + putValues(bloomFilter3));
+        Log.i("Writing values for filter 1 took " + putValues(bloomFilter1));
+        Log.i("Writing values for filter 2 took " + putValues(bloomFilter2));
+        Log.i("Writing values for filter 3 took " + putValues(bloomFilter3));
 
-        UI.write("Reading values for filter 1 took " + readValues(bloomFilter1));
-        UI.write("Reading values for filter 2 took " + readValues(bloomFilter2));
-        UI.write("Reading values for filter 3 took " + readValues(bloomFilter3));
+        Log.i("Reading values for filter 1 took " + readValues(bloomFilter1));
+        Log.i("Reading values for filter 2 took " + readValues(bloomFilter2));
+        Log.i("Reading values for filter 3 took " + readValues(bloomFilter3));
     }
 
     private static long readValues(LongBloomFilter bloomFilter1) {

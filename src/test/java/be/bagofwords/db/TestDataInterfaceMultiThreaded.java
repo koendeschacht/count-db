@@ -93,7 +93,7 @@ public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
         for (int i = 0; i < threads.length; i++) {
             threads[i] = new SafeThread("testThread_" + i, false) {
                 @Override
-                protected void runInt() throws Exception {
+                protected void runImpl() throws Exception {
                     for (int i = 0; i < numOfWritesPerThread; i++) {
                         for (int j = 0; j < 1000; j++) {
                             db.increaseCount(HashUtils.randomDistributeHash(j));
@@ -105,7 +105,7 @@ public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
         }
         SafeThread flushThread = new SafeThread("flushThread", false) {
             @Override
-            protected void runInt() throws Exception {
+            protected void runImpl() throws Exception {
                 for (int j = 0; j < 50; j++) {
                     db.flush();
                     Utils.threadSleep(100);

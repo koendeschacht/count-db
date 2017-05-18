@@ -11,7 +11,7 @@ import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.minidepi.ApplicationManager;
 import be.bagofwords.minidepi.annotations.Inject;
 import be.bagofwords.text.WordIterator;
-import be.bagofwords.ui.UI;
+import be.bagofwords.logging.Log;
 import be.bagofwords.util.HashUtils;
 import be.bagofwords.util.NumUtils;
 import org.apache.commons.io.FileUtils;
@@ -30,7 +30,7 @@ public class BigramTestsMain implements Runnable {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         if (args.length != 1) {
-            UI.writeError("Please provide the path to a large text file");
+            Log.e("Please provide the path to a large text file");
         } else {
             BigramTestsMain main = new BigramTestsMain(new File(args[0]), new File("/tmp/bigrams.bin"));
             ApplicationManager.run(main, new HashMap<>());
@@ -67,7 +67,7 @@ public class BigramTestsMain implements Runnable {
 
     private void prepareBigrams() throws IOException {
         if (!bigramFile.exists() || bigramFile.length() == 0) {
-            UI.write("Writing bigrams in " + largeTextFile.getAbsolutePath() + " to " + bigramFile.getAbsolutePath());
+            Log.i("Writing bigrams in " + largeTextFile.getAbsolutePath() + " to " + bigramFile.getAbsolutePath());
             BufferedReader rdr = new BufferedReader(new FileReader(largeTextFile));
             DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(bigramFile)));
             long numOfBigramsWritten = 0;
@@ -87,19 +87,19 @@ public class BigramTestsMain implements Runnable {
             }
             IOUtils.closeQuietly(rdr);
             IOUtils.closeQuietly(dos);
-            UI.write("Finished writing bigrams.");
+            Log.i("Finished writing bigrams.");
         }
     }
 
     private void runAllTests(DataType dataType, ApplicationContext applicationContext) throws InterruptedException, FileNotFoundException {
-        UI.write("Testing batch writing / reading for data type " + dataType);
+        Log.i("Testing batch writing / reading for data type " + dataType);
         //        testSeparateWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
         //        testSeparateWritingReading(dataType, new FileDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
         testSeparateWritingReading(dataType, new RemoteDatabaseInterfaceFactory(applicationContext), DatabaseCachingType.CACHED_AND_BLOOM);
         //        testSeparateWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
         //        testSeparateWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
 
-        UI.write("Testing mixed writing / reading for data type " + dataType);
+        Log.i("Testing mixed writing / reading for data type " + dataType);
         //        testMixedWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
         //        testMixedWritingReading(dataType, new FileDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
         //        testMixedWritingReading(dataType, new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, taskScheduler, "localhost", 1208), DatabaseCachingType.CACHED_AND_BLOOM);
@@ -156,7 +156,7 @@ public class BigramTestsMain implements Runnable {
         double readsPerSecond = numberOfItemsRead.longValue() * 1e9 / (endOfRead - startOfRead);
 
         dataInterface.close();
-        UI.write(factory.getClass().getSimpleName() + " threads " + numberOfThreads + " items " + numberOfItems + " write " + NumUtils.fmt(writesPerSecond) + " read " + NumUtils.fmt(readsPerSecond));
+        Log.i(factory.getClass().getSimpleName() + " threads " + numberOfThreads + " items " + numberOfItems + " write " + NumUtils.fmt(writesPerSecond) + " read " + NumUtils.fmt(readsPerSecond));
     }
 
     private void testMixedWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType type) throws InterruptedException, FileNotFoundException {
@@ -202,7 +202,7 @@ public class BigramTestsMain implements Runnable {
         double writesPerSecond = numberOfItemsWritten.longValue() * 1e9 / (endOfWrite - start);
 
         dataInterface.close();
-        UI.write(factory.getClass().getSimpleName() + " threads " + numberOfThreads + " items " + numberOfItems + " write " + NumUtils.fmt(writesPerSecond) + " read " + NumUtils.fmt(readsPerSecond));
+        Log.i(factory.getClass().getSimpleName() + " threads " + numberOfThreads + " items " + numberOfItems + " write " + NumUtils.fmt(writesPerSecond) + " read " + NumUtils.fmt(readsPerSecond));
     }
 
     protected DataInterface createDataInterface(DataType dataType, DatabaseCachingType cachingType, DataInterfaceFactory factory) {

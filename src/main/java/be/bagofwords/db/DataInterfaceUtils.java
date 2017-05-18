@@ -1,7 +1,7 @@
 package be.bagofwords.db;
 
 import be.bagofwords.iterator.CloseableIterator;
-import be.bagofwords.ui.UI;
+import be.bagofwords.logging.Log;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.SerializationUtils;
 
@@ -11,11 +11,11 @@ public class DataInterfaceUtils {
         CloseableIterator<KeyValue<T>> it = dataInterface.iterator();
         while (it.hasNext()) {
             KeyValue<T> next = it.next();
-            UI.write(next.getKey() + " ");
-            UI.write(SerializationUtils.serializeObject(next.getValue(), true));
+            Log.i(next.getKey() + " ");
+            Log.i(SerializationUtils.serializeObject(next.getValue(), true));
         }
         it.close();
-        UI.write("Closing connection");
+        Log.i("Closing connection");
     }
 
 }

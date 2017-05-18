@@ -1,7 +1,7 @@
 package be.bagofwords.db;
 
 import be.bagofwords.application.MinimalApplicationDependencies;
-import be.bagofwords.application.SocketServer;
+import be.bagofwords.web.SocketServer;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.helper.DataInterfaceFactoryFactory;
@@ -59,8 +59,8 @@ public class BaseTestDataInterface {
     public void setUp() throws Exception {
         HashMap<String, String> config = new HashMap<>();
         config.put("data_directory", "/tmp/dbServer_" + System.currentTimeMillis());
-        config.put("socket_host", "localhost");
-        config.put("socket_port", "1208");
+        config.put("socket.host", "localhost");
+        config.put("socket.port", "1208");
         context = new ApplicationContext(config);
         context.registerBean(MinimalApplicationDependencies.class);
         DataInterfaceFactoryFactory dataInterfaceFactoryFactory = new DataInterfaceFactoryFactory(context);
