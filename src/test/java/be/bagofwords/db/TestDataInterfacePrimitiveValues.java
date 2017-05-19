@@ -4,6 +4,7 @@ import be.bagofwords.db.combinator.DoubleCombinator;
 import be.bagofwords.db.combinator.FloatCombinator;
 import be.bagofwords.db.combinator.IntegerCombinator;
 import be.bagofwords.db.combinator.LongCombinator;
+import be.bagofwords.db.impl.BaseDataInterface;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,7 +23,7 @@ public class TestDataInterfacePrimitiveValues extends BaseTestDataInterface {
 
     @Test
     public void testLongValues() {
-        final DataInterface<Long> db = dataInterfaceFactory.createDataInterface(type, "testLongValues", Long.class, new LongCombinator());
+        final DataInterface<Long> db = dataInterfaceFactory.dataInterface("testLongValues", Long.class).combinator(new LongCombinator()).caching(type).create();
         db.dropAllData();
         for (int i = 0; i < 1000; i++) {
             db.write(i, (long) i);
@@ -38,7 +39,7 @@ public class TestDataInterfacePrimitiveValues extends BaseTestDataInterface {
 
     @Test
     public void testDoubleValues() {
-        final DataInterface<Double> db = dataInterfaceFactory.createDataInterface(type, "testDoubleValues", Double.class, new DoubleCombinator());
+        final BaseDataInterface<Double> db = dataInterfaceFactory.dataInterface("testDoubleValues", Double.class).combinator(new DoubleCombinator()).caching(type).create();
         db.dropAllData();
         for (int i = 0; i < 1000; i++) {
             db.write(i, (double) i);
@@ -54,7 +55,7 @@ public class TestDataInterfacePrimitiveValues extends BaseTestDataInterface {
 
     @Test
     public void testIntegerValues() {
-        final DataInterface<Integer> db = dataInterfaceFactory.createDataInterface(type, "testIntegerValues", Integer.class, new IntegerCombinator());
+        final BaseDataInterface<Integer> db = dataInterfaceFactory.dataInterface("testIntegerValues", Integer.class).combinator(new IntegerCombinator()).caching(type).create();
         db.dropAllData();
         for (int i = 0; i < 1000; i++) {
             db.write(i, i);
@@ -70,7 +71,7 @@ public class TestDataInterfacePrimitiveValues extends BaseTestDataInterface {
 
     @Test
     public void testFloatValues() {
-        final DataInterface<Float> db = dataInterfaceFactory.createDataInterface(type, "testFloatValues", Float.class, new FloatCombinator());
+        final BaseDataInterface<Float> db = dataInterfaceFactory.dataInterface("testFloatValues", Float.class).combinator(new FloatCombinator()).caching(type).create();
         db.dropAllData();
         for (int i = 0; i < 1000; i++) {
             db.write(i, (float) i);

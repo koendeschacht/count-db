@@ -1,8 +1,8 @@
 package be.bagofwords.main.tests.uniform;
 
 import be.bagofwords.application.MinimalApplicationDependencies;
-import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
+import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.experimental.kyoto.KyotoDataInterfaceFactory;
@@ -73,7 +73,7 @@ public class UniformDataTestsMain implements Runnable {
     }
 
     private void testBatchWritingAndReading(DataInterfaceFactory factory, DatabaseCachingType cachingType, int numberOfThreads, final long numberOfItems) throws FileNotFoundException, InterruptedException {
-        final DataInterface dataInterface = createDataInterface(cachingType, factory);
+        final BaseDataInterface dataInterface = createDataInterface(cachingType, factory);
         dataInterface.dropAllData();
 
         MutableLong numberOfItemsWritten = new MutableLong(0);
@@ -102,9 +102,9 @@ public class UniformDataTestsMain implements Runnable {
         dataInterface.close();
     }
 
-    protected DataInterface createDataInterface(DatabaseCachingType cachingType, DataInterfaceFactory factory) {
+    protected BaseDataInterface createDataInterface(DatabaseCachingType cachingType, DataInterfaceFactory factory) {
         String dataInterfaceName = "readWriteRandom_" + cachingType + "_" + factory.getClass().getSimpleName();
-        return factory.createDataInterface(cachingType, dataInterfaceName, Long.class, new LongCombinator());
+        return factory.dataInterface(dataInterfaceName, Long.class).combinator(new LongCombinator()).caching(cachingType).create();
     }
 
 }

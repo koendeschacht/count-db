@@ -1,7 +1,7 @@
 package be.bagofwords.db.experimental.kyoto;
 
 import be.bagofwords.db.CoreDataInterface;
-import be.bagofwords.db.DataInterfaceFactory;
+import be.bagofwords.db.impl.DataInterfaceFactoryImpl;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.util.Utils;
@@ -11,7 +11,7 @@ import java.io.File;
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/17/14.
  */
-public class KyotoDataInterfaceFactory extends DataInterfaceFactory {
+public class KyotoDataInterfaceFactory extends DataInterfaceFactoryImpl {
 
     private final String directory;
 
@@ -39,7 +39,7 @@ public class KyotoDataInterfaceFactory extends DataInterfaceFactory {
     }
 
     @Override
-    public <T extends Object> CoreDataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
-        return new KyotoDataInterface<>(nameOfSubset, directory, objectClass, combinator, isTemporaryDataInterface);
+    protected <T extends Object> CoreDataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
+        return new KyotoDataInterface<>(nameOfSubset, directory, objectClass, combinator, isTemporaryDataInterface, getMetaDataStore());
     }
 }

@@ -2,6 +2,7 @@ package be.bagofwords.db.experimental.rocksdb;
 
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.impl.MetaDataStore;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.util.DataLock;
 import be.bagofwords.util.KeyValue;
@@ -24,8 +25,8 @@ public class RocksDBDataInterface<T> extends CoreDataInterface<T> {
     private final File dbDirectory;
     private RocksDB db;
 
-    public RocksDBDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, String directory, boolean usePatch, boolean isTemporaryDataInterface) {
-        super(name, objectClass, combinator, isTemporaryDataInterface);
+    public RocksDBDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, String directory, boolean usePatch, boolean isTemporaryDataInterface, MetaDataStore metaDataStore) {
+        super(name, objectClass, combinator, isTemporaryDataInterface, metaDataStore);
         this.useMergeHack = usePatch;
         try {
             if (useMergeHack && objectClass == Long.class) {

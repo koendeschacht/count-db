@@ -27,7 +27,7 @@ public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
         final int numOfExamples = 200;
         final int numOfIterations = 10000;
         String nameOfSubset = "testMultiThreaded_" + type;
-        final DataInterface<Long> db = dataInterfaceFactory.createDataInterface(type, nameOfSubset, Long.class, new LongCombinator());
+        final DataInterface<Long> db = dataInterfaceFactory.dataInterface(nameOfSubset, Long.class).combinator(new LongCombinator()).caching(type).create();
         db.dropAllData();
 
         final long[] numAdded = new long[numOfExamples];

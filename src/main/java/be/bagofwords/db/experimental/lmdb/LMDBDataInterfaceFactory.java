@@ -1,7 +1,7 @@
 package be.bagofwords.db.experimental.lmdb;
 
-import be.bagofwords.db.DataInterface;
-import be.bagofwords.db.DataInterfaceFactory;
+import be.bagofwords.db.impl.DataInterfaceFactoryImpl;
+import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.minidepi.ApplicationContext;
 import org.fusesource.lmdbjni.Env;
@@ -11,7 +11,7 @@ import java.io.File;
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/16/14.
  */
-public class LMDBDataInterfaceFactory extends DataInterfaceFactory {
+public class LMDBDataInterfaceFactory extends DataInterfaceFactoryImpl {
 
     private Env env;
     private String directory;
@@ -35,8 +35,8 @@ public class LMDBDataInterfaceFactory extends DataInterfaceFactory {
     }
 
     @Override
-    public <T> DataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
-        return new LMDBDataInterface<>(nameOfSubset, objectClass, combinator, env, isTemporaryDataInterface);
+    protected <T> BaseDataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
+        return new LMDBDataInterface<>(nameOfSubset, objectClass, combinator, env, isTemporaryDataInterface, getMetaDataStore());
     }
 
     @Override

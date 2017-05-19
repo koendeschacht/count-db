@@ -3,6 +3,7 @@ package be.bagofwords.db.experimental.kyoto;
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.combinator.LongCombinator;
+import be.bagofwords.db.impl.MetaDataStore;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.util.DataLock;
 import be.bagofwords.util.KeyValue;
@@ -22,8 +23,8 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
     private DB db;
     private DataLock dataLock;
 
-    protected KyotoDataInterface(String name, String path, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
-        super(name, objectClass, combinator, isTemporaryDataInterface);
+    protected KyotoDataInterface(String name, String path, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface, MetaDataStore metaDataStore) {
+        super(name, objectClass, combinator, isTemporaryDataInterface, metaDataStore);
         db = new DB();
         File file = new File(new File(path), name + ".kcf");
         File parentDir = file.getParentFile();

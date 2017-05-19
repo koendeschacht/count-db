@@ -1,5 +1,6 @@
-package be.bagofwords.db;
+package be.bagofwords.db.impl;
 
+import be.bagofwords.db.DataInterface;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.logging.Log;
 import be.bagofwords.util.KeyValue;

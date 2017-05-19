@@ -2,6 +2,7 @@ package be.bagofwords.main;
 
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
+import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.application.EmbeddedDBContextFactory;
 import be.bagofwords.db.combinator.OverWriteCombinator;
 import be.bagofwords.iterator.CloseableIterator;
@@ -22,7 +23,7 @@ public class ExampleUsage {
 
         // Create data interfaces
         DataInterface<Long> myLogDataInterface = dataInterfaceFactory.createCountDataInterface("myLoginCounts");
-        DataInterface<UserObject> myUserDataInterface = dataInterfaceFactory.createDataInterface("myUsers", UserObject.class, new OverWriteCombinator<>());
+        BaseDataInterface<UserObject> myUserDataInterface = dataInterfaceFactory.createDataInterface("myUsers", UserObject.class, new OverWriteCombinator<>());
 
         // Write data
         long userId = 12939;

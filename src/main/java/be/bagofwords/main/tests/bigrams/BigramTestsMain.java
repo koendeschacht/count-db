@@ -1,17 +1,17 @@
 package be.bagofwords.main.tests.bigrams;
 
 import be.bagofwords.application.MinimalApplicationDependencies;
-import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
+import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.experimental.kyoto.KyotoDataInterfaceFactory;
 import be.bagofwords.db.remote.RemoteDatabaseInterfaceFactory;
+import be.bagofwords.logging.Log;
 import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.minidepi.ApplicationManager;
 import be.bagofwords.minidepi.annotations.Inject;
 import be.bagofwords.text.WordIterator;
-import be.bagofwords.logging.Log;
 import be.bagofwords.util.HashUtils;
 import be.bagofwords.util.NumUtils;
 import org.apache.commons.io.FileUtils;
@@ -123,11 +123,11 @@ public class BigramTestsMain implements Runnable {
                 testSeparateWritingReading(dataType, factory, type, 8, items);
             }
         }
-        factory.stopBean();
+        factory.terminate();
     }
 
     private void testSeparateWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType cachingType, int numberOfThreads, long numberOfItems) throws FileNotFoundException, InterruptedException {
-        final DataInterface dataInterface = createDataInterface(dataType, cachingType, factory);
+        final BaseDataInterface dataInterface = createDataInterface(dataType, cachingType, factory);
         dataInterface.dropAllData();
         final DataInputStream inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(bigramFile)));
 
@@ -169,7 +169,7 @@ public class BigramTestsMain implements Runnable {
     }
 
     private void testMixedWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType cachingType, File largeTextFile, int numberOfThreads, long numberOfItems) throws FileNotFoundException, InterruptedException {
-        final DataInterface dataInterface = createDataInterface(dataType, cachingType, factory);
+        final BaseDataInterface dataInterface = createDataInterface(dataType, cachingType, factory);
         dataInterface.dropAllData();
         final DataInputStream inputStream = new DataInputStream(new BufferedInputStream(new FileInputStream(bigramFile)));
 
@@ -205,13 +205,13 @@ public class BigramTestsMain implements Runnable {
         Log.i(factory.getClass().getSimpleName() + " threads " + numberOfThreads + " items " + numberOfItems + " write " + NumUtils.fmt(writesPerSecond) + " read " + NumUtils.fmt(readsPerSecond));
     }
 
-    protected DataInterface createDataInterface(DataType dataType, DatabaseCachingType cachingType, DataInterfaceFactory factory) {
+    protected BaseDataInterface createDataInterface(DataType dataType, DatabaseCachingType cachingType, DataInterfaceFactory factory) {
         String dataInterfaceName = "readWriteBigrams_" + dataType + "_" + cachingType + "_" + factory.getClass().getSimpleName();
         switch (dataType) {
             case LONG_COUNT:
-                return factory.createDataInterface(cachingType, dataInterfaceName, Long.class, new LongCombinator());
+                factory.dataInterface(dataInterfaceName, Long.class).combinator(new LongCombinator()).caching(cachingType).create();
             case SERIALIZED_OBJECT:
-                return factory.createDataInterface(cachingType, dataInterfaceName, BigramCount.class, new BigramCountCombinator());
+                factory.dataInterface(dataInterfaceName, BigramCount.class).combinator(new BigramCountCombinator()).caching(cachingType).create();
             default:
                 throw new RuntimeException("Unknown data type " + dataType);
         }

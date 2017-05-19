@@ -3,6 +3,7 @@ package be.bagofwords.db.remote;
 import be.bagofwords.application.TaskSchedulerService;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer.Action;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.logging.Log;
@@ -22,11 +23,9 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
-import static be.bagofwords.db.remote.Protocol.LONG_END;
-import static be.bagofwords.db.remote.Protocol.LONG_ERROR;
-import static be.bagofwords.db.remote.Protocol.LONG_OK;
+import static be.bagofwords.db.remote.Protocol.*;
 
-public class RemoteDataInterface<T> extends DataInterface<T> {
+public class RemoteDataInterface<T> extends BaseDataInterface<T> {
 
     private final static int MAX_NUM_OF_CONNECTIONS = 50;
     private final static long MAX_WAIT = 60 * 1000;
@@ -135,46 +134,12 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
 
     @Override
     public long apprSize() {
-        Connection connection = null;
-        try {
-            connection = selectSmallBufferConnection();
-            doAction(Action.APPROXIMATE_SIZE, connection);
-            connection.flush();
-            long response = connection.readLong();
-            if (response == LONG_OK) {
-                long result = connection.readLong();
-                releaseConnection(connection);
-                return result;
-            } else {
-                dropConnection(connection);
-                throw new RuntimeException("Unexpected error while reading approximate size " + connection.readString());
-            }
-        } catch (Exception e) {
-            dropConnection(connection);
-            throw new RuntimeException(e);
-        }
+        return readLong(Action.APPROXIMATE_SIZE);
     }
 
     @Override
     public long exactSize() {
-        Connection connection = null;
-        try {
-            connection = selectSmallBufferConnection();
-            doAction(Action.EXACT_SIZE, connection);
-            connection.flush();
-            long response = connection.readLong();
-            if (response == LONG_OK) {
-                long result = connection.readLong();
-                releaseConnection(connection);
-                return result;
-            } else {
-                dropConnection(connection);
-                throw new RuntimeException("Unexpected error while reading approximate size " + connection.readString());
-            }
-        } catch (Exception e) {
-            dropConnection(connection);
-            throw new RuntimeException(e);
-        }
+        return readLong(Action.EXACT_SIZE);
     }
 
     @Override
@@ -439,6 +404,32 @@ public class RemoteDataInterface<T> extends DataInterface<T> {
     @Override
     public void dropAllData() {
         doSimpleAction(Action.DROPALLDATA);
+    }
+
+    @Override
+    public long lastWrite() {
+        return readLong(Action.LAST_WRITE);
+    }
+
+    private long readLong(Action lastWrite) {
+        Connection connection = null;
+        try {
+            connection = selectSmallBufferConnection();
+            doAction(lastWrite, connection);
+            connection.flush();
+            long response = connection.readLong();
+            if (response == LONG_OK) {
+                long result = connection.readLong();
+                releaseConnection(connection);
+                return result;
+            } else {
+                dropConnection(connection);
+                throw new RuntimeException("Unexpected error while reading approximate size " + connection.readString());
+            }
+        } catch (Exception e) {
+            dropConnection(connection);
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

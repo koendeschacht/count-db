@@ -2,8 +2,9 @@ package be.bagofwords.db.filedb;
 
 import be.bagofwords.application.TaskSchedulerService;
 import be.bagofwords.db.CoreDataInterface;
-import be.bagofwords.db.DBUtils;
+import be.bagofwords.db.impl.DBUtils;
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.impl.MetaDataStore;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
@@ -53,8 +54,8 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     private boolean metaFileOutOfSync;
 
-    public FileDataInterface(MemoryManager memoryManager, Combinator<T> combinator, Class<T> objectClass, String directory, String nameOfSubset, boolean isTemporaryDataInterface, TaskSchedulerService taskScheduler) {
-        super(nameOfSubset, objectClass, combinator, isTemporaryDataInterface);
+    public FileDataInterface(MemoryManager memoryManager, Combinator<T> combinator, Class<T> objectClass, String directory, String nameOfSubset, boolean isTemporaryDataInterface, TaskSchedulerService taskScheduler, MetaDataStore metaDataStore) {
+        super(nameOfSubset, objectClass, combinator, isTemporaryDataInterface, metaDataStore);
         this.directory = new File(directory, nameOfSubset);
         this.sizeOfValues = SerializationUtils.getWidth(objectClass);
         this.randomId = new Random().nextLong();
@@ -62,14 +63,33 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         this.maxSizeOfCachedFileContents = memoryManager.getAvailableMemoryInBytes() / 3;
         timeOfLastRead = 0;
         checkDataDir();
-        MetaFile metaFile = readMetaInfo();
-        initializeFiles(metaFile);
+        initializeFromMetaFile();
         writeLockFile(randomId);
         currentSizeOfCachedFileContents = 0;
         taskScheduler.schedulePeriodicTask(() -> ifNotClosed(() -> {
             rewriteAllFiles(false);
             checkLock();
         }), 1000); //rewrite files that are too large
+    }
+
+    private void initializeFromMetaFile() {
+        MetaFile metaFile = readMetaInfo();
+        String[] filesInDir = this.directory.list();
+        if (metaFile != null && metaFileUpToDate(metaFile, filesInDir)) {
+            metaFileOutOfSync = false;
+            timeOfLastRead = metaFile.getLastRead();
+            timeOfLastWrite = metaFile.getLastWrite();
+            fileBuckets = metaFile.getFileBuckets();
+        } else {
+            metaFileOutOfSync = true;
+            timeOfLastRead = timeOfLastWrite = 0;
+            fileBuckets = createEmptyFileBuckets();
+            if (filesInDir.length > 0) {
+                Log.i("Missing (up-to-date) meta information for " + getName() + " will reconstruct data structures from files found in directory.");
+                updateBucketsFromFiles(filesInDir);
+            }
+            makeSureAllFileBucketsHaveAtLeastOneFile();
+        }
     }
 
     @Override
@@ -411,6 +431,11 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         writeMetaFile();
     }
 
+    @Override
+    public long lastWrite() {
+        return timeOfLastWrite;
+    }
+
     private void updateShouldBeCleanedInfo() {
         for (FileBucket fileBucket : fileBuckets) {
             fileBucket.lockWrite();
@@ -657,24 +682,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         }
     }
 
-    private void initializeFiles(MetaFile metaFile) {
-        String[] filesInDir = this.directory.list();
-        if (metaFile != null && metaFileUpToDate(metaFile, filesInDir)) {
-            metaFileOutOfSync = false;
-            timeOfLastRead = metaFile.getLastRead();
-            timeOfLastWrite = metaFile.getLastWrite();
-            fileBuckets = metaFile.getFileBuckets();
-        } else {
-            metaFileOutOfSync = true;
-            timeOfLastRead = timeOfLastWrite = 0;
-            fileBuckets = createEmptyFileBuckets();
-            if (filesInDir.length > 0) {
-                Log.i("Missing (up-to-date) meta information for " + getName() + " will reconstruct data structures from files found in directory.");
-                updateBucketsFromFiles(filesInDir);
-            }
-            makeSureAllFileBucketsHaveAtLeastOneFile();
-        }
-    }
 
     private boolean metaFileUpToDate(MetaFile metaFile, String[] filesInDir) {
         for (String file : filesInDir) {

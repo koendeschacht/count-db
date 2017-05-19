@@ -1,15 +1,18 @@
 package be.bagofwords.db;
 
+import be.bagofwords.db.impl.BaseDataInterface;
+import be.bagofwords.db.impl.MetaDataStore;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.util.KeyValue;
 
 import java.util.Iterator;
+import java.util.Map;
 
-public abstract class LayeredDataInterface<T> extends DataInterface<T> {
+public abstract class LayeredDataInterface<T> extends BaseDataInterface<T> {
 
-    protected DataInterface<T> baseInterface;
+    protected BaseDataInterface<T> baseInterface;
 
-    public LayeredDataInterface(DataInterface<T> baseInterface) {
+    public LayeredDataInterface(BaseDataInterface<T> baseInterface) {
         super(baseInterface.getName(), baseInterface.getObjectClass(), baseInterface.getCombinator(), baseInterface.isTemporaryDataInterface());
         this.baseInterface = baseInterface;
     }
@@ -32,6 +35,11 @@ public abstract class LayeredDataInterface<T> extends DataInterface<T> {
     @Override
     public void dropAllData() {
         baseInterface.dropAllData();
+    }
+
+    @Override
+    public long lastWrite() {
+        return baseInterface.lastWrite();
     }
 
     @Override
@@ -85,7 +93,7 @@ public abstract class LayeredDataInterface<T> extends DataInterface<T> {
     }
 
     @Override
-    protected void requestClose() {
+    public void requestClose() {
         super.requestClose();
         baseInterface.requestClose();
     }

@@ -1,4 +1,4 @@
-package be.bagofwords.db;
+package be.bagofwords.db.impl;
 
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.util.KeyValue;

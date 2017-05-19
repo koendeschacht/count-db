@@ -2,7 +2,6 @@ package be.bagofwords.db.remote;
 
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
-import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
@@ -101,7 +100,7 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
                         writeError(" Data interface " + interfaceName + " was closed!");
                     }
                 } else {
-                    dataInterface = dataInterfaceFactory.createDataInterface(DatabaseCachingType.CACHED, interfaceName, objectClass, combinator, isTemporary);
+                    dataInterface= dataInterfaceFactory.dataInterface(interfaceName, objectClass).combinator(combinator).temporary(isTemporary).create();
                     createdInterfaces.add(dataInterface);
                 }
             }
@@ -145,6 +144,8 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
                     handleExactSize();
                 } else if (action == Action.APPROXIMATE_SIZE) {
                     handleApproximateSize();
+                } else if(action==Action.LAST_WRITE) {
+                    handleLastWrite();
                 } else if (action == Action.READVALUE) {
                     handleReadValue();
                 } else if (action == Action.WRITEVALUE) {
@@ -233,6 +234,12 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
             long appSize = dataInterface.apprSize();
             connection.writeLong(LONG_OK);
             connection.writeLong(appSize);
+        }
+
+        private void handleLastWrite() throws IOException {
+            long lastWrite = dataInterface.lastWrite();
+            connection.writeLong(LONG_OK);
+            connection.writeLong(lastWrite);
         }
 
         private void handleExactSize() throws IOException {
@@ -394,6 +401,7 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
     public enum Action {
         READVALUE, WRITEVALUE, READVALUES, READKEYS, WRITEVALUES, DROPALLDATA, CLOSE_CONNECTION, FLUSH,
         READALLVALUES, READ_CACHED_VALUES, APPROXIMATE_SIZE, MIGHT_CONTAIN, EXACT_SIZE, OPTMIZE_FOR_READING,
+        LAST_WRITE
     }
 
     public enum ConnectionType {

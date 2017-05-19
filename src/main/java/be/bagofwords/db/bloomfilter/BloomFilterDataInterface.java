@@ -1,8 +1,8 @@
 package be.bagofwords.db.bloomfilter;
 
 import be.bagofwords.application.TaskSchedulerService;
-import be.bagofwords.db.DBUtils;
-import be.bagofwords.db.DataInterface;
+import be.bagofwords.db.impl.DBUtils;
+import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.LayeredDataInterface;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.logging.Log;
@@ -15,7 +15,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
 
     private static final double INITIAL_FPP = 0.001;
     private final static double MAX_FPP = INITIAL_FPP * 20;
-    private final DataInterface<LongBloomFilterWithCheckSum> bloomFilterDataInterface;
+    private final BaseDataInterface<LongBloomFilterWithCheckSum> bloomFilterDataInterface;
     private final ReentrantLock modifyBloomFilterLock;
     private LongBloomFilterWithCheckSum bloomFilter;
     private long currentKeyForNewBloomFilterCreation = Long.MAX_VALUE;
@@ -23,7 +23,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
     private long actualWriteCount;
     private long writeCountOfSavedFilter;
 
-    public BloomFilterDataInterface(DataInterface<T> baseInterface, DataInterface<LongBloomFilterWithCheckSum> bloomFilterDataInterface, TaskSchedulerService taskScheduler) {
+    public BloomFilterDataInterface(BaseDataInterface<T> baseInterface, BaseDataInterface<LongBloomFilterWithCheckSum> bloomFilterDataInterface, TaskSchedulerService taskScheduler) {
         super(baseInterface);
         this.bloomFilterDataInterface = bloomFilterDataInterface;
         this.modifyBloomFilterLock = new ReentrantLock();

@@ -2,6 +2,7 @@ package be.bagofwords.db.memory;
 
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.impl.MetaDataStore;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.util.DataLock;
@@ -15,8 +16,8 @@ public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T
     private Map<Long, T> values;
     private final DataLock lock;
 
-    public InMemoryDataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
-        super(name, objectClass, combinator, true);
+    public InMemoryDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, MetaDataStore metaDataStore) {
+        super(name, objectClass, combinator, true, metaDataStore);
         this.values = new ConcurrentHashMap<>();
         this.lock = new DataLock();
     }
