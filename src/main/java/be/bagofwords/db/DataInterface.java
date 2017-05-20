@@ -92,5 +92,12 @@ public interface DataInterface<T extends Object> extends DataIterable<KeyValue<T
 
     void ifNotClosed(Runnable action);
 
-    long lastWrite();
+    /**
+     * Returns a number of the last flush, monotonically increasing
+     */
+
+    long lastFlush();
+
+    DataInterface<T> getCoreDataInterface();
+
 }

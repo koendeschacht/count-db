@@ -1,8 +1,9 @@
 package be.bagofwords.db.experimental.rocksdb;
 
-import be.bagofwords.db.impl.DataInterfaceFactoryImpl;
-import be.bagofwords.db.impl.BaseDataInterface;
+import be.bagofwords.db.CoreDataInterface;
+import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.impl.BaseDataInterfaceFactory;
 import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.util.Utils;
 import org.rocksdb.RocksDB;
@@ -12,7 +13,7 @@ import java.io.File;
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/17/14.
  */
-public class RocksDBDataInterfaceFactory extends DataInterfaceFactoryImpl {
+public class RocksDBDataInterfaceFactory extends BaseDataInterfaceFactory {
 
     private final String directory;
     private final boolean usePatch;
@@ -42,7 +43,12 @@ public class RocksDBDataInterfaceFactory extends DataInterfaceFactoryImpl {
     }
 
     @Override
-    protected <T> BaseDataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
-        return new RocksDBDataInterface<>(nameOfSubset, objectClass, combinator, directory, usePatch, isTemporaryDataInterface, getMetaDataStore());
+    protected <T> CoreDataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
+        return new RocksDBDataInterface<>(nameOfSubset, objectClass, combinator, directory, usePatch, isTemporaryDataInterface);
+    }
+
+    @Override
+    protected Class<? extends DataInterface> getBaseDataInterfaceClass() {
+        return RocksDBDataInterface.class;
     }
 }

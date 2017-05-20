@@ -24,8 +24,8 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
     private File databaseDir;
     private DataLock dataLock;
 
-    public LevelDBDataInterface(String directory, String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface, MetaDataStore metaDataStore) {
-        super(name, objectClass, combinator, isTemporaryDataInterface, metaDataStore);
+    public LevelDBDataInterface(String directory, String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
+        super(name, objectClass, combinator, isTemporaryDataInterface);
         try {
             databaseDir = new File(directory + File.separator + name);
             if (!databaseDir.exists()) {
@@ -155,7 +155,7 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public void flush() {
+    public void flushImpl() {
         //Always flushed
     }
 

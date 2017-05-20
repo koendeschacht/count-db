@@ -5,13 +5,12 @@ import be.bagofwords.cache.CachesManager;
 import be.bagofwords.cache.DynamicMap;
 import be.bagofwords.cache.ReadCache;
 import be.bagofwords.db.DataInterface;
-import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.LayeredDataInterface;
 import be.bagofwords.iterator.CloseableIterator;
+import be.bagofwords.logging.Log;
 import be.bagofwords.memory.MemoryGobbler;
 import be.bagofwords.memory.MemoryManager;
 import be.bagofwords.memory.MemoryStatus;
-import be.bagofwords.logging.Log;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.SafeThread;
 import be.bagofwords.util.Utils;
@@ -33,7 +32,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     private final SafeThread initializeCachesThread;
     private long timeOfLastFlushOfWriteBuffer;
 
-    public CachedDataInterface(MemoryManager memoryManager, CachesManager cachesManager, BaseDataInterface<T> baseInterface, TaskSchedulerService taskScheduler) {
+    public CachedDataInterface(MemoryManager memoryManager, CachesManager cachesManager, DataInterface<T> baseInterface, TaskSchedulerService taskScheduler) {
         super(baseInterface);
         this.memoryManager = memoryManager;
         this.memoryManager.registerMemoryGobbler(this);
@@ -83,6 +82,9 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     }
 
     private void checkWriteConditions() {
+        if (wasClosed()) {
+            throw new RuntimeException("The interface " + getName() + " was closed");
+        }
         memoryManager.waitForSufficientMemory();
         waitForSlowFlushes();
     }
@@ -157,10 +159,10 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
             flush();
         } finally {
             //even if the flush failed, we remove our data structures
+            baseInterface.close();
             readCache.clear();
             readCache = null;
             writeBuffers = null;
-            baseInterface.close();
         }
     }
 
@@ -238,7 +240,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
 
     private class InitializeCachesThread extends SafeThread {
 
-        public InitializeCachesThread(BaseDataInterface<T> baseInterface) {
+        public InitializeCachesThread(DataInterface<T> baseInterface) {
             super("initialize_cache_" + baseInterface.getName(), false);
         }
 

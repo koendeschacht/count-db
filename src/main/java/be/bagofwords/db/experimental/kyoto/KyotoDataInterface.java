@@ -23,8 +23,8 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
     private DB db;
     private DataLock dataLock;
 
-    protected KyotoDataInterface(String name, String path, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface, MetaDataStore metaDataStore) {
-        super(name, objectClass, combinator, isTemporaryDataInterface, metaDataStore);
+    protected KyotoDataInterface(String name, String path, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
+        super(name, objectClass, combinator, isTemporaryDataInterface);
         db = new DB();
         File file = new File(new File(path), name + ".kcf");
         File parentDir = file.getParentFile();
@@ -237,7 +237,7 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public void flush() {
+    public void flushImpl() {
         //Always flushed
     }
 

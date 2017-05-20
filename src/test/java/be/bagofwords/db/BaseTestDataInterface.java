@@ -64,16 +64,17 @@ public class BaseTestDataInterface {
         context = new ApplicationContext(config);
         context.registerBean(MinimalApplicationDependencies.class);
         DataInterfaceFactoryFactory dataInterfaceFactoryFactory = new DataInterfaceFactoryFactory(context);
-        dataInterfaceFactory = dataInterfaceFactoryFactory.createFactory(backendType);
         if (backendType == DatabaseBackendType.REMOTE) {
             dataInterfaceServerFactory = context.getBean(FileDataInterfaceFactory.class);
             remoteDataInterfaceServer = context.getBean(RemoteDataInterfaceServer.class);
             context.registerBean(SocketServer.class);
         }
+        dataInterfaceFactory = dataInterfaceFactoryFactory.createFactory(backendType);
     }
 
     @After
     public void closeFactory() {
+        dataInterfaceFactory.closeAllInterfaces();
         context.terminate();
     }
 
@@ -81,8 +82,8 @@ public class BaseTestDataInterface {
         this.dataInterfaceFactory = dataInterfaceFactoryFactory.createFactory(backendType);
     }
 
-    protected DataInterface<Long> createCountDataInterface(String subsetName) {
-        return dataInterfaceFactory.dataInterface(subsetName + "_" + System.currentTimeMillis(), Long.class).combinator(new LongCombinator()).caching(type).create();
+    protected DataInterface<Long> createCountDataInterface(String name) {
+        return dataInterfaceFactory.dataInterface(name + "_" + System.currentTimeMillis(), Long.class).combinator(new LongCombinator()).caching(type).create();
     }
 
 }

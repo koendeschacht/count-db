@@ -1,11 +1,13 @@
 package be.bagofwords.db.remote;
 
-import be.bagofwords.db.impl.DataInterfaceFactoryImpl;
+import be.bagofwords.db.DataInterface;
+import be.bagofwords.db.impl.BaseDataInterfaceFactory;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.impl.MetaDataStore;
 import be.bagofwords.minidepi.ApplicationContext;
 
-public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactoryImpl {
+public class RemoteDatabaseInterfaceFactory extends BaseDataInterfaceFactory {
 
     private final String host;
     private final int port;
@@ -19,6 +21,11 @@ public class RemoteDatabaseInterfaceFactory extends DataInterfaceFactoryImpl {
     @Override
     protected synchronized <T extends Object> BaseDataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
         return new RemoteDataInterface<>(nameOfSubset, objectClass, combinator, host, port, isTemporaryDataInterface, taskScheduler);
+    }
+
+    @Override
+    protected Class<? extends DataInterface> getBaseDataInterfaceClass() {
+        return RemoteDataInterface.class;
     }
 
 }

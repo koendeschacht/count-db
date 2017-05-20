@@ -1,18 +1,16 @@
 package be.bagofwords.db;
 
 import be.bagofwords.db.impl.BaseDataInterface;
-import be.bagofwords.db.impl.MetaDataStore;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.util.KeyValue;
 
 import java.util.Iterator;
-import java.util.Map;
 
-public abstract class LayeredDataInterface<T> extends BaseDataInterface<T> {
+public abstract class LayeredDataInterface<T> extends BaseDataInterface   <T> {
 
-    protected BaseDataInterface<T> baseInterface;
+    protected DataInterface<T> baseInterface;
 
-    public LayeredDataInterface(BaseDataInterface<T> baseInterface) {
+    public LayeredDataInterface(DataInterface<T> baseInterface) {
         super(baseInterface.getName(), baseInterface.getObjectClass(), baseInterface.getCombinator(), baseInterface.isTemporaryDataInterface());
         this.baseInterface = baseInterface;
     }
@@ -38,8 +36,8 @@ public abstract class LayeredDataInterface<T> extends BaseDataInterface<T> {
     }
 
     @Override
-    public long lastWrite() {
-        return baseInterface.lastWrite();
+    public long lastFlush() {
+        return baseInterface.lastFlush();
     }
 
     @Override
@@ -54,7 +52,7 @@ public abstract class LayeredDataInterface<T> extends BaseDataInterface<T> {
     }
 
     @Override
-    public DataInterface getCoreDataInterface() {
+    public DataInterface<T> getCoreDataInterface() {
         return baseInterface.getCoreDataInterface();
     }
 
@@ -90,12 +88,6 @@ public abstract class LayeredDataInterface<T> extends BaseDataInterface<T> {
             //even if the doCloseImpl() method failed, we still try to close the base interface
             baseInterface.close();
         }
-    }
-
-    @Override
-    public void requestClose() {
-        super.requestClose();
-        baseInterface.requestClose();
     }
 
     @Override

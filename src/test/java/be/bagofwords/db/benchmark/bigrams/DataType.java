@@ -1,4 +1,4 @@
-package be.bagofwords.main.tests.bigrams;
+package be.bagofwords.db.benchmark.bigrams;
 
 /**
 * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/22/14.

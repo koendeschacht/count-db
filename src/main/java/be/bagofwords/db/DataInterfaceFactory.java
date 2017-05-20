@@ -1,6 +1,8 @@
 package be.bagofwords.db;
 
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.experimental.index.DataIndexer;
+import be.bagofwords.db.experimental.index.DataInterfaceIndex;
 import be.bagofwords.db.impl.BaseDataInterface;
 
 import java.lang.ref.ReferenceQueue;
@@ -9,15 +11,17 @@ import java.util.List;
 
 public interface DataInterfaceFactory {
 
-    <T> DataInterfaceConfig<T> dataInterface(String nameOfSubset, Class<T> objectClass);
+    <T> DataInterfaceConfig<T> dataInterface(String name, Class<T> objectClass);
 
-    DataInterface<Long> createCountDataInterface(String subset);
+    <T> DataInterfaceIndex<T> index(DataInterface<T> dataInterface, String nameOfIndex, DataIndexer<T> indexer);
 
-    DataInterface<Long> createTmpCountDataInterface(String subset);
+    DataInterface<Long> createCountDataInterface(String name);
+
+    DataInterface<Long> createTmpCountDataInterface(String name);
 
     DataInterface<Long> createInMemoryCountDataInterface(String name);
 
-    <T extends Object> BaseDataInterface<T> createDataInterface(String subset, Class<T> objectClass, Combinator<T> combinator);
+    <T extends Object> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator);
 
     List<DataInterfaceReference> getAllInterfaces();
 
@@ -27,15 +31,15 @@ public interface DataInterfaceFactory {
 
     class DataInterfaceReference extends WeakReference<DataInterface> {
 
-        private String subsetName;
+        private String name;
 
         public DataInterfaceReference(BaseDataInterface referent, ReferenceQueue<DataInterface> referenceQueue) {
             super(referent, referenceQueue);
-            this.subsetName = referent.getName();
+            this.name = referent.getName();
         }
 
         public String getSubsetName() {
-            return subsetName;
+            return name;
         }
     }
 

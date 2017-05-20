@@ -23,7 +23,6 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
     protected final boolean isTemporaryDataInterface;
     private final Object closeLock = new Object();
     private boolean wasClosed;
-    private boolean closeWasRequested;
 
     public BaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
         if (StringUtils.isEmpty(name)) {
@@ -35,7 +34,7 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
         this.combinator = combinator;
     }
 
-    public abstract DataInterface getCoreDataInterface();
+    public abstract DataInterface<T> getCoreDataInterface();
 
     protected abstract void doClose();
 
@@ -61,28 +60,21 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
     }
 
     public final void close() {
-        requestClose();
         ifNotClosed(() -> {
+                    Log.i("Closing " + getName());
                     if (isTemporaryDataInterface) {
                         dropAllData();
                     }
                     flush();
                     doClose();
                     wasClosed = true;
+                    Log.i("Closed " + getName());
                 }
         );
     }
 
-    public void requestClose() {
-        closeWasRequested = true;
-    }
-
     public final boolean wasClosed() {
         return wasClosed;
-    }
-
-    protected final boolean closeWasRequested() {
-        return closeWasRequested;
     }
 
     @Override

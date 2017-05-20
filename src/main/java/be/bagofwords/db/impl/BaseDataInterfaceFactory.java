@@ -2,6 +2,7 @@ package be.bagofwords.db.impl;
 
 import be.bagofwords.application.TaskSchedulerService;
 import be.bagofwords.cache.CachesManager;
+import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceConfig;
 import be.bagofwords.db.DataInterfaceFactory;
@@ -11,8 +12,9 @@ import be.bagofwords.db.cached.CachedDataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.combinator.OverWriteCombinator;
+import be.bagofwords.db.experimental.index.DataIndexer;
+import be.bagofwords.db.experimental.index.DataInterfaceIndex;
 import be.bagofwords.db.memory.InMemoryDataInterface;
-import be.bagofwords.logging.Log;
 import be.bagofwords.memory.MemoryManager;
 import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.minidepi.LifeCycleBean;
@@ -22,7 +24,9 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class DataInterfaceFactoryImpl implements LifeCycleBean, DataInterfaceFactory {
+public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInterfaceFactory {
+
+    public static final String META_DATA_STORAGE = "system_meta_data";
 
     private int tmpDataInterfaceCount = 0;
 
@@ -31,11 +35,12 @@ public abstract class DataInterfaceFactoryImpl implements LifeCycleBean, DataInt
     protected final TaskSchedulerService taskScheduler;
     private final List<DataInterfaceReference> allInterfaces;
     private final ReferenceQueue<DataInterface> allInterfacesReferenceQueue;
-    private final MetaDataStore metaDataStore;
-    private boolean createdMetaDataStore;
+
     private BaseDataInterface<LongBloomFilterWithCheckSum> cachedBloomFilters;
 
-    public DataInterfaceFactoryImpl(ApplicationContext context) {
+    private final MetaDataStore metaDataStore;
+
+    public BaseDataInterfaceFactory(ApplicationContext context) {
         this.cachesManager = context.getBean(CachesManager.class);
         this.memoryManager = context.getBean(MemoryManager.class);
         this.taskScheduler = context.getBean(TaskSchedulerService.class);
@@ -44,33 +49,27 @@ public abstract class DataInterfaceFactoryImpl implements LifeCycleBean, DataInt
         this.metaDataStore = new MetaDataStore();
     }
 
-    protected synchronized MetaDataStore getMetaDataStore() {
-        if (!createdMetaDataStore) {
-            createdMetaDataStore = true;
-            Log.i("Creating meta_data store");
-            BaseDataInterface<String> metaStoreInterface = createBaseDataInterface("meta_data", String.class, new OverWriteCombinator<>(), false);
-            metaStoreInterface = new CachedDataInterface<>(memoryManager, cachesManager, metaStoreInterface, taskScheduler);
-            registerInterface(metaStoreInterface);
-            this.metaDataStore.setStorage(metaStoreInterface);
-        }
-        return this.metaDataStore;
+    public <T> DataInterfaceConfig<T> dataInterface(String name, Class<T> objectClass) {
+        return new DataInterfaceConfig<>(name, objectClass, this);
     }
 
-    public <T> DataInterfaceConfig<T> dataInterface(String nameOfSubset, Class<T> objectClass) {
-        return new DataInterfaceConfig<>(nameOfSubset, objectClass, this);
+    @Override
+    public <T> DataInterfaceIndex<T> index(DataInterface<T> dataInterface, String nameOfIndex, DataIndexer<T> indexer) {
+        return new DataInterfaceIndex<>(nameOfIndex, this, dataInterface, indexer, metaDataStore);
     }
 
     public <T> BaseDataInterface<T> createFromConfig(DataInterfaceConfig<T> config) {
         BaseDataInterface<T> dataInterface;
-        String subsetName = config.subsetName;
+        String name = config.name;
         if (config.isTemporary) {
-            subsetName = createNameForTemporaryInterface(subsetName);
+            name = createNameForTemporaryInterface(name);
         }
         if (config.inMemory) {
-            dataInterface = new InMemoryDataInterface<>(subsetName, config.objectClass, config.combinator, metaDataStore);
+            dataInterface = new InMemoryDataInterface<>(name, config.objectClass, config.combinator);
         } else {
-            dataInterface = createBaseDataInterface(subsetName, config.objectClass, config.combinator, config.isTemporary);
+            dataInterface = createBaseDataInterface(name, config.objectClass, config.combinator, config.isTemporary);
         }
+        setMetaDataStore(dataInterface);
         if (config.cache) {
             dataInterface = new CachedDataInterface<>(memoryManager, cachesManager, dataInterface, taskScheduler);
         }
@@ -82,6 +81,12 @@ public abstract class DataInterfaceFactoryImpl implements LifeCycleBean, DataInt
         return dataInterface;
     }
 
+    private <T> void setMetaDataStore(BaseDataInterface<T> dataInterface) {
+        if (dataInterface instanceof CoreDataInterface) {
+            ((CoreDataInterface<Object>) dataInterface).setMetaDataStore(metaDataStore);
+        }
+    }
+
     private <T> void registerInterface(BaseDataInterface<T> dataInterface) {
         synchronized (allInterfaces) {
             allInterfaces.add(new DataInterfaceReference(dataInterface, allInterfacesReferenceQueue));
@@ -90,24 +95,26 @@ public abstract class DataInterfaceFactoryImpl implements LifeCycleBean, DataInt
 
     protected abstract <T extends Object> BaseDataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface);
 
-    public DataInterface<Long> createCountDataInterface(String subset) {
-        return createDataInterface(subset, Long.class, new LongCombinator(), false, false);
+    protected abstract Class<? extends DataInterface> getBaseDataInterfaceClass();
+
+    public DataInterface<Long> createCountDataInterface(String name) {
+        return createDataInterface(name, Long.class, new LongCombinator(), false, false);
     }
 
-    public DataInterface<Long> createTmpCountDataInterface(String subset) {
-        return createDataInterface(createNameForTemporaryInterface(subset), Long.class, new LongCombinator(), true, false);
+    public DataInterface<Long> createTmpCountDataInterface(String name) {
+        return createDataInterface(createNameForTemporaryInterface(name), Long.class, new LongCombinator(), true, false);
     }
 
     public DataInterface<Long> createInMemoryCountDataInterface(String name) {
         return createDataInterface(name, Long.class, new LongCombinator(), false, true);
     }
 
-    public <T extends Object> BaseDataInterface<T> createDataInterface(String subset, Class<T> objectClass, Combinator<T> combinator) {
-        return createDataInterface(subset, objectClass, combinator, false, false);
+    public <T extends Object> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
+        return createDataInterface(name, objectClass, combinator, false, false);
     }
 
-    private <T extends Object> BaseDataInterface<T> createDataInterface(String subset, Class<T> objectClass, Combinator<T> combinator, boolean temporary, boolean inMemory) {
-        DataInterfaceConfig<T> config = dataInterface(subset, objectClass);
+    private <T extends Object> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean temporary, boolean inMemory) {
+        DataInterfaceConfig<T> config = dataInterface(name, objectClass);
         config.combinator(combinator);
         if (temporary) {
             config.temporary();
@@ -121,6 +128,7 @@ public abstract class DataInterfaceFactoryImpl implements LifeCycleBean, DataInt
     private void checkInitialisationCachedBloomFilters() {
         if (cachedBloomFilters == null) {
             cachedBloomFilters = createBaseDataInterface("system/bloomFilter", LongBloomFilterWithCheckSum.class, new OverWriteCombinator<>(), false);
+            setMetaDataStore(cachedBloomFilters);
             synchronized (allInterfaces) {
                 allInterfaces.add(new DataInterfaceReference(cachedBloomFilters, allInterfacesReferenceQueue));
             }
@@ -133,7 +141,13 @@ public abstract class DataInterfaceFactoryImpl implements LifeCycleBean, DataInt
 
     @Override
     public void startBean() {
-
+        if (CoreDataInterface.class.isAssignableFrom(getBaseDataInterfaceClass())) {
+            BaseDataInterface<String> baseMetaDataStorage = createBaseDataInterface(META_DATA_STORAGE, String.class, new OverWriteCombinator<>(), false);
+            metaDataStore.setStorage(new CachedDataInterface<>(memoryManager, cachesManager, baseMetaDataStorage, taskScheduler));
+            if (baseMetaDataStorage instanceof CoreDataInterface) {
+                ((CoreDataInterface) baseMetaDataStorage).setMetaDataStore(metaDataStore);
+            }
+        }
     }
 
     @Override
@@ -158,6 +172,7 @@ public abstract class DataInterfaceFactoryImpl implements LifeCycleBean, DataInt
                 cachedBloomFilters = null;
             }
             allInterfaces.clear();
+            metaDataStore.close();
         }
 
     }
@@ -177,8 +192,8 @@ public abstract class DataInterfaceFactoryImpl implements LifeCycleBean, DataInt
         }
     }
 
-    private String createNameForTemporaryInterface(String subset) {
-        return "tmp/" + subset + "_" + System.currentTimeMillis() + "_" + tmpDataInterfaceCount++ + "/";
+    private String createNameForTemporaryInterface(String name) {
+        return "tmp/" + name + "_" + System.currentTimeMillis() + "_" + tmpDataInterfaceCount++ + "/";
     }
 
 }

@@ -1,4 +1,4 @@
-package be.bagofwords.main.tests.bigrams;
+package be.bagofwords.db.benchmark.bigrams;
 
 import be.bagofwords.application.MinimalApplicationDependencies;
 import be.bagofwords.db.DataInterfaceFactory;

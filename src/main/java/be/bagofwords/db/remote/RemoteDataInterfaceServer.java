@@ -144,8 +144,8 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
                     handleExactSize();
                 } else if (action == Action.APPROXIMATE_SIZE) {
                     handleApproximateSize();
-                } else if(action==Action.LAST_WRITE) {
-                    handleLastWrite();
+                } else if(action==Action.LAST_FLUSH) {
+                    handleLastFlush();
                 } else if (action == Action.READVALUE) {
                     handleReadValue();
                 } else if (action == Action.WRITEVALUE) {
@@ -236,10 +236,10 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
             connection.writeLong(appSize);
         }
 
-        private void handleLastWrite() throws IOException {
-            long lastWrite = dataInterface.lastWrite();
+        private void handleLastFlush() throws IOException {
+            long lastFlush = dataInterface.lastFlush();
             connection.writeLong(LONG_OK);
-            connection.writeLong(lastWrite);
+            connection.writeLong(lastFlush);
         }
 
         private void handleExactSize() throws IOException {
@@ -401,7 +401,7 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
     public enum Action {
         READVALUE, WRITEVALUE, READVALUES, READKEYS, WRITEVALUES, DROPALLDATA, CLOSE_CONNECTION, FLUSH,
         READALLVALUES, READ_CACHED_VALUES, APPROXIMATE_SIZE, MIGHT_CONTAIN, EXACT_SIZE, OPTMIZE_FOR_READING,
-        LAST_WRITE
+        LAST_FLUSH
     }
 
     public enum ConnectionType {

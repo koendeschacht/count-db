@@ -208,14 +208,14 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
                     thisConnection.writeLong(LONG_END);
                     thisConnection.flush();
                 } catch (Exception e) {
-                    Log.e("Received exception while sending keys for read(..), for subset " + getName() + ". Closing connection. ", e);
+                    Log.e("Received exception while sending keys for read(..), for interface " + getName() + ". Closing connection. ", e);
                     dropConnection(thisConnection);
                 }
             });
             return createNewKeyValueIterator(thisConnection);
         } catch (Exception e) {
             dropConnection(connection);
-            throw new RuntimeException("Received exception while sending keys for read(..) for subset " + getName(), e);
+            throw new RuntimeException("Received exception while sending keys for read(..) for interface " + getName(), e);
         }
     }
 
@@ -407,15 +407,15 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     }
 
     @Override
-    public long lastWrite() {
-        return readLong(Action.LAST_WRITE);
+    public long lastFlush() {
+        return readLong(Action.LAST_FLUSH);
     }
 
-    private long readLong(Action lastWrite) {
+    private long readLong(Action action) {
         Connection connection = null;
         try {
             connection = selectSmallBufferConnection();
-            doAction(lastWrite, connection);
+            doAction(action, connection);
             connection.flush();
             long response = connection.readLong();
             if (response == LONG_OK) {
@@ -475,7 +475,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     }
 
     @Override
-    public DataInterface getCoreDataInterface() {
+    public DataInterface<T> getCoreDataInterface() {
         return this;
     }
 
@@ -550,7 +550,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
             long response = readLong();
             if (response == LONG_ERROR) {
                 String errorMessage = readString();
-                throw new RuntimeException("Received unexpected message while initializing subset " + errorMessage);
+                throw new RuntimeException("Received unexpected message while initializing interface " + errorMessage);
             }
         }
 

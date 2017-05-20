@@ -54,8 +54,10 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     private boolean metaFileOutOfSync;
 
-    public FileDataInterface(MemoryManager memoryManager, Combinator<T> combinator, Class<T> objectClass, String directory, String nameOfSubset, boolean isTemporaryDataInterface, TaskSchedulerService taskScheduler, MetaDataStore metaDataStore) {
-        super(nameOfSubset, objectClass, combinator, isTemporaryDataInterface, metaDataStore);
+    private boolean closeWasRequested;
+
+    public FileDataInterface(MemoryManager memoryManager, Combinator<T> combinator, Class<T> objectClass, String directory, String nameOfSubset, boolean isTemporaryDataInterface, TaskSchedulerService taskScheduler) {
+        super(nameOfSubset, objectClass, combinator, isTemporaryDataInterface);
         this.directory = new File(directory, nameOfSubset);
         this.sizeOfValues = SerializationUtils.getWidth(objectClass);
         this.randomId = new Random().nextLong();
@@ -398,7 +400,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     @Override
-    public void flush() {
+    public void flushImpl() {
         updateShouldBeCleanedInfo();
     }
 
@@ -409,6 +411,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     @Override
     protected void doClose() {
+        closeWasRequested = true;
         updateShouldBeCleanedInfo();
         if (metaFileOutOfSync) {
             writeMetaFile();
@@ -432,7 +435,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     @Override
-    public long lastWrite() {
+    public long lastFlush() {
         return timeOfLastWrite;
     }
 
@@ -447,7 +450,10 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     private synchronized void rewriteAllFiles(boolean forceClean) {
-        int numOfFilesRewritten = fileBuckets.parallelStream().collect(Collectors.summingInt(bucket -> rewriteBucket(bucket, forceClean)));
+        int numOfFilesRewritten;
+        if (DBUtils.DEBUG) {
+            numOfFilesRewritten = fileBuckets.parallelStream().mapToInt(bucket -> rewriteBucket(bucket, forceClean)).sum();
+        }
         if (metaFileOutOfSync) {
             writeMetaFile();
         }
@@ -467,7 +473,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         }
         try {
             int numOfRewrittenFiles = 0;
-            for (int fileInd = 0; fileInd < bucket.getFiles().size() && (!closeWasRequested() || forceClean); fileInd++) {
+            for (int fileInd = 0; fileInd < bucket.getFiles().size() && (!closeWasRequested || forceClean); fileInd++) {
                 FileInfo file = bucket.getFiles().get(fileInd);
                 boolean needsRewrite;
                 long targetSize;
@@ -681,7 +687,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             throw new IllegalArgumentException("File should be directory but is file! " + directory.getAbsolutePath());
         }
     }
-
 
     private boolean metaFileUpToDate(MetaFile metaFile, String[] filesInDir) {
         for (String file : filesInDir) {

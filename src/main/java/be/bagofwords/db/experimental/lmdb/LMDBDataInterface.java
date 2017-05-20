@@ -22,8 +22,8 @@ public class LMDBDataInterface<T> extends CoreDataInterface<T> {
     private final DataLock dataLock;
     private Database db;
 
-    public LMDBDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, Env env, boolean isTemporaryDataInterface, MetaDataStore metaDataStore) {
-        super(name, objectClass, combinator, isTemporaryDataInterface, metaDataStore);
+    public LMDBDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, Env env, boolean isTemporaryDataInterface) {
+        super(name, objectClass, combinator, isTemporaryDataInterface);
         this.db = env.openDatabase(name);
         this.env = env;
         this.dataLock = new DataLock(false);
@@ -132,7 +132,7 @@ public class LMDBDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public void flush() {
+    public void flushImpl() {
         //always flushed
     }
 

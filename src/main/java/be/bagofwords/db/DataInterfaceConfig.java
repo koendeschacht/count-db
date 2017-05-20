@@ -2,27 +2,25 @@ package be.bagofwords.db;
 
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.combinator.OverWriteCombinator;
-import be.bagofwords.db.experimental.index.DataIndexer;
-import be.bagofwords.db.experimental.index.IndexedDataInterface;
 import be.bagofwords.db.impl.BaseDataInterface;
-import be.bagofwords.db.impl.DataInterfaceFactoryImpl;
+import be.bagofwords.db.impl.BaseDataInterfaceFactory;
 
 /**
  * Created by koen on 19/05/17.
  */
 public class DataInterfaceConfig<T> {
 
-    public final String subsetName;
+    public final String name;
     public final Class<T> objectClass;
-    private final DataInterfaceFactoryImpl factory;
+    private final BaseDataInterfaceFactory factory;
     public Combinator<T> combinator;
     public boolean cache;
     public boolean bloomFilter;
     public boolean isTemporary;
     public boolean inMemory;
 
-    public DataInterfaceConfig(String subsetName, Class<T> objectClass, DataInterfaceFactoryImpl factory) {
-        this.subsetName = subsetName;
+    public DataInterfaceConfig(String name, Class<T> objectClass, BaseDataInterfaceFactory factory) {
+        this.name = name;
         this.objectClass = objectClass;
         this.factory = factory;
         this.combinator = new OverWriteCombinator<>();
@@ -72,10 +70,6 @@ public class DataInterfaceConfig<T> {
 
     public BaseDataInterface<T> create() {
         return factory.createFromConfig(this);
-    }
-
-    public IndexedDataInterface<T> createIndexed(String name, DataIndexer<T> indexer) {
-        return new IndexedDataInterface<>(name, factory, factory.createFromConfig(this), indexer);
     }
 
     public DataInterfaceConfig<T> caching(DatabaseCachingType cachingType) {

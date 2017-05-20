@@ -24,6 +24,12 @@ public class DataInterfaceFactoryFactory {
     }
 
     public DataInterfaceFactory createFactory(DatabaseBackendType backendType) {
+        DataInterfaceFactory factory= createFactoryImpl(backendType);
+        context.registerBean(factory);
+        return factory;
+    }
+
+    private DataInterfaceFactory createFactoryImpl(DatabaseBackendType backendType) {
         switch (backendType) {
             case FILE:
                 return new FileDataInterfaceFactory(context);
