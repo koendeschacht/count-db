@@ -5,6 +5,7 @@ import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.Utils;
+import org.apache.commons.lang3.mutable.MutableInt;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -317,6 +318,35 @@ public class TestDataInterface extends BaseTestDataInterface {
         Assert.assertTrue(findValue(dataInterface, key, 10l));
         dataInterface.write(key, 1l);
         Assert.assertTrue(findValue(dataInterface, key, 11l));
+    }
+
+    @Test
+    public void testValuesIteratorWithFilter() {
+        DataInterface<Long> dataInterface = createCountDataInterface("testValuesIteratorWithFilter");
+        int numOfItems = 100;
+        for (int i = 0; i < 100; i++) {
+            dataInterface.write(i, (long) i);
+        }
+        dataInterface.flush();
+        //Try with stream
+        MutableInt numOfValuesRead = new MutableInt();
+        KeyFilter keyFilter = new KeyFilter() {
+            @Override
+            public boolean acceptKey(long key) {
+                return key % 2 == 0;
+            }
+        };
+        dataInterface.streamValues(keyFilter).forEach((v) -> numOfValuesRead.increment());
+        Assert.assertEquals(numOfItems / 2, numOfValuesRead.intValue());
+        //Try with iterator
+        numOfValuesRead.setValue(0);
+        CloseableIterator<Long> closeableIterator = dataInterface.valueIterator(keyFilter);
+        while (closeableIterator.hasNext()) {
+            closeableIterator.next();
+            numOfValuesRead.increment();
+        }
+        closeableIterator.close();
+        Assert.assertEquals(numOfItems / 2, numOfValuesRead.intValue());
     }
 
     private boolean findValue(DataInterface<Long> dataInterface, long key, Long targetValue) {

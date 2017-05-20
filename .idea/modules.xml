@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/count-db.iml" filepath="$PROJECT_DIR$/count-db.iml" />
+      <module fileurl="file://$PROJECT_DIR$/count-db-run/count-db-run.iml" filepath="$PROJECT_DIR$/count-db-run/count-db-run.iml" />
     </modules>
   </component>
 </project>
-

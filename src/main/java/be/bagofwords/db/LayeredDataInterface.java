@@ -5,8 +5,9 @@ import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.util.KeyValue;
 
 import java.util.Iterator;
+import java.util.stream.Stream;
 
-public abstract class LayeredDataInterface<T> extends BaseDataInterface   <T> {
+public abstract class LayeredDataInterface<T> extends BaseDataInterface<T> {
 
     protected DataInterface<T> baseInterface;
 
@@ -75,6 +76,16 @@ public abstract class LayeredDataInterface<T> extends BaseDataInterface   <T> {
 
     public CloseableIterator<T> valueIterator() {
         return baseInterface.valueIterator();
+    }
+
+    @Override
+    public CloseableIterator<T> valueIterator(KeyFilter keyFilter) {
+        return baseInterface.valueIterator(keyFilter);
+    }
+
+    @Override
+    public Stream<T> streamValues(KeyFilter keyFilter) {
+        return baseInterface.streamValues(keyFilter);
     }
 
     public boolean mightContain(long key) {

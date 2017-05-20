@@ -1,4 +1,4 @@
-package be.bagofwords.main.util;
+package be.bagofwords.db.util;
 
 import be.bagofwords.logging.Log;
 import be.bagofwords.ui.UI;

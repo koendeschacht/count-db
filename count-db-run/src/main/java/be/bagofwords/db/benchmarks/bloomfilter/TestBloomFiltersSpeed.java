@@ -1,4 +1,4 @@
-package be.bagofwords.main.tests.bloomfilter;
+package be.bagofwords.db.benchmarks.bloomfilter;
 
 import be.bagofwords.db.bloomfilter.LongBloomFilter;
 import be.bagofwords.db.data.LongCountsBloomFilter;

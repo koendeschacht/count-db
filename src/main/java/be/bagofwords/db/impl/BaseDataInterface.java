@@ -1,6 +1,7 @@
 package be.bagofwords.db.impl;
 
 import be.bagofwords.db.DataInterface;
+import be.bagofwords.db.KeyFilter;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
@@ -61,14 +62,12 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
 
     public final void close() {
         ifNotClosed(() -> {
-                    Log.i("Closing " + getName());
                     if (isTemporaryDataInterface) {
                         dropAllData();
                     }
                     flush();
                     doClose();
                     wasClosed = true;
-                    Log.i("Closed " + getName());
                 }
         );
     }
@@ -183,6 +182,32 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
                 keyValueIterator.close();
             }
         };
+    }
+
+    /**
+     * This method can be overwritten in a subclass to improve efficiency
+     */
+
+    @Override
+    public CloseableIterator<T> valueIterator(KeyFilter keyFilter) {
+        final CloseableIterator<KeyValue<T>> keyValueIterator = iterator();
+        return IterableUtils.iterator(new SimpleIterator<T>() {
+            @Override
+            public T next() throws Exception {
+                while (keyValueIterator.hasNext()) {
+                    KeyValue<T> next = keyValueIterator.next();
+                    if (keyFilter.acceptKey(next.getKey())) {
+                        return next.getValue();
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            public void close() throws Exception {
+                keyValueIterator.close();
+            }
+        });
     }
 
     /**
@@ -329,6 +354,11 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
     @Override
     public Stream<T> streamValues() {
         return StreamUtils.stream(valueIterator(), apprSize(), false);
+    }
+
+    @Override
+    public Stream<T> streamValues(KeyFilter keyFilter) {
+        return stream().filter(kv -> keyFilter.acceptKey(kv.getKey())).map(KeyValue::getValue);
     }
 
     /**

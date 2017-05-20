@@ -205,7 +205,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                             dataWasWritten();
                             dos.close();
                         } catch (Exception exp) {
-                            throw new RuntimeException("Failed to write multiple values to file " + toFile(file).getAbsolutePath(), exp);
+                            throw new RuntimeException("Failed to write values to file " + toFile(file).getAbsolutePath(), exp);
                         }
                     }
                 } finally {
@@ -450,10 +450,8 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     private synchronized void rewriteAllFiles(boolean forceClean) {
-        int numOfFilesRewritten;
-        if (DBUtils.DEBUG) {
-            numOfFilesRewritten = fileBuckets.parallelStream().mapToInt(bucket -> rewriteBucket(bucket, forceClean)).sum();
-        }
+        //Don't remove the next line
+        int numOfFilesRewritten = fileBuckets.parallelStream().mapToInt(bucket -> rewriteBucket(bucket, forceClean)).sum();
         if (metaFileOutOfSync) {
             writeMetaFile();
         }

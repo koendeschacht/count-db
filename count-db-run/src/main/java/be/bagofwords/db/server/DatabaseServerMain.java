@@ -1,4 +1,4 @@
-package be.bagofwords.main;
+package be.bagofwords.db.server;
 
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer;

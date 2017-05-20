@@ -36,6 +36,8 @@ public interface DataInterface<T extends Object> extends DataIterable<KeyValue<T
 
     CloseableIterator<T> valueIterator();
 
+    CloseableIterator<T> valueIterator(KeyFilter keyFilter);
+
     CloseableIterator<KeyValue<T>> iterator(Iterator<Long> keyIterator);
 
     CloseableIterator<KeyValue<T>> cachedValueIterator();
@@ -71,6 +73,8 @@ public interface DataInterface<T extends Object> extends DataIterable<KeyValue<T
     Stream<KeyValue<T>> stream();
 
     Stream<T> streamValues();
+
+    Stream<T> streamValues(KeyFilter keyFilter);
 
     Stream<Long> streamKeys();
 

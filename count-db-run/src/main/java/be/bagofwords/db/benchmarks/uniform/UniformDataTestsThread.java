@@ -1,4 +1,4 @@
-package be.bagofwords.main.tests.uniform;
+package be.bagofwords.db.benchmarks.uniform;
 
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.util.SafeThread;
@@ -20,7 +20,7 @@ class UniformDataTestsThread extends SafeThread {
     private final boolean writeValues;
 
     public UniformDataTestsThread(MutableLong numberOfItemsProcessed, long numberOfItems, DataInterface dataInterface, CountDownLatch countDownLatch, boolean writeValues) {
-        super("ReadTextThread", false);
+        super("UniformDataTestThread", false);
         this.numberOfItemsProcessed = numberOfItemsProcessed;
         this.numberOfItems = numberOfItems;
         this.dataInterface = dataInterface;

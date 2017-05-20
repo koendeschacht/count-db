@@ -1,4 +1,4 @@
-package be.bagofwords.db.benchmark.bigrams;
+package be.bagofwords.db.benchmarks.bigrams;
 
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.util.SafeThread;

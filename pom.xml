@@ -4,9 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>be.bagofwords</groupId>
+    <groupId>com.github.koendeschacht</groupId>
     <artifactId>count-db</artifactId>
-    <version>2017.1.0</version>
+    <packaging>pom</packaging>
+    <version>master-SNAPSHOT</version>
+    <modules>
+        <module>count-db-run</module>
+    </modules>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>A fast key-value store written in Java that outperforms levelDB, kyoto cabinet and rocksDB

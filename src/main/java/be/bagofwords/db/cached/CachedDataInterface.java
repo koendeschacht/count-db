@@ -280,6 +280,13 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
         public DynamicMap<T> getMap() {
             return map;
         }
+
+        @Override
+        public String toString() {
+            return "SwappableDynamicMap{" +
+                    "items=" + map.size() +
+                    '}';
+        }
     }
 
 }

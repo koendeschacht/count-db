@@ -1,4 +1,4 @@
-package be.bagofwords.main;
+package be.bagofwords.db.example;
 
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
@@ -52,6 +52,8 @@ public class ExampleUsage {
         // Drop all data
         myLogDataInterface.dropAllData();
         myUserDataInterface.dropAllData();
+
+        dataInterfaceFactory.terminate();
     }
 
     public static class UserObject {
