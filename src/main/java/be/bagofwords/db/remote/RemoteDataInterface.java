@@ -2,20 +2,17 @@ package be.bagofwords.db.remote;
 
 import be.bagofwords.application.TaskSchedulerService;
 import be.bagofwords.db.DataInterface;
+import be.bagofwords.db.KeyFilter;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer.Action;
+import be.bagofwords.exec.RemoteExecConfig;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.logging.Log;
 import be.bagofwords.util.ExecutorServiceFactory;
 import be.bagofwords.util.KeyValue;
-import be.bagofwords.util.SerializationUtils;
-import be.bagofwords.util.SocketConnection;
 import org.apache.commons.io.IOUtils;
-import org.xerial.snappy.Snappy;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -68,7 +65,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
             //Can we create an extra connection?
             synchronized (connections) {
                 if (connections.size() < MAX_NUM_OF_CONNECTIONS) {
-                    Connection newConn = new Connection(host, port, largeWriteBuffer, largeReadBuffer, connectionType);
+                    Connection newConn = new Connection(this, host, port, largeWriteBuffer, largeReadBuffer, connectionType);
                     connections.add(newConn);
                     newConn.setTaken(true);
                     return newConn;
@@ -103,7 +100,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
         Connection connection = null;
         try {
             connection = selectSmallBufferConnection();
-            doAction(Action.READVALUE, connection);
+            doAction(Action.READ_VALUE, connection);
             connection.writeLong(key);
             connection.flush();
             T value = connection.readValue(getObjectClass());
@@ -147,7 +144,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
         Connection connection = null;
         try {
             connection = selectSmallBufferConnection();
-            doAction(Action.WRITEVALUE, connection);
+            doAction(Action.WRITE_VALUE, connection);
             connection.writeLong(key);
             writeValue(value, connection);
             connection.flush();
@@ -169,7 +166,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
         Connection connection = null;
         try {
             connection = selectLargeWriteBufferConnection();
-            doAction(Action.WRITEVALUES, connection);
+            doAction(Action.WRITE_VALUES, connection);
             while (entries.hasNext()) {
                 KeyValue<T> entry = entries.next();
                 connection.writeLong(entry.getKey());
@@ -198,7 +195,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
         try {
             connection = selectLargeReadBufferConnection();
             Connection thisConnection = connection;
-            doAction(Action.READVALUES, thisConnection);
+            doAction(Action.ITERATOR_WITH_KEY_ITERATOR, thisConnection);
             executorService.submit(() -> {
                 try {
                     while (keyIterator.hasNext()) {
@@ -212,7 +209,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
                     dropConnection(thisConnection);
                 }
             });
-            return createNewKeyValueIterator(thisConnection);
+            return createKeyValueIterator(thisConnection);
         } catch (Exception e) {
             dropConnection(connection);
             throw new RuntimeException("Received exception while sending keys for read(..) for interface " + getName(), e);
@@ -224,103 +221,53 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
         Connection connection = null;
         try {
             connection = selectLargeReadBufferConnection();
-            doAction(Action.READALLVALUES, connection);
+            doAction(Action.ITERATOR, connection);
             connection.flush();
-            return createNewKeyValueIterator(connection);
+            return createKeyValueIterator(connection);
         } catch (Exception e) {
             dropConnection(connection);
             throw new RuntimeException("Failed to iterate over values from " + host + ":" + port, e);
         }
     }
 
-    private CloseableIterator<KeyValue<T>> createNewKeyValueIterator(final Connection connection) {
-        return new CloseableIterator<KeyValue<T>>() {
+    @Override
+    public CloseableIterator<KeyValue<T>> iterator(KeyFilter keyFilter) {
+        Connection connection = null;
+        try {
+            RemoteExecConfig execConfig = RemoteExecConfig.create(keyFilter).add(keyFilter.getClass());
+            connection = selectLargeReadBufferConnection();
+            doAction(Action.ITERATOR_WITH_KEY_FILTER, connection);
+            connection.writeValue(execConfig.pack());
+            connection.flush();
+            return createKeyValueIterator(connection);
+        } catch (Exception e) {
+            dropConnection(connection);
+            throw new RuntimeException("Failed to iterate over values from " + host + ":" + port, e);
+        }
+    }
 
-            private Iterator<KeyValue<T>> nextValues;
-            private boolean readAllValuesFromConnection = false;
+    @Override
+    public CloseableIterator<T> valueIterator(KeyFilter keyFilter) {
+        Connection connection = null;
+        try {
+            RemoteExecConfig execConfig = RemoteExecConfig.create(keyFilter).add(keyFilter.getClass());
+            connection = selectLargeReadBufferConnection();
+            doAction(Action.VALUES_ITERATOR_WITH_KEY_FILTER, connection);
+            connection.writeValue(execConfig.pack());
+            connection.flush();
+            return createValueIterator(connection);
+        } catch (Exception e) {
+            dropConnection(connection);
+            throw new RuntimeException("Failed to iterate over values from " + host + ":" + port, e);
+        }
+    }
 
-            {
-                //Constructor
-                findNextValues();
-            }
+    private CloseableIterator<KeyValue<T>> createKeyValueIterator(final Connection connection) {
+        return new KeyValueSocketIterator<>(this, connection);
+    }
 
-            private synchronized void findNextValues() {
-                if (!wasClosed()) {
-                    try {
-                        long numOfValues = connection.readLong();
-                        if (numOfValues == LONG_END) {
-                            nextValues = null;
-                            readAllValuesFromConnection = true;
-                        } else if (numOfValues != LONG_ERROR) {
-                            byte[] keys = connection.readByteArray();
-                            byte[] compressedValues = connection.readByteArray();
-                            byte[] uncompressedValues = Snappy.uncompress(compressedValues);
-                            DataInputStream keyIS = new DataInputStream(new ByteArrayInputStream(keys));
-                            DataInputStream valueIS = new DataInputStream(new ByteArrayInputStream(uncompressedValues));
-                            List<KeyValue<T>> nextValuesList = new ArrayList<>();
-                            while (nextValuesList.size() < numOfValues) {
-                                long key = keyIS.readLong();
-                                int length = SerializationUtils.getWidth(getObjectClass());
-                                if (length == -1) {
-                                    length = valueIS.readInt();
-                                }
-                                byte[] objectAsBytes = new byte[length];
-                                if (length > 0) {
-                                    int bytesRead = valueIS.read(objectAsBytes);
-                                    if (bytesRead < length) {
-                                        throw new RuntimeException("Read " + bytesRead + " bytes, expected " + length);
-                                    }
-                                }
-                                T value = SerializationUtils.bytesToObjectCheckForNull(objectAsBytes, getObjectClass());
-                                nextValuesList.add(new KeyValue<>(key, value));
-                            }
-                            if (nextValuesList.isEmpty()) {
-                                throw new RuntimeException("Received zero values! numOfValues=" + numOfValues);
-                            }
-                            nextValues = nextValuesList.iterator();
-                        } else {
-                            throw new RuntimeException("Unexpected response " + connection.readString());
-
-                        }
-                    } catch (Exception e) {
-                        dropConnection(connection);
-                        throw new RuntimeException(e);
-                    }
-                } else {
-                    nextValues = null;
-                }
-            }
-
-            @Override
-            public void closeInt() {
-                if (readAllValuesFromConnection) {
-                    releaseConnection(connection);
-                } else {
-                    //server will still be sending data through this connection, so it can not be reused.
-                    dropConnection(connection);
-                }
-            }
-
-            @Override
-            public boolean hasNext() {
-                return nextValues != null;
-            }
-
-            @Override
-            public KeyValue<T> next() {
-                KeyValue<T> result = nextValues.next();
-                if (!nextValues.hasNext()) {
-                    findNextValues();
-                }
-                return result;
-            }
-
-            @Override
-            public void remove() {
-                throw new RuntimeException("Not implemented");
-            }
-
-        };
+    private CloseableIterator<T> createValueIterator(final Connection connection) {
+        return new ValueSocketIterator<>(this, connection);
     }
 
     @Override
@@ -328,7 +275,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
         Connection connection = null;
         try {
             connection = selectLargeReadBufferConnection();
-            doAction(Action.READKEYS, connection);
+            doAction(Action.READ_KEYS, connection);
             connection.flush();
             Connection thisConnection = connection;
             return new CloseableIterator<Long>() {
@@ -394,7 +341,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
             connection = selectLargeReadBufferConnection();
             doAction(Action.READ_CACHED_VALUES, connection);
             connection.flush();
-            return createNewKeyValueIterator(connection);
+            return createKeyValueIterator(connection);
         } catch (Exception e) {
             dropConnection(connection);
             throw new RuntimeException("Failed to iterate over values from " + host + ":" + port, e);
@@ -403,7 +350,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
 
     @Override
     public void dropAllData() {
-        doSimpleAction(Action.DROPALLDATA);
+        doSimpleAction(Action.DROP_ALL_DATA);
     }
 
     @Override
@@ -479,7 +426,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
         return this;
     }
 
-    private void doAction(Action action, Connection connection) throws IOException {
+    void doAction(Action action, Connection connection) throws IOException {
         connection.writeByte((byte) action.ordinal());
     }
 
@@ -502,13 +449,13 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
         }
     }
 
-    private void releaseConnection(Connection connection) {
+    void releaseConnection(Connection connection) {
         if (connection != null) {
             connection.release();
         }
     }
 
-    private void dropConnection(Connection connection) {
+    void dropConnection(Connection connection) {
         if (connection != null) {
             IOUtils.closeQuietly(connection);
             synchronized (smallBufferConnections) {
@@ -520,61 +467,6 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
             synchronized (largeWriteBufferConnections) {
                 largeWriteBufferConnections.remove(connection);
             }
-        }
-    }
-
-    private class Connection extends SocketConnection {
-
-        private boolean isTaken;
-        private long lastUsage;
-
-        public Connection(String host, int port, boolean useLargeOutputBuffer, boolean useLargeInputBuffer, RemoteDataInterfaceServer.ConnectionType connectionType) throws IOException {
-            super(host, port, false, false);
-            if (useLargeOutputBuffer) {
-                useLargeOutputBuffer();
-            }
-            if (useLargeInputBuffer) {
-                useLargeInputBuffer();
-            }
-            initializeSubset(connectionType);
-        }
-
-        private void initializeSubset(RemoteDataInterfaceServer.ConnectionType connectionType) throws IOException {
-            writeString(RemoteDataInterfaceServer.NAME);
-            writeByte((byte) connectionType.ordinal());
-            writeString(getName());
-            writeBoolean(isTemporaryDataInterface());
-            writeString(getObjectClass().getCanonicalName());
-            writeString(getCombinator().getClass().getCanonicalName());
-            flush();
-            long response = readLong();
-            if (response == LONG_ERROR) {
-                String errorMessage = readString();
-                throw new RuntimeException("Received unexpected message while initializing interface " + errorMessage);
-            }
-        }
-
-        private boolean isTaken() {
-            return isTaken;
-        }
-
-        private void setTaken(boolean taken) {
-            isTaken = taken;
-            lastUsage = System.currentTimeMillis();
-        }
-
-        public void release() {
-            isTaken = false;
-            lastUsage = System.currentTimeMillis();
-        }
-
-        public long getLastUsage() {
-            return lastUsage;
-        }
-
-        public void close() throws IOException {
-            doAction(Action.CLOSE_CONNECTION, this);
-            super.close();
         }
     }
 

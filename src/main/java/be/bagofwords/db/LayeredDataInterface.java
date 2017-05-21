@@ -70,6 +70,11 @@ public abstract class LayeredDataInterface<T> extends BaseDataInterface<T> {
         return baseInterface.iterator(keyIterator);
     }
 
+    @Override
+    public CloseableIterator<KeyValue<T>> iterator(KeyFilter keyFilter) {
+        return baseInterface.iterator(keyFilter);
+    }
+
     public CloseableIterator<Long> keyIterator() {
         return baseInterface.keyIterator();
     }

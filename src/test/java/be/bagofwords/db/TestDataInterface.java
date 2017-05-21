@@ -1,5 +1,6 @@
 package be.bagofwords.db;
 
+import be.bagofwords.db.helper.EvenKeysFilter;
 import be.bagofwords.db.helper.TestObject;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.iterator.CloseableIterator;
@@ -321,6 +322,29 @@ public class TestDataInterface extends BaseTestDataInterface {
     }
 
     @Test
+    public void testIteratorWithFilter() {
+        DataInterface<Long> dataInterface = createCountDataInterface("testIteratorWithFilter");
+        int numOfItems = 100;
+        for (int i = 0; i < 100; i++) {
+            dataInterface.write(i, (long) i);
+        }
+        dataInterface.flush();
+        //Try with stream
+        MutableInt numOfValuesRead = new MutableInt();
+        dataInterface.stream(new EvenKeysFilter()).forEach((v) -> numOfValuesRead.increment());
+        Assert.assertEquals(numOfItems / 2, numOfValuesRead.intValue());
+        //Try with iterator
+        numOfValuesRead.setValue(0);
+        CloseableIterator<KeyValue<Long>> closeableIterator = dataInterface.iterator(new EvenKeysFilter());
+        while (closeableIterator.hasNext()) {
+            closeableIterator.next();
+            numOfValuesRead.increment();
+        }
+        closeableIterator.close();
+        Assert.assertEquals(numOfItems / 2, numOfValuesRead.intValue());
+    }
+
+    @Test
     public void testValuesIteratorWithFilter() {
         DataInterface<Long> dataInterface = createCountDataInterface("testValuesIteratorWithFilter");
         int numOfItems = 100;
@@ -330,17 +354,11 @@ public class TestDataInterface extends BaseTestDataInterface {
         dataInterface.flush();
         //Try with stream
         MutableInt numOfValuesRead = new MutableInt();
-        KeyFilter keyFilter = new KeyFilter() {
-            @Override
-            public boolean acceptKey(long key) {
-                return key % 2 == 0;
-            }
-        };
-        dataInterface.streamValues(keyFilter).forEach((v) -> numOfValuesRead.increment());
+        dataInterface.streamValues(new EvenKeysFilter()).forEach((v) -> numOfValuesRead.increment());
         Assert.assertEquals(numOfItems / 2, numOfValuesRead.intValue());
         //Try with iterator
         numOfValuesRead.setValue(0);
-        CloseableIterator<Long> closeableIterator = dataInterface.valueIterator(keyFilter);
+        CloseableIterator<Long> closeableIterator = dataInterface.valueIterator(new EvenKeysFilter());
         while (closeableIterator.hasNext()) {
             closeableIterator.next();
             numOfValuesRead.increment();

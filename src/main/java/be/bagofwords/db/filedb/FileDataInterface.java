@@ -2,9 +2,9 @@ package be.bagofwords.db.filedb;
 
 import be.bagofwords.application.TaskSchedulerService;
 import be.bagofwords.db.CoreDataInterface;
-import be.bagofwords.db.impl.DBUtils;
+import be.bagofwords.db.KeyFilter;
 import be.bagofwords.db.combinator.Combinator;
-import be.bagofwords.db.impl.MetaDataStore;
+import be.bagofwords.db.impl.DBUtils;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
@@ -293,6 +293,40 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                         List<KeyValue<T>> sortedEntries = readCleanValues(file);
                         bucket.unlockRead();
                         valuesInFileIt = sortedEntries.iterator();
+                    } else {
+                        valuesInFileIt = null;
+                        break;
+                    }
+                }
+                if (valuesInFileIt != null && valuesInFileIt.hasNext()) {
+                    return valuesInFileIt.next();
+                } else {
+                    return null;
+                }
+            }
+
+        });
+    }
+
+    @Override
+    public CloseableIterator<KeyValue<T>> iterator(KeyFilter keyFilter) {
+        final FileIterator fileIterator = new FileIterator();
+        return IterableUtils.iterator(new SimpleIterator<KeyValue<T>>() {
+
+            private Iterator<KeyValue<T>> valuesInFileIt;
+
+            @Override
+            public KeyValue<T> next() throws Exception {
+                while ((valuesInFileIt == null || !valuesInFileIt.hasNext())) {
+                    Pair<FileBucket, FileInfo> next = fileIterator.lockCurrentBucketAndGetNextFile();
+                    if (next != null) {
+                        FileBucket bucket = next.getFirst();
+                        FileInfo file = next.getSecond();
+                        if (keyFilter.acceptKeysAboveOrEqual(bucket.getFirstKey()) && keyFilter.acceptKeysBelow(bucket.getLastKey() + 1)) {
+                            List<KeyValue<T>> sortedEntries = readCleanValues(file).stream().filter(kv -> keyFilter.acceptKey(kv.getKey())).collect(Collectors.toList());
+                            valuesInFileIt = sortedEntries.iterator();
+                        }
+                        bucket.unlockRead();
                     } else {
                         valuesInFileIt = null;
                         break;

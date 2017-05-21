@@ -2,14 +2,17 @@ package be.bagofwords.db.remote;
 
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
+import be.bagofwords.db.KeyFilter;
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.exec.PackedRemoteExec;
+import be.bagofwords.exec.RemoteExecUtil;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
+import be.bagofwords.logging.Log;
 import be.bagofwords.memory.MemoryManager;
 import be.bagofwords.memory.MemoryStatus;
 import be.bagofwords.minidepi.ApplicationContext;
-import be.bagofwords.logging.Log;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.ReflectionUtils;
 import be.bagofwords.util.SerializationUtils;
@@ -25,9 +28,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import static be.bagofwords.db.remote.Protocol.LONG_END;
-import static be.bagofwords.db.remote.Protocol.LONG_ERROR;
-import static be.bagofwords.db.remote.Protocol.LONG_OK;
+import static be.bagofwords.db.remote.Protocol.*;
 
 public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
 
@@ -100,7 +101,7 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
                         writeError(" Data interface " + interfaceName + " was closed!");
                     }
                 } else {
-                    dataInterface= dataInterfaceFactory.dataInterface(interfaceName, objectClass).combinator(combinator).temporary(isTemporary).create();
+                    dataInterface = dataInterfaceFactory.dataInterface(interfaceName, objectClass).combinator(combinator).temporary(isTemporary).create();
                     createdInterfaces.add(dataInterface);
                 }
             }
@@ -144,21 +145,23 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
                     handleExactSize();
                 } else if (action == Action.APPROXIMATE_SIZE) {
                     handleApproximateSize();
-                } else if(action==Action.LAST_FLUSH) {
+                } else if (action == Action.LAST_FLUSH) {
                     handleLastFlush();
-                } else if (action == Action.READVALUE) {
+                } else if (action == Action.READ_VALUE) {
                     handleReadValue();
-                } else if (action == Action.WRITEVALUE) {
+                } else if (action == Action.WRITE_VALUE) {
                     handleWriteValue();
-                } else if (action == Action.READALLVALUES) {
-                    handleReadAllValues();
-                } else if (action == Action.READVALUES) {
-                    handleReadValues();
-                } else if (action == Action.WRITEVALUES) {
+                } else if (action == Action.ITERATOR) {
+                    handleIterator();
+                } else if (action == Action.ITERATOR_WITH_KEY_ITERATOR) {
+                    handleIteratorWithKeyIterator();
+                } else if (action == Action.ITERATOR_WITH_KEY_FILTER) {
+                    handleIteratorWithKeyFilter();
+                } else if (action == Action.WRITE_VALUES) {
                     handleWriteValues();
-                } else if (action == Action.READKEYS) {
+                } else if (action == Action.READ_KEYS) {
                     handleReadKeys();
-                } else if (action == Action.DROPALLDATA) {
+                } else if (action == Action.DROP_ALL_DATA) {
                     handleDropAllData();
                 } else if (action == Action.FLUSH) {
                     handleFlush();
@@ -168,6 +171,8 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
                     handleOptimizeForReading();
                 } else if (action == Action.READ_CACHED_VALUES) {
                     handleReadCachedValues();
+                } else if (action == Action.VALUES_ITERATOR_WITH_KEY_FILTER) {
+                    handleValuesIteratorWithKeyFilter();
                 } else {
                     writeError("Unkown action " + action);
                     return false;
@@ -176,9 +181,25 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
             return true;
         }
 
+        private void handleIteratorWithKeyFilter() throws IOException {
+            PackedRemoteExec packedRemoteExec = connection.readValue(PackedRemoteExec.class);
+            KeyFilter filter = (KeyFilter) RemoteExecUtil.loadRemoteRunner(packedRemoteExec);
+            CloseableIterator<KeyValue> iterator = dataInterface.iterator(filter);
+            writeKeyValuesInBatches(iterator);
+            iterator.close();
+        }
+
+        private void handleValuesIteratorWithKeyFilter() throws IOException {
+            PackedRemoteExec packedRemoteExec = connection.readValue(PackedRemoteExec.class);
+            KeyFilter filter = (KeyFilter) RemoteExecUtil.loadRemoteRunner(packedRemoteExec);
+            CloseableIterator iterator = dataInterface.valueIterator(filter);
+            writeValuesInBatches(iterator);
+            iterator.close();
+        }
+
         private void handleReadCachedValues() throws IOException {
             CloseableIterator<KeyValue> iterator = dataInterface.cachedValueIterator();
-            writeValuesInBatches(iterator);
+            writeKeyValuesInBatches(iterator);
             iterator.close();
         }
 
@@ -209,14 +230,14 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
             return startTime;
         }
 
-        private void handleReadValues() throws IOException {
+        private void handleIteratorWithKeyIterator() throws IOException {
             CloseableIterator<KeyValue> valueIt = dataInterface.iterator(IterableUtils.iterator(new SimpleIterator<Long>() {
                 @Override
                 public Long next() throws Exception {
                     return connection.readLong();
                 }
             }, LONG_END));
-            writeValuesInBatches(valueIt);
+            writeKeyValuesInBatches(valueIt);
             valueIt.close();
         }
 
@@ -314,18 +335,39 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
             connection.writeLong(LONG_END);
         }
 
-        private void handleReadAllValues() throws IOException {
+        private void handleIterator() throws IOException {
             CloseableIterator<KeyValue> iterator = dataInterface.iterator();
-            writeValuesInBatches(iterator);
+            writeKeyValuesInBatches(iterator);
             iterator.close();
         }
 
-        private void writeValuesInBatches(CloseableIterator<KeyValue> iterator) throws IOException {
+        private void writeValuesInBatches(CloseableIterator iterator) throws IOException {
+            List<Object> currentBatchValues = new ArrayList<>();
+            long batchSize = getBatchSize();
+            while (iterator.hasNext()) {
+                currentBatchValues.add(iterator.next());
+                if (currentBatchValues.size() >= batchSize || memoryManager.getMemoryStatus() != MemoryStatus.FREE) {
+                    writeValuesInBatch(currentBatchValues);
+                    currentBatchValues.clear();
+                }
+            }
+            if (!currentBatchValues.isEmpty()) {
+                writeValuesInBatch(currentBatchValues);
+            }
+            connection.writeLong(LONG_END);
+            connection.flush();
+        }
+
+        private void writeValuesInBatch(List<Object> currentBatchValues) throws IOException {
+            connection.writeLong(currentBatchValues.size());
+            writeListOfValues(currentBatchValues);
+        }
+
+        private void writeKeyValuesInBatches(CloseableIterator<KeyValue> iterator) throws IOException {
             //will write data in batches so we can compress key's and values separately
             List<Long> currentBatchKeys = new ArrayList<>();
             List<Object> currentBatchValues = new ArrayList<>();
-            int widthOfObject = SerializationUtils.getWidth(dataInterface.getObjectClass());
-            long batchSize = widthOfObject != -1 && widthOfObject < 16 ? CLONE_BATCH_SIZE_PRIMITIVE : CLONE_BATCH_SIZE_NON_PRIMITIVE;
+            long batchSize = getBatchSize();
             while (iterator.hasNext()) {
                 KeyValue curr = iterator.next();
                 currentBatchKeys.add(curr.getKey());
@@ -343,17 +385,20 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
             connection.flush();
         }
 
+        private long getBatchSize() {
+            int widthOfObject = SerializationUtils.getWidth(dataInterface.getObjectClass());
+            return widthOfObject != -1 && widthOfObject < 16 ? CLONE_BATCH_SIZE_PRIMITIVE : CLONE_BATCH_SIZE_NON_PRIMITIVE;
+        }
+
         private void writeCurrentBatch(List<Long> currentBatchKeys, List<Object> currentBatchValues) throws IOException {
-            //write keys
             connection.writeLong(currentBatchKeys.size());
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            DataOutputStream dos = new DataOutputStream(bos);
-            for (Long key : currentBatchKeys) {
-                dos.writeLong(key);
-            }
-            dos.close();
-            byte[] origKeys = bos.toByteArray();
-            connection.writeByteArray(origKeys);
+            writeListOfKeys(currentBatchKeys);
+            writeListOfValues(currentBatchValues);
+        }
+
+        private void writeListOfValues(List<Object> currentBatchValues) throws IOException {
+            ByteArrayOutputStream bos;
+            DataOutputStream dos;
 
             //write values
             bos = new ByteArrayOutputStream();
@@ -370,6 +415,17 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
             byte[] compressedValues = Snappy.compress(origValues);
             //            Log.i("Compressed values from " + origValues.length + " to " + compressedValues.length);
             connection.writeByteArray(compressedValues);
+        }
+
+        private void writeListOfKeys(List<Long> currentBatchKeys) throws IOException {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            DataOutputStream dos = new DataOutputStream(bos);
+            for (Long key : currentBatchKeys) {
+                dos.writeLong(key);
+            }
+            dos.close();
+            byte[] origKeys = bos.toByteArray();
+            connection.writeByteArray(origKeys);
         }
 
         private void handleReadValue() throws IOException {
@@ -399,9 +455,9 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
     }
 
     public enum Action {
-        READVALUE, WRITEVALUE, READVALUES, READKEYS, WRITEVALUES, DROPALLDATA, CLOSE_CONNECTION, FLUSH,
-        READALLVALUES, READ_CACHED_VALUES, APPROXIMATE_SIZE, MIGHT_CONTAIN, EXACT_SIZE, OPTMIZE_FOR_READING,
-        LAST_FLUSH
+        READ_VALUE, WRITE_VALUE, ITERATOR_WITH_KEY_ITERATOR, READ_KEYS, WRITE_VALUES, DROP_ALL_DATA, CLOSE_CONNECTION, FLUSH,
+        ITERATOR, READ_CACHED_VALUES, APPROXIMATE_SIZE, MIGHT_CONTAIN, EXACT_SIZE, OPTMIZE_FOR_READING,
+        VALUES_ITERATOR_WITH_KEY_FILTER, ITERATOR_WITH_KEY_FILTER, LAST_FLUSH
     }
 
     public enum ConnectionType {

@@ -140,23 +140,7 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
 
     @Override
     public CloseableIterator<Long> keyIterator() {
-        final CloseableIterator<KeyValue<T>> keyValueIterator = iterator();
-        return new CloseableIterator<Long>() {
-            @Override
-            public boolean hasNext() {
-                return keyValueIterator.hasNext();
-            }
-
-            @Override
-            public Long next() {
-                return keyValueIterator.next().getKey();
-            }
-
-            @Override
-            public void closeInt() {
-                keyValueIterator.close();
-            }
-        };
+        return IterableUtils.mapIterator(iterator(), KeyValue::getKey);
     }
 
     /**
@@ -165,23 +149,7 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
 
     @Override
     public CloseableIterator<T> valueIterator() {
-        final CloseableIterator<KeyValue<T>> keyValueIterator = iterator();
-        return new CloseableIterator<T>() {
-            @Override
-            public boolean hasNext() {
-                return keyValueIterator.hasNext();
-            }
-
-            @Override
-            public T next() {
-                return keyValueIterator.next().getValue();
-            }
-
-            @Override
-            public void closeInt() {
-                keyValueIterator.close();
-            }
-        };
+        return IterableUtils.mapIterator(iterator(), KeyValue::getValue);
     }
 
     /**
@@ -190,14 +158,23 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
 
     @Override
     public CloseableIterator<T> valueIterator(KeyFilter keyFilter) {
+        return IterableUtils.mapIterator(iterator(keyFilter), KeyValue::getValue);
+    }
+
+    /**
+     * This method can be overwritten in a subclass to improve efficiency
+     */
+
+    @Override
+    public CloseableIterator<KeyValue<T>> iterator(KeyFilter keyFilter) {
         final CloseableIterator<KeyValue<T>> keyValueIterator = iterator();
-        return IterableUtils.iterator(new SimpleIterator<T>() {
+        return IterableUtils.iterator(new SimpleIterator<KeyValue<T>>() {
             @Override
-            public T next() throws Exception {
+            public KeyValue<T> next() throws Exception {
                 while (keyValueIterator.hasNext()) {
                     KeyValue<T> next = keyValueIterator.next();
                     if (keyFilter.acceptKey(next.getKey())) {
-                        return next.getValue();
+                        return next;
                     }
                 }
                 return null;
@@ -352,13 +329,22 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
      */
 
     @Override
+    public Stream<KeyValue<T>> stream(KeyFilter keyFilter) {
+        return StreamUtils.stream(iterator(keyFilter), apprSize(), true);
+    }
+
+    /**
+     * This method can be overwritten in a subclass to improve efficiency
+     */
+
+    @Override
     public Stream<T> streamValues() {
         return StreamUtils.stream(valueIterator(), apprSize(), false);
     }
 
     @Override
     public Stream<T> streamValues(KeyFilter keyFilter) {
-        return stream().filter(kv -> keyFilter.acceptKey(kv.getKey())).map(KeyValue::getValue);
+        return StreamUtils.stream(valueIterator(keyFilter), apprSize(), false);
     }
 
     /**
