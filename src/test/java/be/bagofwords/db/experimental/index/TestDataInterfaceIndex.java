@@ -39,15 +39,16 @@ public class TestDataInterfaceIndex extends BaseTestDataInterface {
         assertEquals(Collections.singletonList("This is a test"), results);
         baseInterface.close();
         indexedInterface.close();
-        baseInterface = dataInterfaceFactory.dataInterface("testIndexed", String.class).caching(type).create();
-        indexedInterface = dataInterfaceFactory.index(baseInterface, "tokens", tokenizer);
-        results = indexedInterface.readIndexedValues("another test");
-        assertEquals(Collections.singletonList("This is a test"), results);
-        Log.i("Writing new value");
-        baseInterface.write(3, "hi there");
-        baseInterface.flush();
-        results = indexedInterface.readIndexedValues("hi");
-        assertEquals(Collections.singletonList("hi there"), results);
+        if (backendType != DatabaseBackendType.MEMORY) {
+            baseInterface = dataInterfaceFactory.dataInterface("testIndexed", String.class).caching(type).create();
+            indexedInterface = dataInterfaceFactory.index(baseInterface, "tokens", tokenizer);
+            results = indexedInterface.readIndexedValues("another test");
+            assertEquals(Collections.singletonList("This is a test"), results);
+            baseInterface.write(3, "hi there");
+            baseInterface.flush();
+            results = indexedInterface.readIndexedValues("hi");
+            assertEquals(Collections.singletonList("hi there"), results);
+        }
     }
 
 }

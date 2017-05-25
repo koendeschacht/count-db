@@ -1,6 +1,7 @@
 package be.bagofwords.db;
 
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.DataIterable;
 import be.bagofwords.text.BowString;

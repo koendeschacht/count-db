@@ -24,6 +24,7 @@ public class Connection extends SocketConnection {
         if (useLargeInputBuffer) {
             useLargeInputBuffer();
         }
+        ensureBuffered();
         initializeSubset(connectionType);
     }
 

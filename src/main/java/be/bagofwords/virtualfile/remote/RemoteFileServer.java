@@ -25,7 +25,6 @@ public class RemoteFileServer implements SocketRequestHandlerFactory {
 
     public RemoteFileServer(ApplicationContext applicationContext) {
         this.virtualFileService = applicationContext.getBean(VirtualFileService.class);
-        applicationContext.getBean(SocketServer.class).registerSocketRequestHandlerFactory(this);
     }
 
     @Override

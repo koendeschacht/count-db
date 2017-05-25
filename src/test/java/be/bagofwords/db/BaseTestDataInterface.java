@@ -26,9 +26,9 @@ public class BaseTestDataInterface {
         List<Object[]> result = new ArrayList<>();
 
         List<DatabaseBackendType> backendTypes = new ArrayList<>();
-        backendTypes.add(DatabaseBackendType.LEVELDB);
-        backendTypes.add(DatabaseBackendType.MEMORY);
-        backendTypes.add(DatabaseBackendType.REMOTE);
+        // backendTypes.add(DatabaseBackendType.LEVELDB);
+        // backendTypes.add(DatabaseBackendType.MEMORY);
+        // backendTypes.add(DatabaseBackendType.REMOTE);
         backendTypes.add(DatabaseBackendType.FILE);
         //        backendTypes.add(DatabaseBackendType.LMDB); --> too slow
         //        backendTypes.add(DatabaseBackendType.KYOTO);
@@ -42,7 +42,7 @@ public class BaseTestDataInterface {
         return result;
     }
 
-    private DatabaseBackendType backendType;
+    protected DatabaseBackendType backendType;
     protected DatabaseCachingType type;
     protected DataInterfaceFactory dataInterfaceFactory;
 

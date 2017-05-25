@@ -14,8 +14,8 @@ public class InMemoryDataInterfaceFactory extends BaseDataInterfaceFactory {
     }
 
     @Override
-    protected <T extends Object> BaseDataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
-        return new InMemoryDataInterface<>(nameOfSubset, objectClass, combinator);
+    protected <T extends Object> BaseDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
+        return new InMemoryDataInterface<>(name, objectClass, combinator);
     }
 
     @Override

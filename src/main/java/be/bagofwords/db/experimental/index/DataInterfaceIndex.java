@@ -1,7 +1,9 @@
 package be.bagofwords.db.experimental.index;
 
+import be.bagofwords.db.methods.SetKeyFilter;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
+import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.data.LongList;
 import be.bagofwords.db.data.LongListCombinator;
 import be.bagofwords.db.impl.BaseDataInterface;
@@ -10,10 +12,7 @@ import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.logging.Log;
 import be.bagofwords.util.KeyValue;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class DataInterfaceIndex<T> {
 
@@ -51,11 +50,35 @@ public class DataInterfaceIndex<T> {
     public List<T> readIndexedValues(T queryByObject) {
         ensureIndexUpToDate();
         List<Long> indexKeys = indexer.convertToIndexes(queryByObject);
-        Set<T> uniqueResults = new HashSet<>();
+        Set<Long> objectKeys = new HashSet<>();
         for (Long indexKey : indexKeys) {
-            uniqueResults.addAll(readIndexedValues(indexKey));
+            LongList keys = indexedDataInterface.read(indexKey);
+            if (keys != null) {
+                objectKeys.addAll(keys);
+            }
         }
-        return new ArrayList<>(uniqueResults);
+        return readAllValuesForKeys(objectKeys);
+    }
+
+    private List<T> readAllValuesForKeys(Set<Long> objectKeys) {
+        long start = System.currentTimeMillis();
+        List<T> results = new ArrayList<>();
+        CloseableIterator<T> iterator = dataInterface.valueIterator(new SetKeyFilter(objectKeys));
+        iterator.forEachRemaining(results::add);
+        iterator.close();
+        Log.i("Reading values took " + (System.currentTimeMillis() - start) + " ms");
+        return results;
+    }
+
+    public List<T> readIndexedValues(KeyFilter keyFilter) {
+        ensureIndexUpToDate();
+        Set<Long> objectKeys = new HashSet<>();
+        long start = System.currentTimeMillis();
+        CloseableIterator<LongList> indexIterator = indexedDataInterface.valueIterator(keyFilter);
+        indexIterator.forEachRemaining(objectKeys::addAll);
+        indexIterator.close();
+        Log.i("Reading indexes took " + (System.currentTimeMillis() - start) + "ms");
+        return readAllValuesForKeys(objectKeys);
     }
 
     public List<T> readIndexedValues(long indexKey) {

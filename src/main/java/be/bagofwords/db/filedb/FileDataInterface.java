@@ -2,7 +2,7 @@ package be.bagofwords.db.filedb;
 
 import be.bagofwords.application.TaskSchedulerService;
 import be.bagofwords.db.CoreDataInterface;
-import be.bagofwords.db.KeyFilter;
+import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.impl.DBUtils;
 import be.bagofwords.iterator.CloseableIterator;
@@ -56,9 +56,9 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     private boolean closeWasRequested;
 
-    public FileDataInterface(MemoryManager memoryManager, Combinator<T> combinator, Class<T> objectClass, String directory, String nameOfSubset, boolean isTemporaryDataInterface, TaskSchedulerService taskScheduler) {
-        super(nameOfSubset, objectClass, combinator, isTemporaryDataInterface);
-        this.directory = new File(directory, nameOfSubset);
+    public FileDataInterface(MemoryManager memoryManager, Combinator<T> combinator, Class<T> objectClass, String directory, String name, boolean isTemporaryDataInterface, TaskSchedulerService taskScheduler) {
+        super(name, objectClass, combinator, isTemporaryDataInterface);
+        this.directory = new File(directory, name);
         this.sizeOfValues = SerializationUtils.getWidth(objectClass);
         this.randomId = new Random().nextLong();
         this.memoryManager = memoryManager;
@@ -127,7 +127,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     long currentKey = SerializationUtils.bytesToLong(buffer, position);
                     position += LONG_SIZE;
                     if (currentKey == key) {
-                        ReadValue<T> readValue = readValue(buffer, position);
+                        ReadValue<T> readValue = readValue(buffer, position, true);
                         return readValue.getValue();
                     } else if (currentKey > key) {
                         return null;
@@ -322,8 +322,8 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     if (next != null) {
                         FileBucket bucket = next.getFirst();
                         FileInfo file = next.getSecond();
-                        if (keyFilter.acceptKeysAboveOrEqual(bucket.getFirstKey()) && keyFilter.acceptKeysBelow(bucket.getLastKey() + 1)) {
-                            List<KeyValue<T>> sortedEntries = readCleanValues(file).stream().filter(kv -> keyFilter.acceptKey(kv.getKey())).collect(Collectors.toList());
+                        if (keyFilter.acceptKeysAboveOrEqual(bucket.getLastKey()) && keyFilter.acceptKeysBelow(file.getFirstKey())) {
+                            List<KeyValue<T>> sortedEntries = readCleanValuesWithKeyFilter(file, keyFilter);
                             valuesInFileIt = sortedEntries.iterator();
                         }
                         bucket.unlockRead();
@@ -678,7 +678,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         }
     }
 
-    private ReadValue<T> readValue(byte[] buffer, int position) throws IOException {
+    private ReadValue<T> readValue(byte[] buffer, int position, boolean readActualValue) throws IOException {
         int lengthOfObject;
         int lenghtOfLengthValue;
         if (sizeOfValues == -1) {
@@ -688,7 +688,12 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             lengthOfObject = sizeOfValues;
             lenghtOfLengthValue = 0;
         }
-        T value = SerializationUtils.bytesToObjectCheckForNull(buffer, position + lenghtOfLengthValue, lengthOfObject, getObjectClass());
+        T value;
+        if (readActualValue) {
+            value = SerializationUtils.bytesToObjectCheckForNull(buffer, position + lenghtOfLengthValue, lengthOfObject, getObjectClass());
+        } else {
+            value = null;
+        }
         return new ReadValue<>(lengthOfObject + lenghtOfLengthValue, value);
     }
 
@@ -927,9 +932,32 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             while (position < buffer.length) {
                 long key = SerializationUtils.bytesToLong(buffer, position);
                 position += LONG_SIZE;
-                ReadValue<T> readValue = readValue(buffer, position);
+                ReadValue<T> readValue = readValue(buffer, position, true);
                 position += readValue.getSize();
                 result.add(new KeyValue<>(key, readValue.getValue()));
+            }
+            dataWasRead();
+            return result;
+        } catch (Exception ex) {
+            throw new RuntimeException("Unexpected exception while reading values from file " + toFile(file).getAbsolutePath(), ex);
+        }
+    }
+
+    private List<KeyValue<T>> readCleanValuesWithKeyFilter(FileInfo file, KeyFilter keyFilter) {
+        try {
+            byte[] buffer = getReadBuffer(file, 0, file.getReadSize()).getBuffer();
+            int expectedNumberOfValues = getLowerBoundOnNumberOfValues(file.getReadSize());
+            List<KeyValue<T>> result = new ArrayList<>(expectedNumberOfValues);
+            int position = 0;
+            while (position < buffer.length) {
+                long key = SerializationUtils.bytesToLong(buffer, position);
+                position += LONG_SIZE;
+                boolean readActualValue = keyFilter.acceptKey(key);
+                ReadValue<T> readValue = readValue(buffer, position, readActualValue);
+                position += readValue.getSize();
+                if (readActualValue) {
+                    result.add(new KeyValue<>(key, readValue.getValue()));
+                }
             }
             dataWasRead();
             return result;
@@ -956,7 +984,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 while (position < buffer.length) {
                     long key = SerializationUtils.bytesToLong(buffer, position);
                     position += LONG_SIZE;
-                    ReadValue<T> readValue = readValue(buffer, position);
+                    ReadValue<T> readValue = readValue(buffer, position, true);
                     position += readValue.getSize();
                     int bucketInd = (int) ((key - start) / density);
                     if (bucketInd == buckets.length) {

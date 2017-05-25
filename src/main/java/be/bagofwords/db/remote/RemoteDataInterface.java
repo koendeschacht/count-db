@@ -2,7 +2,7 @@ package be.bagofwords.db.remote;
 
 import be.bagofwords.application.TaskSchedulerService;
 import be.bagofwords.db.DataInterface;
-import be.bagofwords.db.KeyFilter;
+import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer.Action;

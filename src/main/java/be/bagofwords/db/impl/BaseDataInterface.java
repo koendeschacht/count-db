@@ -1,7 +1,7 @@
 package be.bagofwords.db.impl;
 
 import be.bagofwords.db.DataInterface;
-import be.bagofwords.db.KeyFilter;
+import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;

@@ -2,7 +2,7 @@ package be.bagofwords.db.remote;
 
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
-import be.bagofwords.db.KeyFilter;
+import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.exec.PackedRemoteExec;
 import be.bagofwords.exec.RemoteExecUtil;
@@ -126,13 +126,17 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
 
         @Override
         public void handleRequests() throws Exception {
-            prepareHandler();
-            connection.getOs().flush();
-            boolean keepReadingCommands = true;
-            while (keepReadingCommands && connection.isOpen()) {
-                keepReadingCommands = handleRequest();
-                totalNumberOfRequests++;
+            try {
+                prepareHandler();
                 connection.getOs().flush();
+                boolean keepReadingCommands = true;
+                while (keepReadingCommands && connection.isOpen()) {
+                    keepReadingCommands = handleRequest();
+                    totalNumberOfRequests++;
+                    connection.getOs().flush();
+                }
+            } catch (Exception exp) {
+                writeError("Unexpected error " + exp.getMessage());
             }
         }
 

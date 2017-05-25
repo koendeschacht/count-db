@@ -13,6 +13,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.Random;
+import java.util.concurrent.CountDownLatch;
 
 @RunWith(Parameterized.class)
 public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
@@ -22,19 +23,20 @@ public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
     }
 
     @Test
-    public void testStrings() {
+    public void testStrings() throws InterruptedException {
         final int numOfThreads = 10;
         final int numOfExamples = 200;
         final int numOfIterations = 10000;
-        String nameOfSubset = "testMultiThreaded_" + type;
-        final DataInterface<Long> db = dataInterfaceFactory.dataInterface(nameOfSubset, Long.class).combinator(new LongCombinator()).caching(type).create();
+        String name = "testMultiThreaded_" + type;
+        final DataInterface<Long> db = dataInterfaceFactory.dataInterface(name, Long.class).combinator(new LongCombinator()).caching(type).create();
         db.dropAllData();
 
         final long[] numAdded = new long[numOfExamples];
-        final MutableLong threadsFinished = new MutableLong();
+        final CountDownLatch countDownLatch = new CountDownLatch(numOfThreads);
         //Add multithreaded
         for (int i = 0; i < numOfThreads; i++) {
-            Thread t = new Thread() {
+            Thread t = new Thread("testStringsThread") {
+
                 @Override
                 public void run() {
                     Random r = new Random();
@@ -45,14 +47,12 @@ public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
                         }
                         db.increaseCount(Integer.toString(nextInt), 1l);
                     }
-                    threadsFinished.increment();
+                    countDownLatch.countDown();
                 }
             };
             t.start();
         }
-        while (threadsFinished.intValue() != numOfThreads) {
-            Utils.threadSleep(100);
-        }
+        countDownLatch.await();
         db.flush();
         for (int i = 0; i < numOfExamples; i++) {
             Assert.assertEquals("Not equal on position " + i, numAdded[i], db.readCount(Integer.toString(i)));

@@ -1,9 +1,11 @@
 package be.bagofwords.db;
 
+import be.bagofwords.db.methods.RangeKeyFilter;
 import be.bagofwords.db.helper.EvenKeysFilter;
 import be.bagofwords.db.helper.TestObject;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.iterator.CloseableIterator;
+import be.bagofwords.util.HashUtils;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.Utils;
 import org.apache.commons.lang3.mutable.MutableInt;
@@ -13,6 +15,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.*;
+import java.util.stream.IntStream;
 
 @RunWith(Parameterized.class)
 public class TestDataInterface extends BaseTestDataInterface {
@@ -92,7 +95,7 @@ public class TestDataInterface extends BaseTestDataInterface {
 
     @Test
     public void testCountsWithPause() throws Exception {
-        long numOfExamples = 1000;
+        long numOfExamples = 100;
         DataInterface<Long> dataInterface = createCountDataInterface("testCountsWithPause");
         dataInterface.dropAllData();
         for (int i = 0; i < numOfExamples; i++) {
@@ -158,9 +161,7 @@ public class TestDataInterface extends BaseTestDataInterface {
         int numOfExamples = 1000;
         DataInterface<Long> db = createCountDataInterface("testApproximateSize");
         db.dropAllData();
-        for (int i = 0; i < numOfExamples; i++) {
-            db.increaseCount(Integer.toString(i));
-        }
+        db.write(IntStream.range(0, numOfExamples).mapToObj(i->new KeyValue<>(HashUtils.hashCode(Integer.toString(i)), 1l)).iterator());
         db.flush();
         long apprSize = db.apprSize();
         Assert.assertTrue(apprSize > 100);
@@ -306,9 +307,9 @@ public class TestDataInterface extends BaseTestDataInterface {
     @Test
     public void testFlushIfNotClosed() {
         final DataInterface<Long> dataInterface = createCountDataInterface("testFlushIfNotClosed");
-        dataInterface.ifNotClosed(() -> dataInterface.flush());
+        dataInterface.ifNotClosed(dataInterface::flush);
         dataInterface.close();
-        dataInterface.ifNotClosed(() -> dataInterface.flush());
+        dataInterface.ifNotClosed(dataInterface::flush);
     }
 
     @Test
@@ -367,6 +368,29 @@ public class TestDataInterface extends BaseTestDataInterface {
         Assert.assertEquals(numOfItems / 2, numOfValuesRead.intValue());
     }
 
+    @Test
+    public void testValuesIteratorWithRangeFilter() {
+        DataInterface<Long> dataInterface = createCountDataInterface("testValuesIteratorWithRangeFilter");
+        int numOfItems = 100;
+        for (int i = 0; i < 100; i++) {
+            dataInterface.write(i, (long) i);
+        }
+        dataInterface.flush();
+        //Try with stream
+        MutableInt numOfValuesRead = new MutableInt();
+        dataInterface.streamValues(new RangeKeyFilter(0,50)).forEach((v) -> numOfValuesRead.increment());
+        Assert.assertEquals(numOfItems / 2, numOfValuesRead.intValue());
+        //Try with iterator
+        numOfValuesRead.setValue(0);
+        CloseableIterator<Long> closeableIterator = dataInterface.valueIterator(new RangeKeyFilter(0,50));
+        while (closeableIterator.hasNext()) {
+            closeableIterator.next();
+            numOfValuesRead.increment();
+        }
+        closeableIterator.close();
+        Assert.assertEquals(numOfItems / 2, numOfValuesRead.intValue());
+    }
+
     private boolean findValue(DataInterface<Long> dataInterface, long key, Long targetValue) {
         long started = System.currentTimeMillis();
         boolean foundValue = false;
@@ -383,9 +407,9 @@ public class TestDataInterface extends BaseTestDataInterface {
     }
 
     private void writeRandomObjects(BaseDataInterface<TestObject> dataInterface, int numOfExamples, Random random) throws Exception {
-        for (int i = 0; i < numOfExamples; i++) {
-            dataInterface.write(Integer.toString(random.nextInt(10000)), createRandomObject(random));
-        }
+        dataInterface.write(IntStream.range(0, numOfExamples)
+                .mapToObj(i->new KeyValue<>(HashUtils.hashCode(Integer.toString(random.nextInt(10000))), createRandomObject(random)))
+                .iterator());
         dataInterface.flush();
     }
 

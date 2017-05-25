@@ -26,7 +26,7 @@ import java.util.List;
 
 public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInterfaceFactory {
 
-    public static final String META_DATA_STORAGE = "system_meta_data";
+    public static final String META_DATA_STORAGE = "system/metaData";
 
     private int tmpDataInterfaceCount = 0;
 
@@ -36,7 +36,8 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
     private final List<DataInterfaceReference> allInterfaces;
     private final ReferenceQueue<DataInterface> allInterfacesReferenceQueue;
 
-    private BaseDataInterface<LongBloomFilterWithCheckSum> cachedBloomFilters;
+    private BaseDataInterface<LongBloomFilterWithCheckSum> bloomFiltersInterface;
+    private BaseDataInterface<String> metaDataInterface;
 
     private final MetaDataStore metaDataStore;
 
@@ -75,7 +76,7 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
         }
         if (config.bloomFilter) {
             checkInitialisationCachedBloomFilters();
-            dataInterface = new BloomFilterDataInterface<>(dataInterface, cachedBloomFilters, taskScheduler);
+            dataInterface = new BloomFilterDataInterface<>(dataInterface, bloomFiltersInterface, taskScheduler);
         }
         registerInterface(dataInterface);
         return dataInterface;
@@ -93,7 +94,7 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
         }
     }
 
-    protected abstract <T extends Object> BaseDataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface);
+    protected abstract <T extends Object> BaseDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface);
 
     protected abstract Class<? extends DataInterface> getBaseDataInterfaceClass();
 
@@ -126,11 +127,11 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
     }
 
     private void checkInitialisationCachedBloomFilters() {
-        if (cachedBloomFilters == null) {
-            cachedBloomFilters = createBaseDataInterface("system/bloomFilter", LongBloomFilterWithCheckSum.class, new OverWriteCombinator<>(), false);
-            setMetaDataStore(cachedBloomFilters);
+        if (bloomFiltersInterface == null) {
+            bloomFiltersInterface = createBaseDataInterface("system/bloomFilter", LongBloomFilterWithCheckSum.class, new OverWriteCombinator<>(), false);
+            setMetaDataStore(bloomFiltersInterface);
             synchronized (allInterfaces) {
-                allInterfaces.add(new DataInterfaceReference(cachedBloomFilters, allInterfacesReferenceQueue));
+                allInterfaces.add(new DataInterfaceReference(bloomFiltersInterface, allInterfacesReferenceQueue));
             }
         }
     }
@@ -141,12 +142,12 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
 
     @Override
     public void startBean() {
-        if (CoreDataInterface.class.isAssignableFrom(getBaseDataInterfaceClass())) {
-            BaseDataInterface<String> baseMetaDataStorage = createBaseDataInterface(META_DATA_STORAGE, String.class, new OverWriteCombinator<>(), false);
-            metaDataStore.setStorage(new CachedDataInterface<>(memoryManager, cachesManager, baseMetaDataStorage, taskScheduler));
-            if (baseMetaDataStorage instanceof CoreDataInterface) {
-                ((CoreDataInterface) baseMetaDataStorage).setMetaDataStore(metaDataStore);
-            }
+        BaseDataInterface<String> baseMetaDataStorage = createBaseDataInterface(META_DATA_STORAGE, String.class, new OverWriteCombinator<>(), false);
+        metaDataInterface = new CachedDataInterface<>(memoryManager, cachesManager, baseMetaDataStorage, taskScheduler);
+        metaDataStore.setStorage(metaDataInterface);
+        registerInterface(metaDataInterface);
+        if (baseMetaDataStorage instanceof CoreDataInterface) {
+            ((CoreDataInterface) baseMetaDataStorage).setMetaDataStore(metaDataStore);
         }
     }
 
@@ -163,18 +164,22 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
         synchronized (allInterfaces) {
             for (WeakReference<DataInterface> referenceToDI : allInterfaces) {
                 final DataInterface dataInterface = referenceToDI.get();
-                if (dataInterface != null && dataInterface != cachedBloomFilters) {
+                if (dataInterface != null && !isSystemInterface(dataInterface)) {
                     dataInterface.close();
                 }
             }
-            if (cachedBloomFilters != null) {
-                cachedBloomFilters.close();
-                cachedBloomFilters = null;
+            if (bloomFiltersInterface != null) {
+                bloomFiltersInterface.close();
+                bloomFiltersInterface = null;
             }
             allInterfaces.clear();
             metaDataStore.close();
         }
 
+    }
+
+    private boolean isSystemInterface(DataInterface dataInterface) {
+        return dataInterface == bloomFiltersInterface || dataInterface == metaDataInterface;
     }
 
     @Override

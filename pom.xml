@@ -6,11 +6,7 @@
 
     <groupId>com.github.koendeschacht</groupId>
     <artifactId>count-db</artifactId>
-    <packaging>pom</packaging>
     <version>master-SNAPSHOT</version>
-    <modules>
-        <module>count-db-run</module>
-    </modules>
 
     <name>${project.groupId}:${project.artifactId}</name>
     <description>A fast key-value store written in Java that outperforms levelDB, kyoto cabinet and rocksDB
@@ -82,20 +78,6 @@
                         <id>attach-javadocs</id>
                         <goals>
                             <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>1.5</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
                         </goals>
                     </execution>
                 </executions>

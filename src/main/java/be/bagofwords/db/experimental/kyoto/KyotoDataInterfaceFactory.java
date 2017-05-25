@@ -41,8 +41,8 @@ public class KyotoDataInterfaceFactory extends BaseDataInterfaceFactory {
     }
 
     @Override
-    protected <T extends Object> BaseDataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
-        return new KyotoDataInterface<>(nameOfSubset, directory, objectClass, combinator, isTemporaryDataInterface);
+    protected <T extends Object> BaseDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
+        return new KyotoDataInterface<>(name, directory, objectClass, combinator, isTemporaryDataInterface);
     }
 
     @Override

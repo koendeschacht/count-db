@@ -2,6 +2,7 @@ package be.bagofwords.db.benchmarks.bigrams;
 
 import be.bagofwords.application.MinimalApplicationDependencies;
 import be.bagofwords.db.DataInterfaceFactory;
+import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.combinator.LongCombinator;
@@ -21,19 +22,22 @@ import org.apache.commons.lang3.mutable.MutableLong;
 import java.io.*;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 
 public class BigramTestsMain implements Runnable {
 
-    private static final long MIN_MILLION_ITEMS_TO_PROCESS = 1;
-    private static final long MAX_MILLION_ITEMS_TO_PROCESS = 256;
+    private static final long MIN_MILLION_ITEMS_TO_PROCESS = 132;
+    private static final long MAX_MILLION_ITEMS_TO_PROCESS = 132;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         if (args.length != 1) {
             Log.e("Please provide the path to a large text file");
         } else {
             BigramTestsMain main = new BigramTestsMain(new File(args[0]), new File("/tmp/bigrams.bin"));
-            ApplicationManager.run(main, new HashMap<>());
+            Map<String, String> config = new HashMap<>();
+            config.put("data_directory", tmpDbDir.getAbsolutePath());
+            ApplicationManager.run(main, config);
         }
     }
 
@@ -55,10 +59,10 @@ public class BigramTestsMain implements Runnable {
     public void run() {
         try {
             prepareTmpDir(tmpDbDir);
-            prepareBigrams();
+            // prepareBigrams();
 
             runAllTests(DataType.LONG_COUNT, applicationContext);
-            //            runAllTests(DataType.SERIALIZED_OBJECT);
+            // runAllTests(DataType.SERIALIZED_OBJECT, applicationContext);
 
         } catch (Exception exp) {
             throw new RuntimeException(exp);
@@ -94,8 +98,8 @@ public class BigramTestsMain implements Runnable {
     private void runAllTests(DataType dataType, ApplicationContext applicationContext) throws InterruptedException, FileNotFoundException {
         Log.i("Testing batch writing / reading for data type " + dataType);
         //        testSeparateWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
-        //        testSeparateWritingReading(dataType, new FileDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
-        testSeparateWritingReading(dataType, new RemoteDatabaseInterfaceFactory(applicationContext), DatabaseCachingType.CACHED_AND_BLOOM);
+        testSeparateWritingReading(dataType, new FileDataInterfaceFactory(applicationContext), DatabaseCachingType.CACHED_AND_BLOOM);
+        // testSeparateWritingReading(dataType, new RemoteDatabaseInterfaceFactory(applicationContext), DatabaseCachingType.CACHED_AND_BLOOM);
         //        testSeparateWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
         //        testSeparateWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
 
@@ -118,6 +122,7 @@ public class BigramTestsMain implements Runnable {
     }
 
     private void testSeparateWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType type) throws InterruptedException, FileNotFoundException {
+        applicationContext.registerBean(factory);
         for (long items = MIN_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items <= MAX_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items *= 2) {
             if (!(factory instanceof KyotoDataInterfaceFactory) || items < 256 * 1024 * 1024) {
                 testSeparateWritingReading(dataType, factory, type, 8, items);
@@ -209,9 +214,9 @@ public class BigramTestsMain implements Runnable {
         String dataInterfaceName = "readWriteBigrams_" + dataType + "_" + cachingType + "_" + factory.getClass().getSimpleName();
         switch (dataType) {
             case LONG_COUNT:
-                factory.dataInterface(dataInterfaceName, Long.class).combinator(new LongCombinator()).caching(cachingType).create();
+                return factory.dataInterface(dataInterfaceName, Long.class).combinator(new LongCombinator()).caching(cachingType).create();
             case SERIALIZED_OBJECT:
-                factory.dataInterface(dataInterfaceName, BigramCount.class).combinator(new BigramCountCombinator()).caching(cachingType).create();
+                return factory.dataInterface(dataInterfaceName, BigramCount.class).combinator(new BigramCountCombinator()).caching(cachingType).create();
             default:
                 throw new RuntimeException("Unknown data type " + dataType);
         }

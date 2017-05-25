@@ -2,14 +2,51 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>count-db</artifactId>
-        <groupId>com.github.koendeschacht</groupId>
-        <version>master-SNAPSHOT</version>
-    </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <groupId>com.github.koendeschacht</groupId>
     <artifactId>count-db-run</artifactId>
+    <version>master-SNAPSHOT</version>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
     <dependencies>
         <dependency>
@@ -21,6 +58,27 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>1.7.24</version>
+        </dependency>
+        <dependency>
+            <groupId>extraLibs</groupId>
+            <artifactId>kyotocabinet</artifactId>
+            <version>1.24</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/../lib/kyotocabinet-1.24/kyotocabinet.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>extraLibs</groupId>
+            <artifactId>rocksdb</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/../lib/rocksdb/rocksdbjni.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>org.fusesource.leveldbjni</groupId>
+            <artifactId>leveldbjni-all</artifactId>
+            <version>99-master-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/../lib/leveldb/leveldbjni-all-99-master-SNAPSHOT.jar</systemPath>
         </dependency>
     </dependencies>
 

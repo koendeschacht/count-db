@@ -36,8 +36,8 @@ public class LMDBDataInterfaceFactory extends BaseDataInterfaceFactory {
     }
 
     @Override
-    protected <T> BaseDataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
-        return new LMDBDataInterface<>(nameOfSubset, objectClass, combinator, env, isTemporaryDataInterface);
+    protected <T> BaseDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
+        return new LMDBDataInterface<>(name, objectClass, combinator, env, isTemporaryDataInterface);
     }
 
     @Override

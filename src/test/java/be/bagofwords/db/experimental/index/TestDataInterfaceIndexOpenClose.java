@@ -45,7 +45,7 @@ public class TestDataInterfaceIndexOpenClose extends BaseTestDataInterface {
     public void tearDown() {
         baseInterface.dropAllData();
         baseInterface.close();
-        indexedInterface.close();
+        // indexedInterface.close();
     }
 
     @Test

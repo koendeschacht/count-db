@@ -26,9 +26,9 @@ public class TestRemoteFileService {
         config.put("socket.port", "1208");
         ApplicationContext context = new ApplicationContext(config);
         context.registerBean(MinimalApplicationDependencies.class);
-        context.registerBean(SocketServer.class);
         context.registerBean(LocalFileService.class);
         context.registerBean(RemoteFileServer.class);
+        context.registerBean(SocketServer.class);
         Utils.threadSleep(1000); //Make sure server has started
         RemoteFileService remoteFileService = new RemoteFileService(context);
         VirtualFile dir = remoteFileService.getRootDirectory();

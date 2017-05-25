@@ -1,4 +1,4 @@
-package be.bagofwords.db;
+package be.bagofwords.db.methods;
 
 /**
  * Created by koen on 20/05/17.

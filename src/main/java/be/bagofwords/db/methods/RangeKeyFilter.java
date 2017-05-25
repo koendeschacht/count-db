@@ -1,16 +1,22 @@
-package be.bagofwords;
+package be.bagofwords.db.methods;
 
-import be.bagofwords.db.KeyFilter;
 import be.bagofwords.exec.RemoteClass;
+
+import java.io.Serializable;
 
 /**
  * Created by koen on 20/05/17.
  */
 @RemoteClass
-public class RangeKeyFilter implements KeyFilter {
+public class RangeKeyFilter implements KeyFilter, Serializable {
 
-    private long lowerBound;
-    private long higherBound;
+    private long lowerBound; //Inclusive
+    private long higherBound; //Exclusive
+
+    public RangeKeyFilter(long lowerBound, long higherBound) {
+        this.lowerBound = lowerBound;
+        this.higherBound = higherBound;
+    }
 
     @Override
     public boolean acceptKey(long key) {

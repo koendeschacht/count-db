@@ -43,8 +43,8 @@ public class RocksDBDataInterfaceFactory extends BaseDataInterfaceFactory {
     }
 
     @Override
-    protected <T> CoreDataInterface<T> createBaseDataInterface(String nameOfSubset, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
-        return new RocksDBDataInterface<>(nameOfSubset, objectClass, combinator, directory, usePatch, isTemporaryDataInterface);
+    protected <T> CoreDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
+        return new RocksDBDataInterface<>(name, objectClass, combinator, directory, usePatch, isTemporaryDataInterface);
     }
 
     @Override
