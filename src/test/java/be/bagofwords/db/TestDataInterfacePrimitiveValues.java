@@ -25,13 +25,13 @@ public class TestDataInterfacePrimitiveValues extends BaseTestDataInterface {
     public void testLongValues() {
         final DataInterface<Long> db = dataInterfaceFactory.dataInterface("testLongValues", Long.class).combinator(new LongCombinator()).caching(type).create();
         db.dropAllData();
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 100; i++) {
             db.write(i, (long) i);
         }
         db.write(0, null);
         db.flush();
         Assert.assertNull(db.read(0));
-        for (int i = 1; i < 1000; i++) {
+        for (int i = 1; i < 100; i++) {
             Long value = db.read(i);
             Assert.assertEquals(new Long(i), value);
         }

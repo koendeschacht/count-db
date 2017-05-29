@@ -31,7 +31,7 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
     private int tmpDataInterfaceCount = 0;
 
     private final CachesManager cachesManager;
-    private final MemoryManager memoryManager;
+    protected final MemoryManager memoryManager;
     protected final TaskSchedulerService taskScheduler;
     private final List<DataInterfaceReference> allInterfaces;
     private final ReferenceQueue<DataInterface> allInterfacesReferenceQueue;
