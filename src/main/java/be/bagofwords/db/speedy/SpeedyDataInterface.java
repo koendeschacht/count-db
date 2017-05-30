@@ -75,10 +75,15 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
             long end = Long.MAX_VALUE >> BITS_TO_DISCARD_FOR_FILE_BUCKETS;
             for (long val = start; val <= end; val++) {
                 long firstKey = val << BITS_TO_DISCARD_FOR_FILE_BUCKETS;
+                long lastKey = ((val + 1) << BITS_TO_DISCARD_FOR_FILE_BUCKETS);
+                if (lastKey < firstKey) {
+                    //overflow
+                    lastKey = Long.MAX_VALUE;
+                }
                 if (firstKey == Long.MIN_VALUE) {
                     firstKey = Long.MIN_VALUE + 1l;
                 }
-                SpeedyFile speedyFile = new SpeedyFile(firstKey, -1, -1, 0, 0);
+                SpeedyFile speedyFile = new SpeedyFile(firstKey, lastKey, 0, 0);
                 File file = getFile(speedyFile);
                 if (file.exists() && !file.delete()) {
                     throw new RuntimeException("Failed to delete file " + file.getAbsolutePath());
@@ -89,12 +94,11 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public T read(long origKey) {
-        long key = reHash(origKey);
+    public T read(long key) {
         SpeedyFile speedyFile = findFile(key, true);
         File file = getFile(speedyFile);
         long position = findFilePosition(speedyFile, key);
-        Log.i("Reading key " + origKey + " which is now " + key + " from position " + position);
+        Log.i("Reading key " + key + " from position " + position);
         Log.i("Reading from file " + speedyFile);
         try {
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
@@ -130,7 +134,7 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
     }
 
     private File getFile(SpeedyFile file) {
-        return new File(directory, Long.toString(file.minKey));
+        return new File(directory, Long.toString(file.firstKey));
     }
 
     private long findFilePosition(SpeedyFile file, long key) {
@@ -159,9 +163,8 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
 
     private SpeedyFile findFile(long key, boolean lockRead) {
         synchronized (accessFileLock) {
-            for (int i = 0; i < files.size(); i++) {
-                if (i == files.size() - 1 || files.get(i + 1).minKey > key) {
-                    SpeedyFile file = files.get(i);
+            for (SpeedyFile file : files) {
+                if (file.firstKey <= key && file.lastKey > key) {
                     if (lockRead) {
                         file.lockRead();
                     } else {
@@ -187,18 +190,22 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
             }
 
             private void readValues() {
-                while (values.isEmpty() && curr != Long.MAX_VALUE) {
-                    SpeedyFile file = findFile(curr, true);
-                    try {
-                        values = readAllValues(file);
-                        ind = 0;
-                        curr = file.lastKey + 1;
-                    } catch (IOException e) {
-                        throw new RuntimeException("Failed to read file " + file, e);
-                    } finally {
-                        file.unlockRead();
+                do {
+                    if (curr != Long.MAX_VALUE) {
+                        SpeedyFile file = findFile(curr, true);
+                        try {
+                            values = readAllValues(file);
+                            ind = 0;
+                            curr = file.lastKey;
+                        } catch (IOException e) {
+                            throw new RuntimeException("Failed to read file " + file, e);
+                        } finally {
+                            file.unlockRead();
+                        }
+                    } else {
+                        values = Collections.emptyList();
                     }
-                }
+                } while (values.isEmpty() && curr != Long.MAX_VALUE);
             }
 
             @Override
@@ -214,6 +221,10 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
             @Override
             public KeyValue<T> next() {
                 Pair<Long, T> curr = values.get(ind);
+                ind++;
+                if (ind == values.size()) {
+                    readValues();
+                }
                 return new KeyValue<>(curr.getLeft(), curr.getRight());
             }
         };
@@ -226,15 +237,18 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
 
     @Override
     public long apprSize() {
-        return 0;
+        long sum = 0;
+        for (SpeedyFile file : files) {
+            sum += file.actualKeys;
+        }
+        return sum;
     }
 
     @Override
-    public void write(long origKey, T value) {
-        long key = reHash(origKey);
+    public void write(long key, T value) {
         SpeedyFile speedyFile = findFile(key, false);
         File file = getFile(speedyFile);
-        Log.i("Writing key " + origKey + " which is now " + key);
+        Log.i("Writing key " + key);
         try {
             double loadFactor = computeLoadFactor(speedyFile);
             Log.i("Load factor is " + loadFactor);
@@ -293,16 +307,6 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
         }
     }
 
-    private long reHash(long key) {
-        long result = Long.reverse(key ^ HASH_ADD);
-        if (result == Long.MIN_VALUE) {
-            result++;
-        } else if (result == Long.MAX_VALUE) {
-            result--;
-        }
-        return result;
-    }
-
     private void rewriteFile(SpeedyFile speedyFile) throws IOException {
         Log.i("Rewriting file " + speedyFile);
         List<Pair<Long, T>> values = readAllValues(speedyFile);
@@ -313,7 +317,7 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
             //Split in two
             List<Pair<Long, T>> valuesForNewFile = values.subList(values.size() / 2, values.size());
             long splitKey = valuesForNewFile.get(0).getLeft();
-            SpeedyFile newSpeedyFile = new SpeedyFile(splitKey, splitKey, valuesForNewFile.get(valuesForNewFile.size() - 1).getKey(), 0, 0);
+            SpeedyFile newSpeedyFile = new SpeedyFile(splitKey, speedyFile.firstKey, 0, 0);
             speedyFile.lastKey = splitKey - 1;
             newSpeedyFile.lockWrite();
             writeAllValues(valuesForNewFile, newSpeedyFile);
@@ -330,13 +334,6 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
         try {
             speedyFile.numOfKeys = values.size();
             speedyFile.actualKeys = values.size();
-            if (values.size() == 0) {
-                speedyFile.firstKey = -1;
-                speedyFile.lastKey = -1;
-            } else {
-                speedyFile.firstKey = values.get(0).getKey();
-                speedyFile.lastKey = values.get(values.size() - 1).getKey();
-            }
             Pair[] positionedValues = new Pair[(speedyFile.numOfKeys + 1) * INITIAL_GAP_RATIO];
             for (int i = 0; i < values.size(); i++) {
                 Pair<Long, T> curr = values.get(i);

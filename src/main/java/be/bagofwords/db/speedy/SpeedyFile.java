@@ -8,16 +8,14 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class SpeedyFile implements Comparable<SpeedyFile> {
 
-    public long minKey;
-    public long firstKey; //Since last rewrite
-    public long lastKey; //Since last rewrite
-    public int numOfKeys; //Since last rewrite
+    public long firstKey;
+    public long lastKey;
+    public int numOfKeys; // Since last rewrite
     public int actualKeys;
     public long size;
     private final ReadWriteLock lock;
 
-    public SpeedyFile(long minKey, long firstKey, long lastKey, long size, int numOfKeys) {
-        this.minKey = minKey;
+    public SpeedyFile(long firstKey, long lastKey, long size, int numOfKeys) {
         this.firstKey = firstKey;
         this.lastKey = lastKey;
         this.size = size;
@@ -50,7 +48,6 @@ public class SpeedyFile implements Comparable<SpeedyFile> {
     @Override
     public String toString() {
         return "SpeedyFile{" +
-                "minKey=" + minKey +
                 ", firstKey=" + firstKey +
                 ", lastKey=" + lastKey +
                 ", numOfKeys=" + numOfKeys +
