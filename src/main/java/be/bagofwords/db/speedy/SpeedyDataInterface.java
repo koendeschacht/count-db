@@ -4,7 +4,6 @@ import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.logging.Log;
-import be.bagofwords.util.HashUtils;
 import be.bagofwords.util.KeyValue;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -95,6 +94,7 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
 
     @Override
     public T read(long key) {
+        key = rehashKey(key);
         SpeedyFile speedyFile = findFile(key, true);
         File file = getFile(speedyFile);
         long position = findFilePosition(speedyFile, key);
@@ -130,6 +130,14 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
             throw new RuntimeException("Error in file " + file.getAbsolutePath(), exp);
         } finally {
             speedyFile.unlockRead();
+        }
+    }
+
+    private long rehashKey(long key) {
+        if (key == 1) {
+            return 1;
+        } else {
+            return Long.reverse(key);
         }
     }
 
@@ -225,7 +233,7 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
                 if (ind == values.size()) {
                     readValues();
                 }
-                return new KeyValue<>(curr.getLeft(), curr.getRight());
+                return new KeyValue<>(rehashKey(curr.getLeft()), curr.getRight());
             }
         };
     }
@@ -246,6 +254,7 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
 
     @Override
     public void write(long key, T value) {
+        key = rehashKey(key);
         SpeedyFile speedyFile = findFile(key, false);
         File file = getFile(speedyFile);
         Log.i("Writing key " + key);
