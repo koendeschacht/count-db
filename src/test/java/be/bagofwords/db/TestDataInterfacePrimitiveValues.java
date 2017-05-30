@@ -10,6 +10,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/19/14.
  */
@@ -22,16 +26,39 @@ public class TestDataInterfacePrimitiveValues extends BaseTestDataInterface {
     }
 
     @Test
+    public void testLongRandomValues() {
+        final DataInterface<Long> db = dataInterfaceFactory.dataInterface("testLongRandomValues", Long.class).combinator(new LongCombinator()).caching(type).create();
+        db.dropAllData();
+        Random random = new Random(2);
+        List<Long> keys = new ArrayList<>();
+        for (int i = 0; i < 1000; i++) {
+            keys.add(random.nextLong());
+        }
+        for (int i = 0; i < keys.size(); i++) {
+            long key = keys.get(i);
+            db.write(key, key);
+        }
+        db.write(keys.get(0), null);
+        db.flush();
+        Assert.assertNull(db.read(keys.get(0)));
+        for (int i = 1; i < keys.size(); i++) {
+            long key = keys.get(i);
+            Long value = db.read(key);
+            Assert.assertEquals(new Long(keys.get(i)), value);
+        }
+    }
+
+    @Test
     public void testLongValues() {
         final DataInterface<Long> db = dataInterfaceFactory.dataInterface("testLongValues", Long.class).combinator(new LongCombinator()).caching(type).create();
         db.dropAllData();
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 1000; i++) {
             db.write(i, (long) i);
         }
         db.write(0, null);
         db.flush();
         Assert.assertNull(db.read(0));
-        for (int i = 1; i < 100; i++) {
+        for (int i = 1; i < 1000; i++) {
             Long value = db.read(i);
             Assert.assertEquals(new Long(i), value);
         }
