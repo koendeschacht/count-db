@@ -7,9 +7,7 @@ import net.jpountz.lz4.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.toList;
@@ -22,7 +20,106 @@ public class Tests {
 
     public static void main(String[] args) throws IOException {
         // testSnappy();
-        testRandomAccess();
+        // testRandomAccess();
+        testBinarySearch();
+    }
+
+    private static class Wrapper {
+        public long value;
+
+        public Wrapper(long value) {
+            this.value = value;
+        }
+    }
+
+    private static class Node {
+        public long split;
+        public Node left;
+        public Node right;
+
+        public Node(long split, Node left, Node right) {
+            this.split = split;
+            this.left = left;
+            this.right = right;
+        }
+
+        public Node() {
+            this.split = Long.MAX_VALUE;
+        }
+
+        public Node getNode(long value) {
+            if (split == Long.MAX_VALUE) {
+                return this;
+            } else if (split > value) {
+                return left.getNode(value);
+            } else {
+                return right.getNode(value);
+            }
+        }
+
+        public int leafs() {
+            if (split == Long.MAX_VALUE) {
+                return 1;
+            } else {
+                return left.leafs() + right.leafs();
+            }
+        }
+    }
+
+    private static void testBinarySearch() {
+        int numOfItems = 300_000;
+        int numOfQueries = 100_000;
+        List<Long> borders = new ArrayList<>();
+        Random random = new Random(12);
+        for (int i = 0; i < numOfItems; i++) {
+            borders.add(random.nextLong());
+        }
+        Collections.sort(borders);
+        Node tree = new Node();
+        addNodes(tree, borders, 0, borders.size());
+        List<Wrapper> borderWrappers = borders.stream().map(Wrapper::new).collect(toList());
+
+        Log.i("Testing search methods ");
+        MappedLists<String, Long> measuredTimes = new MappedLists<>();
+        for (int run = 0; run < 20; run++) {
+            measureBinarySearch("binarySearch", borders, tree, measuredTimes, numOfQueries, random, borderWrappers);
+            measureBinarySearch("binaryWrapperSearch", borders, tree, measuredTimes, numOfQueries, random, borderWrappers);
+            measureBinarySearch("tree", borders, tree, measuredTimes, numOfQueries, random, borderWrappers);
+        }
+
+        printTimes(measuredTimes);
+    }
+
+    private static void measureBinarySearch(String searchMethod, List<Long> borders, Node tree, MappedLists<String, Long> measuredTimes, int numOfQueries, Random random, List<Wrapper> borderWrappers) {
+        long start = System.nanoTime();
+        if (searchMethod.equals("binarySearch")) {
+            for (int i = 0; i < numOfQueries; i++) {
+                long value = random.nextLong();
+                Collections.binarySearch(borders, value);
+            }
+        } else if (searchMethod.equals("binaryWrapperSearch")) {
+            for (int i = 0; i < numOfQueries; i++) {
+                long value = random.nextLong();
+                Collections.binarySearch(borderWrappers, value, (o1, o2) -> Long.compare(((Wrapper) o1).value, (Long) o2));
+            }
+        } else {
+            for (int i = 0; i < numOfQueries; i++) {
+                long value = random.nextLong();
+                tree.getNode(value);
+            }
+        }
+        measuredTimes.get(searchMethod).add((System.nanoTime() - start) / 1000);
+    }
+
+    private static void addNodes(Node node, List<Long> borders, int start, int end) {
+        if (end - start > 1) {
+            int splitInd = start + (end - start) / 2;
+            node.split = borders.get(splitInd);
+            node.left = new Node();
+            node.right = new Node();
+            addNodes(node.left, borders, start, splitInd);
+            addNodes(node.right, borders, splitInd, end);
+        }
     }
 
     private static void testRandomAccess() throws IOException {

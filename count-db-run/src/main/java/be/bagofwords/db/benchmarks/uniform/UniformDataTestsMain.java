@@ -10,6 +10,7 @@ import be.bagofwords.db.experimental.rocksdb.RocksDBDataInterfaceFactory;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.leveldb.LevelDBDataInterfaceFactory;
+import be.bagofwords.db.speedy.SpeedyDataInterfaceFactory;
 import be.bagofwords.logging.Log;
 import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.minidepi.ApplicationManager;
@@ -30,7 +31,7 @@ import static be.bagofwords.util.Utils.noException;
 public class UniformDataTestsMain implements Runnable {
 
     private static final int MIN_MILLION_ITEMS_TO_PROCESS = 1;
-    private static final int MAX_MILLION_ITEMS_TO_PROCESS = 128;
+    private static final int MAX_MILLION_ITEMS_TO_PROCESS = 12;
 
     private static final File tmpDbDir = new File("/tmp/testUniformData");
 
@@ -53,11 +54,12 @@ public class UniformDataTestsMain implements Runnable {
     public void run() {
         noException(() -> {
             prepareTmpDir(tmpDbDir);
-            testWritingReading(new LevelDBDataInterfaceFactory(context), DatabaseCachingType.DIRECT);
-            testWritingReading(new FileDataInterfaceFactory(context), DatabaseCachingType.CACHED_AND_BLOOM);
-            testWritingReading(new KyotoDataInterfaceFactory(context), DatabaseCachingType.DIRECT);
-            testWritingReading(new RocksDBDataInterfaceFactory(context, false), DatabaseCachingType.DIRECT);
-            testWritingReading(new RocksDBDataInterfaceFactory(context, true), DatabaseCachingType.DIRECT);
+            // testWritingReading(new LevelDBDataInterfaceFactory(context), DatabaseCachingType.DIRECT);
+            // testWritingReading(new FileDataInterfaceFactory(context), DatabaseCachingType.CACHED_AND_BLOOM);
+            testWritingReading(new SpeedyDataInterfaceFactory(context), DatabaseCachingType.CACHED_AND_BLOOM);
+            // testWritingReading(new KyotoDataInterfaceFactory(context), DatabaseCachingType.DIRECT);
+            // testWritingReading(new RocksDBDataInterfaceFactory(context, false), DatabaseCachingType.DIRECT);
+            // testWritingReading(new RocksDBDataInterfaceFactory(context, true), DatabaseCachingType.DIRECT);
         });
     }
 
@@ -95,9 +97,9 @@ public class UniformDataTestsMain implements Runnable {
         double writesPerSecond = numberOfItemsWritten.longValue() * 1e9 / (endOfWrite - startOfWrite);
 
         countDownLatch = new CountDownLatch(numberOfThreads);
+        long startOfRead = System.nanoTime();
         dataInterface.optimizeForReading();
         MutableLong numberOfItemsRead = new MutableLong(0);
-        long startOfRead = System.nanoTime();
         for (int i = 0; i < numberOfThreads; i++) {
             new UniformDataTestsThread(numberOfItemsRead, numberOfItems, dataInterface, countDownLatch, false).start();
         }

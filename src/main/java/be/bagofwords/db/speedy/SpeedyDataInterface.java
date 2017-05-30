@@ -3,9 +3,9 @@ package be.bagofwords.db.speedy;
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.iterator.CloseableIterator;
-import be.bagofwords.logging.Log;
 import be.bagofwords.util.KeyValue;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.*;
@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static be.bagofwords.util.Utils.noException;
 import static com.sun.xml.internal.fastinfoset.algorithm.IntegerEncodingAlgorithm.INT_SIZE;
@@ -24,14 +26,13 @@ import static com.sun.xml.internal.fastinfoset.algorithm.IntegerEncodingAlgorith
 public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
 
     private final long NULL_VALUE = Long.MIN_VALUE;
-    private final long HASH_ADD = 0x5555555555555555L;
     private final long MAX_WRITE_SIZE = 50 * 1024 * 1024;
     private final File directory;
     private final int lengthOfData;
     private List<SpeedyFile> files;
     private double MAX_LOAD_FACTOR = 0.5;
     private int INITIAL_GAP_RATIO = 10;
-    private final Object accessFileLock = new Object();
+    private final ReadWriteLock accessFileLock = new ReentrantReadWriteLock();
 
     public SpeedyDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporary, String rootDirectory) {
         super(name, objectClass, combinator, isTemporary);
@@ -98,10 +99,9 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
         SpeedyFile speedyFile = findFile(key, true);
         File file = getFile(speedyFile);
         long position = findFilePosition(speedyFile, key);
-        Log.i("Reading key " + key + " from position " + position);
-        Log.i("Reading from file " + speedyFile);
+        RandomAccessFile randomAccessFile = null;
         try {
-            RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
+            randomAccessFile = new RandomAccessFile(file, "r");
             randomAccessFile.seek(position);
             boolean foundEnd = false;
             while (!foundEnd) {
@@ -120,16 +120,16 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
                 } else if (keyAtPos == NULL_VALUE) {
                     foundEnd = true;
                 } else {
-                    randomAccessFile.skipBytes(LONG_SIZE);
+                    randomAccessFile.seek(position + LONG_SIZE * 2);
                 }
                 position += LONG_SIZE * 2;
-                Log.i("Looking for key " + key + " from position " + position);
             }
             return null;
         } catch (IOException exp) {
             throw new RuntimeException("Error in file " + file.getAbsolutePath(), exp);
         } finally {
             speedyFile.unlockRead();
+            IOUtils.closeQuietly(randomAccessFile);
         }
     }
 
@@ -170,19 +170,39 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
     }
 
     private SpeedyFile findFile(long key, boolean lockRead) {
-        synchronized (accessFileLock) {
-            for (SpeedyFile file : files) {
-                if (file.firstKey <= key && file.lastKey > key) {
-                    if (lockRead) {
-                        file.lockRead();
-                    } else {
-                        file.lockWrite();
-                    }
-                    return file;
-                }
-            }
-            throw new RuntimeException("Missing file?");
+        if (lockRead) {
+            accessFileLock.readLock().lock();
+        } else {
+            accessFileLock.writeLock().lock();
         }
+        int ind = Collections.binarySearch(files, key, (o1, o2) -> {
+            SpeedyFile file = (SpeedyFile) o1;
+            long key1 = (Long) o2;
+            return Long.compare(file.lastKey, key1);
+        });
+        if (ind < 0) {
+            ind = -(ind + 1);
+        } else {
+            ind++;
+        }
+        if (ind == files.size()) {
+            ind--;
+        }
+        SpeedyFile file = files.get(ind);
+        if (file.firstKey > key || file.lastKey < key) {
+            throw new RuntimeException("Huh?");
+        }
+        if (lockRead) {
+            file.lockRead();
+        } else {
+            file.lockWrite();
+        }
+        if (lockRead) {
+            accessFileLock.readLock().unlock();
+        } else {
+            accessFileLock.writeLock().unlock();
+        }
+        return file;
     }
 
     @Override
@@ -257,23 +277,20 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
         key = rehashKey(key);
         SpeedyFile speedyFile = findFile(key, false);
         File file = getFile(speedyFile);
-        Log.i("Writing key " + key);
+        RandomAccessFile randomAccessFile = null;
         try {
             double loadFactor = computeLoadFactor(speedyFile);
-            Log.i("Load factor is " + loadFactor);
             if (loadFactor >= MAX_LOAD_FACTOR) {
                 rewriteFile(speedyFile);
                 speedyFile.unlockWrite();
                 speedyFile = findFile(key, false);
                 file = getFile(speedyFile);
             }
-            Log.i("Writing to file " + speedyFile);
-            RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+            randomAccessFile = new RandomAccessFile(file, "rw");
             long position = findFilePosition(speedyFile, key);
             if (position < 0) {
                 findFilePosition(speedyFile, key);
             }
-            Log.i("Seeking to position " + position);
             randomAccessFile.seek(position);
             boolean didWriteValue = false;
             while (!didWriteValue) {
@@ -284,19 +301,16 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
                 long keyAtPos = randomAccessFile.readLong();
                 if (keyAtPos == key) {
                     if (value == null) {
-                        Log.i("Setting key " + key + " to null at position " + position);
                         randomAccessFile.writeLong(NULL_VALUE);
                     } else {
                         T currentValue = (T) (Object) randomAccessFile.readLong();
                         T newValue = combinator.combine(currentValue, value);
-                        Log.i("Writing key " + key + " at position " + position);
                         randomAccessFile.seek(position + LONG_SIZE);
                         randomAccessFile.writeLong((Long) newValue);
                     }
                     didWriteValue = true;
                 } else if (keyAtPos == NULL_VALUE) {
                     if (value != null) {
-                        Log.i("Writing key " + key + " at position " + position);
                         randomAccessFile.seek(position);
                         randomAccessFile.writeLong(key);
                         randomAccessFile.writeLong((Long) value);
@@ -307,22 +321,20 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
                     randomAccessFile.skipBytes(LONG_SIZE);
                     position += LONG_SIZE + LONG_SIZE;
                 }
-                Log.i("Position is now " + position);
             }
         } catch (IOException exp) {
             throw new RuntimeException("Failed to write to file " + file.getAbsolutePath(), exp);
         } finally {
             speedyFile.unlockWrite();
+            IOUtils.closeQuietly(randomAccessFile);
         }
     }
 
     private void rewriteFile(SpeedyFile speedyFile) throws IOException {
-        Log.i("Rewriting file " + speedyFile);
         List<Pair<Long, T>> values = readAllValues(speedyFile);
         values.sort(Comparator.comparingLong(Pair::getLeft));
         long newSize = Math.round((speedyFile.numOfKeys + 1) * LONG_SIZE * LONG_SIZE * INITIAL_GAP_RATIO);
         if (newSize > MAX_WRITE_SIZE) {
-            Log.i("Splitting file in two");
             //Split in two
             List<Pair<Long, T>> valuesForNewFile = values.subList(values.size() / 2, values.size());
             long splitKey = valuesForNewFile.get(0).getLeft();
@@ -338,7 +350,6 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
     }
 
     private void writeAllValues(List<Pair<Long, T>> values, SpeedyFile speedyFile) {
-        Log.i("Writing all values to " + speedyFile);
         File file = getFile(speedyFile);
         try {
             speedyFile.numOfKeys = values.size();
@@ -363,7 +374,6 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
                 } else {
                     long key = curr.getLeft();
                     T value = curr.getRight();
-                    Log.i("Rewriting key " + key + " at position " + i * LONG_SIZE * 2);
                     dos.writeLong(key);
                     dos.writeLong((Long) value);
                 }
@@ -372,7 +382,6 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
         } catch (IOException exp) {
             throw new RuntimeException("Failed to write to " + file.getAbsolutePath(), exp);
         }
-        Log.i("Wrote all values to " + speedyFile);
     }
 
     private void addNewFile(SpeedyFile newSpeedyFile) {
