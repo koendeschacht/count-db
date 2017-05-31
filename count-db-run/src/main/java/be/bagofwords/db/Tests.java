@@ -20,8 +20,8 @@ public class Tests {
 
     public static void main(String[] args) throws IOException {
         // testSnappy();
-        // testRandomAccess();
-        testBinarySearch();
+        testRandomAccess();
+        // testBinarySearch();
     }
 
     private static class Wrapper {

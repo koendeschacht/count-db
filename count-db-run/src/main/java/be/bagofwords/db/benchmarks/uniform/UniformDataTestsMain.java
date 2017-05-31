@@ -55,7 +55,7 @@ public class UniformDataTestsMain implements Runnable {
         noException(() -> {
             prepareTmpDir(tmpDbDir);
             // testWritingReading(new LevelDBDataInterfaceFactory(context), DatabaseCachingType.DIRECT);
-            // testWritingReading(new FileDataInterfaceFactory(context), DatabaseCachingType.CACHED_AND_BLOOM);
+            testWritingReading(new FileDataInterfaceFactory(context), DatabaseCachingType.CACHED_AND_BLOOM);
             testWritingReading(new SpeedyDataInterfaceFactory(context), DatabaseCachingType.CACHED_AND_BLOOM);
             // testWritingReading(new KyotoDataInterfaceFactory(context), DatabaseCachingType.DIRECT);
             // testWritingReading(new RocksDBDataInterfaceFactory(context, false), DatabaseCachingType.DIRECT);

@@ -65,6 +65,27 @@ public class TestDataInterfacePrimitiveValues extends BaseTestDataInterface {
     }
 
     @Test
+    public void testLongValuesIterator() {
+        final DataInterface<Long> db = dataInterfaceFactory.dataInterface("testLongValuesIterator", Long.class).combinator(new LongCombinator()).caching(type).create();
+        db.dropAllData();
+        for (int i = 0; i < 1000; i++) {
+            db.write(i, (long) i);
+        }
+        db.flush();
+        boolean[] readValues = new boolean[1000];
+        db.stream().forEach(k -> {
+            Assert.assertEquals(k.getKey(), k.getValue().longValue());
+            readValues[k.getValue().intValue()] = true;
+        });
+        for (int i = 0; i < readValues.length; i++) {
+            if (!readValues[i]) {
+                db.read(i);
+            }
+            Assert.assertTrue(i + " should be set!", readValues[i]);
+        }
+    }
+
+    @Test
     public void testDoubleValues() {
         final BaseDataInterface<Double> db = dataInterfaceFactory.dataInterface("testDoubleValues", Double.class).combinator(new DoubleCombinator()).caching(type).create();
         db.dropAllData();
