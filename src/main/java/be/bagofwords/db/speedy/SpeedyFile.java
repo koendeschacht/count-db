@@ -1,11 +1,10 @@
 package be.bagofwords.db.speedy;
 
 import be.bagofwords.logging.Log;
-import be.bagofwords.util.MappedLists;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.io.IOUtils;
 
-import java.util.Collections;
-import java.util.List;
+import java.io.File;
+import java.nio.channels.FileChannel;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
@@ -18,19 +17,23 @@ public class SpeedyFile {
     public int numOfKeys; // Since last rewrite
     public int actualKeys;
     public long size;
-    public long firstKey;
-    public long lastKey;
+    public final long firstKey;
+    public final long lastKey;
+    public final File file;
     private final ReadWriteLock lock;
-    public SpeedyFile left;
-    public SpeedyFile right;
+    private SpeedyFile left;
+    private SpeedyFile right;
+    public FileChannel writeFile;
 
-    public SpeedyFile(long firstKey, long lastKey) {
+    public SpeedyFile(long firstKey, long lastKey, FileChannel writeFile, File file) {
         this.firstKey = firstKey;
         this.lastKey = lastKey;
+        this.file = file;
         this.size = 0;
         this.numOfKeys = 0;
         this.actualKeys = 0;
         this.lock = new ReentrantReadWriteLock();
+        this.writeFile = writeFile;
     }
 
     public void lockRead() {
@@ -45,35 +48,35 @@ public class SpeedyFile {
 
     public void lockWrite() {
         lock.writeLock().lock();
-        // Log.i("lockWrite " + this);
+        // Log.i("lockWrite " + this + " from " + Thread.currentThread());
     }
 
     public void unlockWrite() {
-        // Log.i("unlockWrite " + this);
+        // Log.i("unlockWrite " + this + " from " + Thread.currentThread());
         lock.writeLock().unlock();
     }
 
-    public SpeedyFile getFile(long value, boolean lockRead) {
+    public SpeedyFile getFile(long value, LockMethod lockMethod) {
         if (left == null) {
-            if (lockRead) {
+            if (lockMethod == LockMethod.LOCK_READ) {
                 lockRead();
-            } else {
+            } else if (lockMethod == LockMethod.LOCK_WRITE) {
                 lockWrite();
             }
             if (left == null) {
                 return this;
             } else {
-                if (lockRead) {
+                if (lockMethod == LockMethod.LOCK_READ) {
                     unlockRead();
-                } else {
+                } else if (lockMethod == LockMethod.LOCK_WRITE) {
                     unlockWrite();
                 }
             }
         }
         if (right.firstKey > value) {
-            return left.getFile(value, lockRead);
+            return left.getFile(value, lockMethod);
         } else {
-            return right.getFile(value, lockRead);
+            return right.getFile(value, lockMethod);
         }
     }
 
@@ -116,20 +119,21 @@ public class SpeedyFile {
         }
     }
 
-    public <T> void mapValuesToNodes(MappedLists<SpeedyFile, Pair<Long, T>> result, List<Pair<Long, T>> values, int start, int end) {
-        if (start >= end) {
-            return;
-        }
-        if (left == null) {
-            result.put(this, values.subList(start, end));
-        } else {
-            int splitInd = Collections.binarySearch(values, right.firstKey, (p, k) -> Long.compare(((Pair<Long, T>) p).getKey(), (Long) k));
-            if (splitInd < 0) {
-                splitInd = -(splitInd + 1);
-            }
-            left.mapValuesToNodes(result, values, start, splitInd);
-            right.mapValuesToNodes(result, values, splitInd, end);
-        }
+    public void setChildNodes(SpeedyFile left, SpeedyFile right) {
+        this.left = left;
+        this.right = right;
+        this.numOfKeys = 0;
+        this.actualKeys = 0;
+        IOUtils.closeQuietly(this.writeFile);
+        this.writeFile = null;
+    }
+
+    public SpeedyFile getLeft() {
+        return left;
+    }
+
+    public SpeedyFile getRight() {
+        return right;
     }
 }
 

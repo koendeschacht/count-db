@@ -8,6 +8,7 @@ import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.experimental.kyoto.KyotoDataInterfaceFactory;
 import be.bagofwords.db.remote.RemoteDatabaseInterfaceFactory;
+import be.bagofwords.db.speedy.SpeedyDataInterfaceFactory;
 import be.bagofwords.logging.Log;
 import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.minidepi.ApplicationManager;
@@ -27,8 +28,8 @@ import java.util.concurrent.CountDownLatch;
 
 public class BigramTestsMain implements Runnable {
 
-    private static final long MIN_MILLION_ITEMS_TO_PROCESS = 132;
-    private static final long MAX_MILLION_ITEMS_TO_PROCESS = 132;
+    private static final long MIN_MILLION_ITEMS_TO_PROCESS = 28;
+    private static final long MAX_MILLION_ITEMS_TO_PROCESS = 28;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         if (args.length != 1) {
@@ -59,7 +60,7 @@ public class BigramTestsMain implements Runnable {
     public void run() {
         try {
             prepareTmpDir(tmpDbDir);
-            // prepareBigrams();
+            prepareBigrams();
 
             runAllTests(DataType.LONG_COUNT, applicationContext);
             // runAllTests(DataType.SERIALIZED_OBJECT, applicationContext);
@@ -99,6 +100,7 @@ public class BigramTestsMain implements Runnable {
         Log.i("Testing batch writing / reading for data type " + dataType);
         //        testSeparateWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
         testSeparateWritingReading(dataType, new FileDataInterfaceFactory(applicationContext), DatabaseCachingType.CACHED_AND_BLOOM);
+        testSeparateWritingReading(dataType, new SpeedyDataInterfaceFactory(applicationContext), DatabaseCachingType.CACHED_AND_BLOOM);
         // testSeparateWritingReading(dataType, new RemoteDatabaseInterfaceFactory(applicationContext), DatabaseCachingType.CACHED_AND_BLOOM);
         //        testSeparateWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
         //        testSeparateWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
@@ -106,7 +108,7 @@ public class BigramTestsMain implements Runnable {
         Log.i("Testing mixed writing / reading for data type " + dataType);
         //        testMixedWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
         //        testMixedWritingReading(dataType, new FileDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
-        //        testMixedWritingReading(dataType, new RemoteDatabaseInterfaceFactory(cachesManager, memoryManager, taskScheduler, "localhost", 1208), DatabaseCachingType.CACHED_AND_BLOOM);
+        //        testMixedWritingReading(dataType, new RemoteDatabaseInterfaceactory(cachesManager, memoryManager, taskScheduler, "localhost", 1208), DatabaseCachingType.CACHED_AND_BLOOM);
         //        testMixedWritingReading(dataType, new KyotoDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/kyotoDB"), DatabaseCachingType.DIRECT);
         //        testMixedWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
     }

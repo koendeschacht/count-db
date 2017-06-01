@@ -30,8 +30,8 @@ import static be.bagofwords.util.Utils.noException;
 
 public class UniformDataTestsMain implements Runnable {
 
-    private static final int MIN_MILLION_ITEMS_TO_PROCESS = 1;
-    private static final int MAX_MILLION_ITEMS_TO_PROCESS = 12;
+    private static final int MIN_MILLION_ITEMS_TO_PROCESS = 8;
+    private static final int MAX_MILLION_ITEMS_TO_PROCESS = 8;
 
     private static final File tmpDbDir = new File("/tmp/testUniformData");
 
@@ -55,7 +55,7 @@ public class UniformDataTestsMain implements Runnable {
         noException(() -> {
             prepareTmpDir(tmpDbDir);
             // testWritingReading(new LevelDBDataInterfaceFactory(context), DatabaseCachingType.DIRECT);
-            testWritingReading(new FileDataInterfaceFactory(context), DatabaseCachingType.CACHED_AND_BLOOM);
+            // testWritingReading(new FileDataInterfaceFactory(context), DatabaseCachingType.CACHED_AND_BLOOM);
             testWritingReading(new SpeedyDataInterfaceFactory(context), DatabaseCachingType.CACHED_AND_BLOOM);
             // testWritingReading(new KyotoDataInterfaceFactory(context), DatabaseCachingType.DIRECT);
             // testWritingReading(new RocksDBDataInterfaceFactory(context, false), DatabaseCachingType.DIRECT);

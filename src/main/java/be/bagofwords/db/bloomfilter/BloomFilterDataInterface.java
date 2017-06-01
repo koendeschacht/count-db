@@ -159,6 +159,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
             bloomFilter.put(key);
             numOfKeys++;
             currentKeyForNewBloomFilterCreation = key;
+            // Log.i("Adding " + key + " to bloomfilter");
             if (numOfKeys > 100 && numOfKeys > numOfValuesForBloomFilter * 10) {
                 throw new RuntimeException("Received " + numOfKeys + " while we only expected " + numOfValuesForBloomFilter);
             }
@@ -166,7 +167,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
         it.close();
         currentKeyForNewBloomFilterCreation = Long.MAX_VALUE;
         long taken = (System.currentTimeMillis() - start);
-        Log.i("Created bloomfilter " + getName() + " in " + taken + " ms for " + numOfKeys + " keys, size is " + bloomFilter.getBits().size() / (8 * 1024) + " kbytes.");
+        // Log.i("Created bloomfilter " + getName() + " in " + taken + " ms for " + numOfKeys + " keys, size is " + bloomFilter.getBits().size() / (8 * 1024) + " kbytes.");
     }
 
     private void createNewBloomFilter() {

@@ -20,8 +20,44 @@ public class Tests {
 
     public static void main(String[] args) throws IOException {
         // testSnappy();
-        testRandomAccess();
+        // testRandomAccess();
+        testRandomAccessWriting();
         // testBinarySearch();
+    }
+
+    private static void testRandomAccessWriting() throws IOException {
+        String fileName = "/tmp/randomAccessWriting.bin";
+        Log.i("Testing random access writing");
+        MappedLists<String, Long> measuredTimes = new MappedLists<>();
+        for (int run = 0; run < 10; run++) {
+            measureWriteTime("sequential", fileName, measuredTimes);
+            measureWriteTime("random", fileName, measuredTimes);
+        }
+        printTimes(measuredTimes);
+    }
+
+    private static void measureWriteTime(String method, String fileName, MappedLists<String, Long> measuredTimes) throws IOException {
+        Random random = new Random();
+        int numOfItems = 1024 * 1024;
+        long start = System.nanoTime();
+        if (method.equals("sequential")) {
+            DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fileName)));
+            for (int i = 0; i < numOfItems; i++) {
+                os.writeLong(random.nextLong());
+            }
+            os.close();
+        } else {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            DataOutputStream dos = new DataOutputStream(bos);
+            for (int i = 0; i < numOfItems; i++) {
+                dos.writeLong(random.nextLong());
+            }
+            dos.close();
+            RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
+            raf.write(bos.toByteArray());
+            raf.close();
+        }
+        measuredTimes.get(method).add((System.nanoTime() - start) / 1000);
     }
 
     private static class Wrapper {
@@ -129,29 +165,41 @@ public class Tests {
         Log.i("Testing sequential access");
         MappedLists<String, Long> measuredTimes = new MappedLists<>();
         for (int run = 0; run < 10; run++) {
-            measureReadTime("sequential", true, fileName, measuredTimes);
-            measureReadTime("random", false, fileName, measuredTimes);
+            measureReadTime("sequential", fileName, measuredTimes);
+            measureReadTime("random_seek", fileName, measuredTimes);
+            measureReadTime("random_all", fileName, measuredTimes);
         }
         printTimes(measuredTimes);
     }
 
-    private static void measureReadTime(String name, boolean sequential, String fileName, MappedLists<String, Long> measuredTimes) throws IOException {
+    private static void measureReadTime(String name, String fileName, MappedLists<String, Long> measuredTimes) throws IOException {
         long start = System.nanoTime();
         File file = new File(fileName);
-        if (sequential) {
+        if (name.equals("sequential")) {
             InputStream is = new BufferedInputStream(new FileInputStream(fileName));
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[1024 * 1024];
             long totalRead = 0;
             int bytesRead;
             while ((bytesRead = is.read(buffer)) != -1 && totalRead < file.length() / 10) {
                 totalRead += bytesRead;
             }
+            Log.i("Total read sequential " + totalRead);
             is.close();
-        } else {
+        } else if (name.equals("random_seek")) {
             RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
             raf.seek(file.length() / 3 * 2);
             byte[] buffer = new byte[1024];
             raf.read(buffer);
+        } else if (name.equals("random_all")) {
+            RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
+            byte[] buffer = new byte[1024 * 1024];
+            long totalRead = 0;
+            int bytesRead;
+            while ((bytesRead = raf.read(buffer)) != -1 && totalRead < file.length() / 10) {
+                totalRead += bytesRead;
+            }
+            Log.i("Total read random " + totalRead);
+            raf.close();
         }
         measuredTimes.get(name).add((System.nanoTime() - start) / 1000_000);
     }
