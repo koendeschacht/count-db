@@ -1,6 +1,5 @@
-package be.bagofwords;
+package be.bagofwords.db.methods;
 
-import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.exec.RemoteClass;
 
 import java.io.Serializable;
