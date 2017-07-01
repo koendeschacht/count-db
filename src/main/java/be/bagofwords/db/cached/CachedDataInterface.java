@@ -1,12 +1,12 @@
 package be.bagofwords.db.cached;
 
-import be.bagofwords.application.TaskSchedulerService;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.cache.DynamicMap;
 import be.bagofwords.cache.ReadCache;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.LayeredDataInterface;
 import be.bagofwords.iterator.CloseableIterator;
+import be.bagofwords.jobs.AsyncJobService;
 import be.bagofwords.logging.Log;
 import be.bagofwords.memory.MemoryGobbler;
 import be.bagofwords.memory.MemoryManager;
@@ -32,7 +32,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     private final SafeThread initializeCachesThread;
     private long timeOfLastFlushOfWriteBuffer;
 
-    public CachedDataInterface(MemoryManager memoryManager, CachesManager cachesManager, DataInterface<T> baseInterface, TaskSchedulerService taskScheduler) {
+    public CachedDataInterface(MemoryManager memoryManager, CachesManager cachesManager, DataInterface<T> baseInterface, AsyncJobService taskScheduler) {
         super(baseInterface);
         this.memoryManager = memoryManager;
         this.memoryManager.registerMemoryGobbler(this);
@@ -44,7 +44,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
         }
         this.initializeCachesThread = new InitializeCachesThread(baseInterface);
         this.initializeCachesThread.start();
-        taskScheduler.schedulePeriodicTask(() -> ifNotClosed(this::flushWriteBuffer), TIME_BETWEEN_FLUSHES_WRITE_BUFFER);
+        taskScheduler.schedulePeriodicJob(() -> ifNotClosed(this::flushWriteBuffer), TIME_BETWEEN_FLUSHES_WRITE_BUFFER);
         timeOfLastFlushOfWriteBuffer = System.currentTimeMillis();
     }
 

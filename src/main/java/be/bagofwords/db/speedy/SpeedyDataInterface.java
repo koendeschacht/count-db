@@ -21,8 +21,6 @@ import static be.bagofwords.db.speedy.LockMethod.LOCK_READ;
 import static be.bagofwords.db.speedy.LockMethod.LOCK_WRITE;
 import static be.bagofwords.db.speedy.LockMethod.NO_LOCK;
 import static be.bagofwords.util.Utils.noException;
-import static com.sun.xml.internal.fastinfoset.algorithm.IntegerEncodingAlgorithm.INT_SIZE;
-import static com.sun.xml.internal.fastinfoset.algorithm.IntegerEncodingAlgorithm.LONG_SIZE;
 
 /**
  * Created by koen on 29/05/17.
@@ -31,6 +29,8 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
 
     private static final int BATCH_SIZE_PRIMITIVE_VALUES = 100000;
     private static final int BATCH_SIZE_NON_PRIMITIVE_VALUES = 100;
+    private static final int LONG_SIZE = 8;
+    private static final int INT_SIZE = 4;
     private final long NULL_VALUE = Long.MIN_VALUE;
     private final long MAX_WRITE_SIZE = 10 * 1024 * 1024;
     private final File directory;

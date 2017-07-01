@@ -29,8 +29,9 @@ public class BaseTestDataInterface {
         // backendTypes.add(DatabaseBackendType.LEVELDB);
         // backendTypes.add(DatabaseBackendType.MEMORY);
         // backendTypes.add(DatabaseBackendType.REMOTE);
-        // backendTypes.add(DatabaseBackendType.FILE);
-        backendTypes.add(DatabaseBackendType.SPEED);
+        backendTypes.add(DatabaseBackendType.FILE);
+        // backendTypes.add(DatabaseBackendType.SPEED);
+        // backendTypes.add(DatabaseBackendType.NEW_FILE);
         //        backendTypes.add(DatabaseBackendType.LMDB); --> too slow
         //        backendTypes.add(DatabaseBackendType.KYOTO);
         //        backendTypes.add(DatabaseBackendType.ROCKSDB);

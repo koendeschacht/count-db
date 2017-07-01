@@ -1,6 +1,5 @@
 package be.bagofwords.db.impl;
 
-import be.bagofwords.application.TaskSchedulerService;
 import be.bagofwords.cache.CachesManager;
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.DataInterface;
@@ -15,6 +14,7 @@ import be.bagofwords.db.combinator.OverWriteCombinator;
 import be.bagofwords.db.experimental.index.DataIndexer;
 import be.bagofwords.db.experimental.index.DataInterfaceIndex;
 import be.bagofwords.db.memory.InMemoryDataInterface;
+import be.bagofwords.jobs.AsyncJobService;
 import be.bagofwords.memory.MemoryManager;
 import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.minidepi.LifeCycleBean;
@@ -32,7 +32,7 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
 
     private final CachesManager cachesManager;
     protected final MemoryManager memoryManager;
-    protected final TaskSchedulerService taskScheduler;
+    protected final AsyncJobService asyncJobService;
     private final List<DataInterfaceReference> allInterfaces;
     private final ReferenceQueue<DataInterface> allInterfacesReferenceQueue;
 
@@ -44,7 +44,7 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
     public BaseDataInterfaceFactory(ApplicationContext context) {
         this.cachesManager = context.getBean(CachesManager.class);
         this.memoryManager = context.getBean(MemoryManager.class);
-        this.taskScheduler = context.getBean(TaskSchedulerService.class);
+        this.asyncJobService = context.getBean(AsyncJobService.class);
         this.allInterfaces = new ArrayList<>();
         this.allInterfacesReferenceQueue = new ReferenceQueue<>();
         this.metaDataStore = new MetaDataStore();
@@ -72,11 +72,11 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
         }
         setMetaDataStore(dataInterface);
         if (config.cache) {
-            dataInterface = new CachedDataInterface<>(memoryManager, cachesManager, dataInterface, taskScheduler);
+            dataInterface = new CachedDataInterface<>(memoryManager, cachesManager, dataInterface, asyncJobService);
         }
         if (config.bloomFilter) {
             checkInitialisationCachedBloomFilters();
-            dataInterface = new BloomFilterDataInterface<>(dataInterface, bloomFiltersInterface, taskScheduler);
+            dataInterface = new BloomFilterDataInterface<>(dataInterface, bloomFiltersInterface, asyncJobService);
         }
         registerInterface(dataInterface);
         return dataInterface;
@@ -143,7 +143,7 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
     @Override
     public void startBean() {
         BaseDataInterface<String> baseMetaDataStorage = createBaseDataInterface(META_DATA_STORAGE, String.class, new OverWriteCombinator<>(), false);
-        metaDataInterface = new CachedDataInterface<>(memoryManager, cachesManager, baseMetaDataStorage, taskScheduler);
+        metaDataInterface = new CachedDataInterface<>(memoryManager, cachesManager, baseMetaDataStorage, asyncJobService);
         metaDataStore.setStorage(metaDataInterface);
         registerInterface(metaDataInterface);
         if (baseMetaDataStorage instanceof CoreDataInterface) {

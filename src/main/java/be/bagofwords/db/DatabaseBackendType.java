@@ -6,6 +6,6 @@ package be.bagofwords.db;
 public enum DatabaseBackendType {
 
     FILE, LEVELDB, MEMORY, REMOTE, LMDB, KYOTO, ROCKSDB, ROCKSDB_PATCHED,
-    SPEED
+    NEW_FILE, SPEED
 
 }

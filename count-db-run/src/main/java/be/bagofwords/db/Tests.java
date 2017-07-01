@@ -19,10 +19,10 @@ import static org.xerial.snappy.SnappyFramedOutputStream.MAX_BLOCK_SIZE;
 public class Tests {
 
     public static void main(String[] args) throws IOException {
-        // testSnappy();
+        // testCompression();
         // testRandomAccess();
-        testRandomAccessWriting();
-        // testBinarySearch();
+        // testRandomAccessWriting();
+        testBinarySearch();
     }
 
     private static void testRandomAccessWriting() throws IOException {
@@ -160,20 +160,26 @@ public class Tests {
 
     private static void testRandomAccess() throws IOException {
         Log.i("Generating file");
-        String fileName = "/tmp/randomAccess.bin";
-        createRandomFile(fileName);
+        String fileNameSSD = "/tmp/randomAccess.bin";
+        String fileNameHD = "/media/koen/LENOVO/tests/randomAccess.bin";
+        createRandomFile(fileNameSSD);
+        createRandomFile(fileNameHD);
         Log.i("Testing sequential access");
         MappedLists<String, Long> measuredTimes = new MappedLists<>();
         for (int run = 0; run < 10; run++) {
-            measureReadTime("sequential", fileName, measuredTimes);
-            measureReadTime("random_seek", fileName, measuredTimes);
-            measureReadTime("random_all", fileName, measuredTimes);
+            measureReadTime("sequential_ssd", fileNameSSD, measuredTimes);
+            measureReadTime("random_seek_ssd", fileNameSSD, measuredTimes);
+            measureReadTime("random_all_ssd", fileNameSSD, measuredTimes);
+            measureReadTime("sequential_hd", fileNameHD, measuredTimes);
+            measureReadTime("random_seek_hd", fileNameHD, measuredTimes);
+            measureReadTime("random_all_hd", fileNameHD, measuredTimes);
         }
         printTimes(measuredTimes);
     }
 
     private static void measureReadTime(String name, String fileName, MappedLists<String, Long> measuredTimes) throws IOException {
         long start = System.nanoTime();
+        Log.i("Started reading " + fileName);
         File file = new File(fileName);
         if (name.equals("sequential")) {
             InputStream is = new BufferedInputStream(new FileInputStream(fileName));
@@ -183,7 +189,6 @@ public class Tests {
             while ((bytesRead = is.read(buffer)) != -1 && totalRead < file.length() / 10) {
                 totalRead += bytesRead;
             }
-            Log.i("Total read sequential " + totalRead);
             is.close();
         } else if (name.equals("random_seek")) {
             RandomAccessFile raf = new RandomAccessFile(fileName, "rw");
@@ -198,24 +203,24 @@ public class Tests {
             while ((bytesRead = raf.read(buffer)) != -1 && totalRead < file.length() / 10) {
                 totalRead += bytesRead;
             }
-            Log.i("Total read random " + totalRead);
             raf.close();
         }
-        measuredTimes.get(name).add((System.nanoTime() - start) / 1000_000);
+        Log.i("Finished reading " + fileName);
+        measuredTimes.get(name).add((System.nanoTime() - start));
     }
 
     private static void createRandomFile(String fileName) throws IOException {
         Random random = new Random();
         OutputStream os = new BufferedOutputStream(new FileOutputStream(fileName));
         byte[] buffer = new byte[1024];
-        for (int i = 0; i < 1024 * 1024; i++) {
+        for (int i = 0; i < 1024 * 1024 * 10; i++) {
             random.nextBytes(buffer);
             os.write(buffer);
         }
         os.close();
     }
 
-    public static void testSnappy() throws IOException {
+    public static void testCompression() throws IOException {
         Random random = new Random();
         int numOfItems = 5_000_000;
         List<byte[]> randomItems = IntStream.range(0, numOfItems)

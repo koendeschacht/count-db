@@ -1,10 +1,10 @@
 package be.bagofwords.db.bloomfilter;
 
-import be.bagofwords.application.TaskSchedulerService;
-import be.bagofwords.db.impl.DBUtils;
-import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.LayeredDataInterface;
+import be.bagofwords.db.impl.BaseDataInterface;
+import be.bagofwords.db.impl.DBUtils;
 import be.bagofwords.iterator.CloseableIterator;
+import be.bagofwords.jobs.AsyncJobService;
 import be.bagofwords.logging.Log;
 import be.bagofwords.util.KeyValue;
 
@@ -23,7 +23,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
     private long actualWriteCount;
     private long writeCountOfSavedFilter;
 
-    public BloomFilterDataInterface(BaseDataInterface<T> baseInterface, BaseDataInterface<LongBloomFilterWithCheckSum> bloomFilterDataInterface, TaskSchedulerService taskScheduler) {
+    public BloomFilterDataInterface(BaseDataInterface<T> baseInterface, BaseDataInterface<LongBloomFilterWithCheckSum> bloomFilterDataInterface, AsyncJobService taskScheduler) {
         super(baseInterface);
         this.bloomFilterDataInterface = bloomFilterDataInterface;
         this.modifyBloomFilterLock = new ReentrantLock();
@@ -34,7 +34,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
             writeCountOfSavedFilter = -Long.MAX_VALUE;
             actualWriteCount = writeCountOfSavedFilter + 1;
         }
-        taskScheduler.schedulePeriodicTask(() -> ifNotClosed(this::writeBloomFilterToDiskIfNecessary), 1000);
+        taskScheduler.schedulePeriodicJob(() -> ifNotClosed(this::writeBloomFilterToDiskIfNecessary), 1000);
     }
 
     @Override

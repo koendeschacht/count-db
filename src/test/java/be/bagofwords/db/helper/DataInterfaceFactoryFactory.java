@@ -8,6 +8,7 @@ import be.bagofwords.db.experimental.rocksdb.RocksDBDataInterfaceFactory;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.leveldb.LevelDBDataInterfaceFactory;
 import be.bagofwords.db.memory.InMemoryDataInterfaceFactory;
+import be.bagofwords.db.newfiledb.NewFileDataInterfaceFactory;
 import be.bagofwords.db.remote.RemoteDatabaseInterfaceFactory;
 import be.bagofwords.db.speedy.SpeedyDataInterfaceFactory;
 import be.bagofwords.minidepi.ApplicationContext;
@@ -36,6 +37,8 @@ public class DataInterfaceFactoryFactory {
                 return new SpeedyDataInterfaceFactory(context);
             case FILE:
                 return new FileDataInterfaceFactory(context);
+            case NEW_FILE:
+                return new NewFileDataInterfaceFactory(context);
             case REMOTE:
                 return new RemoteDatabaseInterfaceFactory(context);
             case MEMORY:
