@@ -14,6 +14,10 @@ import be.bagofwords.db.combinator.OverWriteCombinator;
 import be.bagofwords.db.experimental.index.DataIndexer;
 import be.bagofwords.db.experimental.index.DataInterfaceIndex;
 import be.bagofwords.db.memory.InMemoryDataInterface;
+import be.bagofwords.db.methods.JsonObjectSerializer;
+import be.bagofwords.db.methods.LongObjectSerializer;
+import be.bagofwords.db.methods.ObjectSerializer;
+import be.bagofwords.db.methods.StringSerializer;
 import be.bagofwords.jobs.AsyncJobService;
 import be.bagofwords.memory.MemoryManager;
 import be.bagofwords.minidepi.ApplicationContext;
@@ -65,10 +69,19 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
         if (config.isTemporary) {
             name = createNameForTemporaryInterface(name);
         }
+        if (config.objectClass == null) {
+            throw new RuntimeException("The object class is not set");
+        }
+        if (config.combinator == null) {
+            throw new RuntimeException("The object combinator is not set");
+        }
         if (config.inMemory) {
             dataInterface = new InMemoryDataInterface<>(name, config.objectClass, config.combinator);
         } else {
-            dataInterface = createBaseDataInterface(name, config.objectClass, config.combinator, config.isTemporary);
+            if (config.objectSerializer == null) {
+                throw new RuntimeException("The object serializer is not set");
+            }
+            dataInterface = createBaseDataInterface(name, config.objectClass, config.combinator, config.objectSerializer, config.isTemporary);
         }
         setMetaDataStore(dataInterface);
         if (config.cache) {
@@ -94,29 +107,30 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
         }
     }
 
-    protected abstract <T extends Object> BaseDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface);
+    protected abstract <T extends Object> BaseDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer, boolean isTemporaryDataInterface);
 
     protected abstract Class<? extends DataInterface> getBaseDataInterfaceClass();
 
     public DataInterface<Long> createCountDataInterface(String name) {
-        return createDataInterface(name, Long.class, new LongCombinator(), false, false);
+        return createDataInterface(name, Long.class, new LongCombinator(), new LongObjectSerializer(), false, false);
     }
 
     public DataInterface<Long> createTmpCountDataInterface(String name) {
-        return createDataInterface(createNameForTemporaryInterface(name), Long.class, new LongCombinator(), true, false);
+        return createDataInterface(createNameForTemporaryInterface(name), Long.class, new LongCombinator(), new LongObjectSerializer(), true, false);
     }
 
     public DataInterface<Long> createInMemoryCountDataInterface(String name) {
-        return createDataInterface(name, Long.class, new LongCombinator(), false, true);
+        return createDataInterface(name, Long.class, new LongCombinator(), new LongObjectSerializer(), false, true);
     }
 
-    public <T extends Object> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
-        return createDataInterface(name, objectClass, combinator, false, false);
+    public <T extends Object> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer) {
+        return createDataInterface(name, objectClass, combinator, objectSerializer, false, false);
     }
 
-    private <T extends Object> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean temporary, boolean inMemory) {
+    private <T extends Object> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer, boolean temporary, boolean inMemory) {
         DataInterfaceConfig<T> config = dataInterface(name, objectClass);
         config.combinator(combinator);
+        config.serializer(objectSerializer);
         if (temporary) {
             config.temporary();
         }
@@ -128,7 +142,7 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
 
     private void checkInitialisationCachedBloomFilters() {
         if (bloomFiltersInterface == null) {
-            bloomFiltersInterface = createBaseDataInterface("system/bloomFilter", LongBloomFilterWithCheckSum.class, new OverWriteCombinator<>(), false);
+            bloomFiltersInterface = createBaseDataInterface("system/bloomFilter", LongBloomFilterWithCheckSum.class, new OverWriteCombinator<>(), new JsonObjectSerializer<>(LongBloomFilterWithCheckSum.class), false);
             setMetaDataStore(bloomFiltersInterface);
             synchronized (allInterfaces) {
                 allInterfaces.add(new DataInterfaceReference(bloomFiltersInterface, allInterfacesReferenceQueue));
@@ -142,8 +156,9 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
 
     @Override
     public void startBean() {
-        BaseDataInterface<String> baseMetaDataStorage = createBaseDataInterface(META_DATA_STORAGE, String.class, new OverWriteCombinator<>(), false);
-        metaDataInterface = new CachedDataInterface<>(memoryManager, cachesManager, baseMetaDataStorage, asyncJobService);
+        BaseDataInterface<String> baseMetaDataStorage = createBaseDataInterface(META_DATA_STORAGE, String.class, new OverWriteCombinator<>(), new StringSerializer(), false);
+        // metaDataInterface = new CachedDataInterface<>(memoryManager, cachesManager, baseMetaDataStorage, asyncJobService);
+        metaDataInterface = baseMetaDataStorage;
         metaDataStore.setStorage(metaDataInterface);
         registerInterface(metaDataInterface);
         if (baseMetaDataStorage instanceof CoreDataInterface) {

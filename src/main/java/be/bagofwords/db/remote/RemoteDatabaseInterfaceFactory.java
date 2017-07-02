@@ -4,6 +4,7 @@ import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.impl.BaseDataInterfaceFactory;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.minidepi.ApplicationContext;
 
 public class RemoteDatabaseInterfaceFactory extends BaseDataInterfaceFactory {
@@ -18,8 +19,8 @@ public class RemoteDatabaseInterfaceFactory extends BaseDataInterfaceFactory {
     }
 
     @Override
-    protected synchronized <T extends Object> BaseDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
-        return new RemoteDataInterface<>(name, objectClass, combinator, host, port, isTemporaryDataInterface, asyncJobService);
+    protected synchronized <T extends Object> BaseDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer, boolean isTemporaryDataInterface) {
+        return new RemoteDataInterface<>(name, objectClass, combinator, objectSerializer, host, port, isTemporaryDataInterface, asyncJobService);
     }
 
     @Override

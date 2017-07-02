@@ -2,7 +2,7 @@ package be.bagofwords.db.experimental.lmdb;
 
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.combinator.Combinator;
-import be.bagofwords.db.impl.MetaDataStore;
+import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.util.DataLock;
 import be.bagofwords.util.KeyValue;
@@ -22,8 +22,8 @@ public class LMDBDataInterface<T> extends CoreDataInterface<T> {
     private final DataLock dataLock;
     private Database db;
 
-    public LMDBDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, Env env, boolean isTemporaryDataInterface) {
-        super(name, objectClass, combinator, isTemporaryDataInterface);
+    public LMDBDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer, Env env, boolean isTemporaryDataInterface) {
+        super(name, objectClass, combinator, objectSerializer, isTemporaryDataInterface);
         this.db = env.openDatabase(name);
         this.env = env;
         this.dataLock = new DataLock(false);

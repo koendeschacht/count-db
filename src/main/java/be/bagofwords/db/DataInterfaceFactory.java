@@ -4,6 +4,7 @@ import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.experimental.index.DataIndexer;
 import be.bagofwords.db.experimental.index.DataInterfaceIndex;
 import be.bagofwords.db.impl.BaseDataInterface;
+import be.bagofwords.db.methods.ObjectSerializer;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
@@ -21,7 +22,7 @@ public interface DataInterfaceFactory {
 
     DataInterface<Long> createInMemoryCountDataInterface(String name);
 
-    <T extends Object> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator);
+    <T extends Object> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer);
 
     List<DataInterfaceReference> getAllInterfaces();
 

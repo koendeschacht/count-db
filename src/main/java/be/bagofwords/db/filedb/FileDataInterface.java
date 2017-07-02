@@ -4,6 +4,8 @@ import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.impl.DBUtils;
 import be.bagofwords.db.methods.KeyFilter;
+import be.bagofwords.db.methods.ObjectSerializer;
+import be.bagofwords.db.methods.ReadValue;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
@@ -48,10 +50,9 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     private static final int LONG_SIZE = 8;
     private static final int INT_SIZE = 4;
 
-    private MemoryManager memoryManager;
-    private File directory;
+    private final MemoryManager memoryManager;
+    private final File directory;
     private List<FileBucket> fileBuckets;
-    private final int sizeOfValues;
     private final long randomId;
 
     private final String sizeOfCachedFileContentsLock = new String("LOCK");
@@ -65,10 +66,9 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     private boolean closeWasRequested;
 
-    public FileDataInterface(MemoryManager memoryManager, Combinator<T> combinator, Class<T> objectClass, String directory, String name, boolean isTemporaryDataInterface, AsyncJobService taskScheduler) {
-        super(name, objectClass, combinator, isTemporaryDataInterface);
+    public FileDataInterface(MemoryManager memoryManager, Combinator<T> combinator, Class<T> objectClass, String directory, String name, boolean isTemporaryDataInterface, AsyncJobService taskScheduler, ObjectSerializer<T> objectSerializer) {
+        super(name, objectClass, combinator, objectSerializer, isTemporaryDataInterface);
         this.directory = new File(directory, name);
-        this.sizeOfValues = SerializationUtils.getWidth(objectClass);
         this.randomId = new Random().nextLong();
         this.memoryManager = memoryManager;
         this.maxSizeOfCachedFileContents = memoryManager.getAvailableMemoryInBytes() / 3;
@@ -137,7 +137,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     position += LONG_SIZE;
                     if (currentKey == key) {
                         ReadValue<T> readValue = readValue(buffer, position, true);
-                        return readValue.getValue();
+                        return readValue.value;
                     } else if (currentKey > key) {
                         return null;
                     } else {
@@ -676,34 +676,12 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     private int writeValue(DataOutputStream dos, long key, T value) throws IOException {
         dos.writeLong(key);
-        byte[] objectAsBytes = SerializationUtils.objectToBytesCheckForNull(value, getObjectClass());
-        if (sizeOfValues == -1) {
-            dos.writeInt(objectAsBytes.length);
-            dos.write(objectAsBytes);
-            return 8 + 4 + objectAsBytes.length;
-        } else {
-            dos.write(objectAsBytes);
-            return 8 + sizeOfValues;
-        }
+        int extraSize = objectSerializer.writeValue(value, dos);
+        return 8 + extraSize;
     }
 
     private ReadValue<T> readValue(byte[] buffer, int position, boolean readActualValue) throws IOException {
-        int lengthOfObject;
-        int lenghtOfLengthValue;
-        if (sizeOfValues == -1) {
-            lengthOfObject = SerializationUtils.bytesToInt(buffer, position);
-            lenghtOfLengthValue = INT_SIZE;
-        } else {
-            lengthOfObject = sizeOfValues;
-            lenghtOfLengthValue = 0;
-        }
-        T value;
-        if (readActualValue) {
-            value = SerializationUtils.bytesToObjectCheckForNull(buffer, position + lenghtOfLengthValue, lengthOfObject, getObjectClass());
-        } else {
-            value = null;
-        }
-        return new ReadValue<>(lengthOfObject + lenghtOfLengthValue, value);
+        return objectSerializer.readValue(buffer, position, readActualValue);
     }
 
     private List<FileBucket> createEmptyFileBuckets() {
@@ -889,16 +867,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     private int skipValue(byte[] buffer, int position) throws IOException {
-        //Skip some bytes
-        Class<T> objectClass = getObjectClass();
-        if (objectClass == Long.class || objectClass == Double.class) {
-            return LONG_SIZE;
-        } else if (objectClass == Integer.class || objectClass == Float.class) {
-            return INT_SIZE;
-        } else {
-            int length = SerializationUtils.bytesToInt(buffer, position);
-            return INT_SIZE + length;
-        }
+        return readValue(buffer, position, false).size;
     }
 
     private DataOutputStream getAppendingOutputStream(FileInfo fileInfo) throws FileNotFoundException {
@@ -942,8 +911,8 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 long key = SerializationUtils.bytesToLong(buffer, position);
                 position += LONG_SIZE;
                 ReadValue<T> readValue = readValue(buffer, position, true);
-                position += readValue.getSize();
-                result.add(new KeyValue<>(key, readValue.getValue()));
+                position += readValue.size;
+                result.add(new KeyValue<>(key, readValue.value));
             }
             dataWasRead();
             return result;
@@ -963,9 +932,9 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 position += LONG_SIZE;
                 boolean readActualValue = keyFilter.acceptKey(key);
                 ReadValue<T> readValue = readValue(buffer, position, readActualValue);
-                position += readValue.getSize();
+                position += readValue.size;
                 if (readActualValue) {
-                    result.add(new KeyValue<>(key, readValue.getValue()));
+                    result.add(new KeyValue<>(key, readValue.value));
                 }
             }
             dataWasRead();
@@ -994,12 +963,12 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     long key = SerializationUtils.bytesToLong(buffer, position);
                     position += LONG_SIZE;
                     ReadValue<T> readValue = readValue(buffer, position, true);
-                    position += readValue.getSize();
+                    position += readValue.size;
                     int bucketInd = (int) ((key - start) / density);
                     if (bucketInd == buckets.length) {
                         bucketInd--; //rounding error?
                     }
-                    buckets[bucketInd].add(new KeyValue<>(key, readValue.getValue()));
+                    buckets[bucketInd].add(new KeyValue<>(key, readValue.value));
                 }
                 for (int bucketInd = 0; bucketInd < buckets.length; bucketInd++) {
                     List<KeyValue<T>> currentBucket = buckets[bucketInd];
@@ -1029,10 +998,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     private int getLowerBoundOnNumberOfValues(int sizeOfFile) {
-        int width = sizeOfValues;
-        if (width == -1) {
-            width = 4; //will probably be much larger...
-        }
+        int width = objectSerializer.getMinimumBoundOfObjectSize();
         return sizeOfFile / (8 + width);
     }
 
@@ -1087,7 +1053,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     private long getBatchSize() {
-        return SerializationUtils.getWidth(getObjectClass()) == -1 ? BATCH_SIZE_NON_PRIMITIVE_VALUES : BATCH_SIZE_PRIMITIVE_VALUES;
+        return objectSerializer.getValueWidth() == -1 ? BATCH_SIZE_NON_PRIMITIVE_VALUES : BATCH_SIZE_PRIMITIVE_VALUES;
     }
 
     private static class ReadBuffer {
@@ -1105,24 +1071,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
         public int getOffset() {
             return offset;
-        }
-    }
-
-    private static class ReadValue<T> {
-        private int size;
-        private T value;
-
-        private ReadValue(int size, T value) {
-            this.size = size;
-            this.value = value;
-        }
-
-        public int getSize() {
-            return size;
-        }
-
-        public T getValue() {
-            return value;
         }
     }
 

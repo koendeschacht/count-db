@@ -4,6 +4,7 @@ import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.impl.BaseDataInterfaceFactory;
+import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.util.Utils;
 import org.rocksdb.RocksDB;
@@ -43,8 +44,8 @@ public class RocksDBDataInterfaceFactory extends BaseDataInterfaceFactory {
     }
 
     @Override
-    protected <T> CoreDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
-        return new RocksDBDataInterface<>(name, objectClass, combinator, directory, usePatch, isTemporaryDataInterface);
+    protected <T> CoreDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer, boolean isTemporaryDataInterface) {
+        return new RocksDBDataInterface<>(name, objectClass, combinator, objectSerializer, directory, usePatch, isTemporaryDataInterface);
     }
 
     @Override

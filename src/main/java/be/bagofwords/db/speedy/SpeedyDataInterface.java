@@ -2,6 +2,7 @@ package be.bagofwords.db.speedy;
 
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.logging.Log;
 import be.bagofwords.util.KeyValue;
@@ -47,8 +48,8 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
     private int numOfWritesWithRewrite = 0;
     private byte[] nullBuffer;
 
-    public SpeedyDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporary, String rootDirectory) {
-        super(name, objectClass, combinator, isTemporary);
+    public SpeedyDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer, boolean isTemporary, String rootDirectory) {
+        super(name, objectClass, combinator, objectSerializer, isTemporary);
         if (objectClass != Long.class) {
             throw new RuntimeException("Only works for longs for now");
         }

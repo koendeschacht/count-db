@@ -4,16 +4,15 @@ import be.bagofwords.MetaDataProperties;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.impl.MetaDataStore;
-
-import static be.bagofwords.db.impl.BaseDataInterfaceFactory.META_DATA_STORAGE;
+import be.bagofwords.db.methods.ObjectSerializer;
 
 public abstract class CoreDataInterface<T> extends BaseDataInterface<T> {
 
     private MetaDataStore metaDataStore;
     private long flushInd;
 
-    public CoreDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporary) {
-        super(name, objectClass, combinator, isTemporary);
+    public CoreDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer, boolean isTemporary) {
+        super(name, objectClass, combinator, objectSerializer, isTemporary);
     }
 
     public void setMetaDataStore(MetaDataStore metaDataStore) {

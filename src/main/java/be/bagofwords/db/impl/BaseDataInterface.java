@@ -3,6 +3,7 @@ package be.bagofwords.db.impl;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
@@ -22,10 +23,11 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
     protected final Class<T> objectClass;
     protected final String name;
     protected final boolean isTemporaryDataInterface;
+    protected final ObjectSerializer<T> objectSerializer;
     private final Object closeLock = new Object();
     private boolean wasClosed;
 
-    public BaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
+    public BaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer, boolean isTemporaryDataInterface) {
         if (StringUtils.isEmpty(name)) {
             throw new IllegalArgumentException("Name can not be null or empty");
         }
@@ -33,6 +35,7 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
         this.name = name;
         this.isTemporaryDataInterface = isTemporaryDataInterface;
         this.combinator = combinator;
+        this.objectSerializer = objectSerializer;
     }
 
     public abstract DataInterface<T> getCoreDataInterface();
@@ -41,6 +44,11 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
 
     public Combinator<T> getCombinator() {
         return combinator;
+    }
+
+    @Override
+    public ObjectSerializer<T> getObjectSerializer() {
+        return objectSerializer;
     }
 
     @Override
@@ -159,6 +167,11 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
     @Override
     public CloseableIterator<T> valueIterator(KeyFilter keyFilter) {
         return IterableUtils.mapIterator(iterator(keyFilter), KeyValue::getValue);
+    }
+
+    @Override
+    public CloseableIterator<T> valueIterator(Iterator<Long> keyIterator) {
+        return IterableUtils.mapIterator(iterator(keyIterator), KeyValue::getValue);
     }
 
     /**

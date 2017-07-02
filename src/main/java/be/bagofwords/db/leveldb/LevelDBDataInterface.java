@@ -2,7 +2,7 @@ package be.bagofwords.db.leveldb;
 
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.combinator.Combinator;
-import be.bagofwords.db.impl.MetaDataStore;
+import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.util.DataLock;
 import be.bagofwords.util.KeyValue;
@@ -24,8 +24,8 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
     private File databaseDir;
     private DataLock dataLock;
 
-    public LevelDBDataInterface(String directory, String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
-        super(name, objectClass, combinator, isTemporaryDataInterface);
+    public LevelDBDataInterface(String directory, String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer, boolean isTemporaryDataInterface) {
+        super(name, objectClass, combinator, objectSerializer, isTemporaryDataInterface);
         try {
             databaseDir = new File(directory + File.separator + name);
             if (!databaseDir.exists()) {

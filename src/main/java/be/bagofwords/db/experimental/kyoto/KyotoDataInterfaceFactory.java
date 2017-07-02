@@ -1,10 +1,10 @@
 package be.bagofwords.db.experimental.kyoto;
 
-import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.DataInterface;
+import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.impl.BaseDataInterfaceFactory;
-import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.util.Utils;
 
@@ -41,8 +41,8 @@ public class KyotoDataInterfaceFactory extends BaseDataInterfaceFactory {
     }
 
     @Override
-    protected <T extends Object> BaseDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
-        return new KyotoDataInterface<>(name, directory, objectClass, combinator, isTemporaryDataInterface);
+    protected <T extends Object> BaseDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer, boolean isTemporaryDataInterface) {
+        return new KyotoDataInterface<>(name, directory, objectClass, combinator, objectSerializer, isTemporaryDataInterface);
     }
 
     @Override

@@ -4,6 +4,7 @@ import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.impl.BaseDataInterface;
+import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer.Action;
 import be.bagofwords.exec.RemoteExecConfig;
 import be.bagofwords.iterator.CloseableIterator;
@@ -34,8 +35,8 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     private final List<Connection> largeReadBufferConnections;
     private final ExecutorService executorService;
 
-    public RemoteDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, String host, int port, boolean isTemporaryDataInterface, AsyncJobService taskScheduler) {
-        super(name, objectClass, combinator, isTemporaryDataInterface);
+    public RemoteDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer, String host, int port, boolean isTemporaryDataInterface, AsyncJobService taskScheduler) {
+        super(name, objectClass, combinator, objectSerializer, isTemporaryDataInterface);
         this.host = host;
         this.port = port;
         this.smallBufferConnections = new ArrayList<>();

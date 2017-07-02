@@ -31,4 +31,8 @@ public class SetKeyFilter implements KeyFilter, Serializable {
     public boolean acceptKeysAboveOrEqual(long key) {
         return true;
     }
+
+    public Set<Long> getKeys() {
+        return keys;
+    }
 }

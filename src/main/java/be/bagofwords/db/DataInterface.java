@@ -2,6 +2,7 @@ package be.bagofwords.db;
 
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.methods.KeyFilter;
+import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.DataIterable;
 import be.bagofwords.text.BowString;
@@ -35,13 +36,15 @@ public interface DataInterface<T extends Object> extends DataIterable<KeyValue<T
 
     CloseableIterator<KeyValue<T>> iterator(KeyFilter keyFilter);
 
+    CloseableIterator<KeyValue<T>> iterator(Iterator<Long> keyIterator);
+
     CloseableIterator<Long> keyIterator();
 
     CloseableIterator<T> valueIterator();
 
     CloseableIterator<T> valueIterator(KeyFilter keyFilter);
 
-    CloseableIterator<KeyValue<T>> iterator(Iterator<Long> keyIterator);
+    CloseableIterator<T> valueIterator(Iterator<Long> keyIterator);
 
     CloseableIterator<KeyValue<T>> cachedValueIterator();
 
@@ -109,4 +112,5 @@ public interface DataInterface<T extends Object> extends DataIterable<KeyValue<T
 
     DataInterface<T> getCoreDataInterface();
 
+    ObjectSerializer<T> getObjectSerializer();
 }

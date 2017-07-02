@@ -1,18 +1,22 @@
 package be.bagofwords.db.experimental.index;
 
-import be.bagofwords.db.methods.SetKeyFilter;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
-import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.data.LongList;
 import be.bagofwords.db.data.LongListCombinator;
+import be.bagofwords.db.data.LongListSerializer;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.impl.MetaDataStore;
+import be.bagofwords.db.methods.KeyFilter;
+import be.bagofwords.db.methods.SetKeyFilter;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.logging.Log;
 import be.bagofwords.util.KeyValue;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class DataInterfaceIndex<T> {
 
@@ -27,7 +31,7 @@ public class DataInterfaceIndex<T> {
         this.dataInterface = dataInterface;
         this.indexer = indexer;
         this.metaDataStore = metaDataStore;
-        this.indexedDataInterface = dataInterfaceFactory.createDataInterface(name, LongList.class, new LongListCombinator());
+        this.indexedDataInterface = dataInterfaceFactory.createDataInterface(name, LongList.class, new LongListCombinator(), new LongListSerializer());
         this.lastSync = metaDataStore.getLong(indexedDataInterface, "last.sync", -Long.MAX_VALUE);
     }
 

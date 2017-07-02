@@ -29,7 +29,7 @@ import java.util.concurrent.CountDownLatch;
 public class BigramTestsMain implements Runnable {
 
     private static final long MIN_MILLION_ITEMS_TO_PROCESS = 1;
-    private static final long MAX_MILLION_ITEMS_TO_PROCESS = 28;
+    private static final long MAX_MILLION_ITEMS_TO_PROCESS = 64;
 
     public static void main(String[] args) throws IOException, InterruptedException {
         if (args.length != 1) {

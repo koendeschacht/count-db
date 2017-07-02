@@ -5,6 +5,7 @@ import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.application.EmbeddedDBContextFactory;
 import be.bagofwords.db.combinator.OverWriteCombinator;
+import be.bagofwords.db.methods.JsonObjectSerializer;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.util.KeyValue;
 import org.apache.commons.lang3.time.DateUtils;
@@ -23,7 +24,7 @@ public class ExampleUsage {
 
         // Create data interfaces
         DataInterface<Long> myLogDataInterface = dataInterfaceFactory.createCountDataInterface("myLoginCounts");
-        BaseDataInterface<UserObject> myUserDataInterface = dataInterfaceFactory.createDataInterface("myUsers", UserObject.class, new OverWriteCombinator<>());
+        BaseDataInterface<UserObject> myUserDataInterface = dataInterfaceFactory.createDataInterface("myUsers", UserObject.class, new OverWriteCombinator<>(), new JsonObjectSerializer<>(UserObject.class));
 
         // Write data
         long userId = 12939;

@@ -4,6 +4,7 @@ import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.impl.BaseDataInterfaceFactory;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.minidepi.ApplicationContext;
 
 import java.io.File;
@@ -22,8 +23,8 @@ public class LevelDBDataInterfaceFactory extends BaseDataInterfaceFactory {
     }
 
     @Override
-    protected <T extends Object> BaseDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
-        return new LevelDBDataInterface<>(directory, name, objectClass, combinator, isTemporaryDataInterface);
+    protected <T extends Object> BaseDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer, boolean isTemporaryDataInterface) {
+        return new LevelDBDataInterface<>(directory, name, objectClass, combinator, objectSerializer, isTemporaryDataInterface);
     }
 
     @Override

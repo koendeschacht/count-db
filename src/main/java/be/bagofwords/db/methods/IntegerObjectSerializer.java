@@ -1,30 +1,41 @@
 package be.bagofwords.db.methods;
 
 import be.bagofwords.util.SerializationUtils;
-import org.apache.commons.io.IOUtils;
 
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
 /**
  * Created by koen on 23/05/17.
  */
-public class IntegerObjectSerializer implements ObjectSerializer<Long> {
+public class IntegerObjectSerializer implements ObjectSerializer<Integer> {
 
-    private final byte[] buffer = new byte[8];
+    private final byte[] buffer = new byte[4];
 
     @Override
-    public int serialize(Long t, OutputStream os) throws IOException {
-        SerializationUtils.longToBytes(t, buffer, 0);
-        os.write(buffer);
-        return 8;
+    public int writeValue(Integer obj, DataOutputStream dos) throws IOException {
+        dos.writeInt(obj);
+        return 4;
     }
 
     @Override
-    public Long deserialize(int length, InputStream is) throws IOException {
-        IOUtils.readFully(is, buffer);
-        return SerializationUtils.bytesToLong(buffer);
+    public ReadValue<Integer> readValue(byte[] buffer, int position, boolean readActualValue) {
+        Integer value;
+        if (readActualValue) {
+            value = SerializationUtils.bytesToInt(buffer, position);
+        } else {
+            value = null;
+        }
+        return new ReadValue<>(4, value);
     }
 
+    @Override
+    public int getMinimumBoundOfObjectSize() {
+        return 4;
+    }
+
+    @Override
+    public int getValueWidth() {
+        return 4;
+    }
 }

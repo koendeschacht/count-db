@@ -4,6 +4,7 @@ import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.impl.BaseDataInterfaceFactory;
+import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.minidepi.ApplicationContext;
 import org.fusesource.lmdbjni.Env;
 
@@ -36,8 +37,8 @@ public class LMDBDataInterfaceFactory extends BaseDataInterfaceFactory {
     }
 
     @Override
-    protected <T> BaseDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, boolean isTemporaryDataInterface) {
-        return new LMDBDataInterface<>(name, objectClass, combinator, env, isTemporaryDataInterface);
+    protected <T> BaseDataInterface<T> createBaseDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer, boolean isTemporaryDataInterface) {
+        return new LMDBDataInterface<>(name, objectClass, combinator, objectSerializer, env, isTemporaryDataInterface);
     }
 
     @Override

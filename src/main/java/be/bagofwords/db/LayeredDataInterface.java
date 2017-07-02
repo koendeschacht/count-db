@@ -13,7 +13,7 @@ public abstract class LayeredDataInterface<T> extends BaseDataInterface<T> {
     protected DataInterface<T> baseInterface;
 
     public LayeredDataInterface(DataInterface<T> baseInterface) {
-        super(baseInterface.getName(), baseInterface.getObjectClass(), baseInterface.getCombinator(), baseInterface.isTemporaryDataInterface());
+        super(baseInterface.getName(), baseInterface.getObjectClass(), baseInterface.getCombinator(), baseInterface.getObjectSerializer(), baseInterface.isTemporaryDataInterface());
         this.baseInterface = baseInterface;
     }
 
@@ -87,6 +87,11 @@ public abstract class LayeredDataInterface<T> extends BaseDataInterface<T> {
     @Override
     public CloseableIterator<T> valueIterator(KeyFilter keyFilter) {
         return baseInterface.valueIterator(keyFilter);
+    }
+
+    @Override
+    public CloseableIterator<T> valueIterator(Iterator<Long> keyIterator) {
+        return baseInterface.valueIterator(keyIterator);
     }
 
     @Override

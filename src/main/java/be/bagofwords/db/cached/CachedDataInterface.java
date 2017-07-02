@@ -5,7 +5,10 @@ import be.bagofwords.cache.DynamicMap;
 import be.bagofwords.cache.ReadCache;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.LayeredDataInterface;
+import be.bagofwords.db.methods.KeyFilter;
+import be.bagofwords.db.methods.SetKeyFilter;
 import be.bagofwords.iterator.CloseableIterator;
+import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.jobs.AsyncJobService;
 import be.bagofwords.logging.Log;
 import be.bagofwords.memory.MemoryGobbler;
@@ -15,9 +18,7 @@ import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.SafeThread;
 import be.bagofwords.util.Utils;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CachedDataInterface<T extends Object> extends LayeredDataInterface<T> implements MemoryGobbler {
@@ -59,6 +60,60 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
         } else {
             return cachedValue.getValue();
         }
+    }
+
+    @Override
+    public CloseableIterator<KeyValue<T>> iterator(KeyFilter keyFilter) {
+        if (keyFilter instanceof SetKeyFilter && weHaveSomeFreeMemory()) {
+            SetKeyFilter setKeyFilter = (SetKeyFilter) keyFilter;
+            Set<Long> uncachedKeys = new HashSet<>();
+            List<KeyValue<T>> cachedValues = new ArrayList<>();
+            for (long key : setKeyFilter.getKeys()) {
+                KeyValue<T> cachedValue = readCache.get(key);
+                if (cachedValue != null) {
+                    cachedValues.add(cachedValue);
+                } else {
+                    uncachedKeys.add(key);
+                }
+            }
+            Log.i("In iterator(keyFilter) we have " + uncachedKeys.size() + " uncached keys and " + cachedValues.size() + " cached keys");
+            List<CloseableIterator<? extends KeyValue<T>>> iterators = new ArrayList<>();
+            iterators.add(IterableUtils.iterator(cachedValues));
+            CloseableIterator<KeyValue<T>> baseIterator = baseInterface.iterator(new SetKeyFilter(uncachedKeys));
+            iterators.add(new CloseableIterator<KeyValue<T>>() {
+                @Override
+                protected void closeInt() {
+                    baseIterator.close();
+                }
+
+                @Override
+                public boolean hasNext() {
+                    return baseIterator.hasNext();
+                }
+
+                @Override
+                public KeyValue<T> next() {
+                    KeyValue<T> next = baseIterator.next();
+                    if (weHaveSomeFreeMemory()) {
+                        readCache.put(next.getKey(), next.getValue());
+                    }
+                    return next;
+                }
+            });
+            return IterableUtils.iterator(iterators, IterableUtils.CombineMethod.SEQUENTIAL);
+        } else {
+            return super.iterator(keyFilter);
+        }
+    }
+
+    @Override
+    public CloseableIterator<T> valueIterator(KeyFilter keyFilter) {
+        return IterableUtils.mapIterator(iterator(keyFilter), KeyValue::getValue);
+    }
+
+    private boolean weHaveSomeFreeMemory() {
+        MemoryStatus memoryStatus = memoryManager.getMemoryStatus();
+        return memoryStatus == MemoryStatus.FREE || memoryStatus == MemoryStatus.SOMEWHAT_LOW;
     }
 
     @Override

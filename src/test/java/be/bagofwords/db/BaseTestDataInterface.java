@@ -1,6 +1,7 @@
 package be.bagofwords.db;
 
 import be.bagofwords.application.MinimalApplicationDependencies;
+import be.bagofwords.db.methods.LongObjectSerializer;
 import be.bagofwords.web.SocketServer;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
@@ -27,8 +28,8 @@ public class BaseTestDataInterface {
 
         List<DatabaseBackendType> backendTypes = new ArrayList<>();
         // backendTypes.add(DatabaseBackendType.LEVELDB);
-        // backendTypes.add(DatabaseBackendType.MEMORY);
-        // backendTypes.add(DatabaseBackendType.REMOTE);
+        backendTypes.add(DatabaseBackendType.MEMORY);
+        backendTypes.add(DatabaseBackendType.REMOTE);
         backendTypes.add(DatabaseBackendType.FILE);
         // backendTypes.add(DatabaseBackendType.SPEED);
         // backendTypes.add(DatabaseBackendType.NEW_FILE);
@@ -85,7 +86,7 @@ public class BaseTestDataInterface {
     }
 
     protected DataInterface<Long> createCountDataInterface(String name) {
-        return dataInterfaceFactory.dataInterface(name + "_" + System.currentTimeMillis(), Long.class).combinator(new LongCombinator()).caching(type).create();
+        return dataInterfaceFactory.dataInterface(name + "_" + System.currentTimeMillis(), Long.class).combinator(new LongCombinator()).serializer(new LongObjectSerializer()).caching(type).create();
     }
 
 }

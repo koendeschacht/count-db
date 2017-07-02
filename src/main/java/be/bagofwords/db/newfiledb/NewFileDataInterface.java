@@ -4,6 +4,7 @@ import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.impl.DBUtils;
 import be.bagofwords.db.methods.KeyFilter;
+import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
@@ -59,8 +60,8 @@ public class NewFileDataInterface<T extends Object> extends CoreDataInterface<T>
 
     private boolean closeWasRequested;
 
-    public NewFileDataInterface(MemoryManager memoryManager, Combinator<T> combinator, Class<T> objectClass, String directory, String name, boolean isTemporaryDataInterface, AsyncJobService asyncJobService) {
-        super(name, objectClass, combinator, isTemporaryDataInterface);
+    public NewFileDataInterface(MemoryManager memoryManager, Combinator<T> combinator, Class<T> objectClass, ObjectSerializer<T> objectSerializer, String directory, String name, boolean isTemporaryDataInterface, AsyncJobService asyncJobService) {
+        super(name, objectClass, combinator, objectSerializer, isTemporaryDataInterface);
         this.directory = new File(directory, name);
         this.sizeOfValues = SerializationUtils.getWidth(objectClass);
         this.randomId = new Random().nextLong();
