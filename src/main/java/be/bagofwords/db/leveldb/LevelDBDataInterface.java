@@ -176,7 +176,7 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public synchronized void write(Iterator<KeyValue<T>> entries) {
+    public synchronized void write(CloseableIterator<KeyValue<T>> entries) {
         WriteBatch writeBatch = db.createWriteBatch();
         while (entries.hasNext()) {
             KeyValue<T> entry = entries.next();
@@ -195,6 +195,7 @@ public class LevelDBDataInterface<T> extends CoreDataInterface<T> {
                 writeBatch.put(keyInBytes, SerializationUtils.objectToBytes(valueToWrite, getObjectClass()));
             }
         }
+        entries.close();
         db.write(writeBatch);
         try {
             writeBatch.close();

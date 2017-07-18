@@ -5,6 +5,7 @@ import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.iterator.CloseableIterator;
+import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.util.DataLock;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.SerializationUtils;
@@ -110,7 +111,7 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public CloseableIterator<KeyValue<T>> iterator(final Iterator<Long> keyIterator) {
+    public CloseableIterator<KeyValue<T>> iterator(CloseableIterator<Long> keyIterator) {
         return new CloseableIterator<KeyValue<T>>() {
 
             private Iterator<KeyValue<T>> valueBatch;
@@ -162,7 +163,7 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
 
             @Override
             public void closeInt() {
-                //all good
+                keyIterator.close();
             }
         };
     }
@@ -173,7 +174,7 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public void write(Iterator<KeyValue<T>> entries) {
+    public void write(CloseableIterator<KeyValue<T>> entries) {
         while (entries.hasNext()) {
             //Write values in batch:
             Map<Long, T> valuesToWrite = new HashMap<>();
@@ -191,12 +192,13 @@ public class KyotoDataInterface<T> extends CoreDataInterface<T> {
             bulkDelete(valuesToDelete);
             bulkWrite(valuesToWrite);
         }
+        entries.close();
     }
 
     private synchronized void bulkWrite(Map<Long, T> valuesToWrite) {
         //First read current values in bulk
         Map<Long, T> currentValues = new HashMap<>();
-        CloseableIterator<KeyValue<T>> valueIt = iterator(valuesToWrite.keySet().iterator());
+        CloseableIterator<KeyValue<T>> valueIt = iterator(IterableUtils.iterator(valuesToWrite.keySet()));
         while (valueIt.hasNext()) {
             KeyValue<T> curr = valueIt.next();
             if (curr.getValue() != null) {

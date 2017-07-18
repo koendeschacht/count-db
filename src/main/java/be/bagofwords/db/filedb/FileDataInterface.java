@@ -181,7 +181,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     @Override
-    public void write(Iterator<KeyValue<T>> entries) {
+    public void write(CloseableIterator<KeyValue<T>> entries) {
         long batchSize = getBatchSize();
         while (entries.hasNext()) {
             MappedLists<FileBucket, KeyValue<T>> entriesToFileBuckets = new MappedLists<>();
@@ -225,10 +225,11 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 batchSize = BATCH_SIZE_PRIMITIVE_VALUES * 16 * batchSize / totalSizeWrittenInBatch;
             }
         }
+        entries.close();
     }
 
     @Override
-    public CloseableIterator<KeyValue<T>> iterator(final Iterator<Long> keyIterator) {
+    public CloseableIterator<KeyValue<T>> iterator(CloseableIterator<Long> keyIterator) {
         return new CloseableIterator<KeyValue<T>>() {
 
             private Iterator<KeyValue<T>> currBatchIterator;
@@ -266,7 +267,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
             @Override
             protected void closeInt() {
-                //ok
+                keyIterator.close();
             }
 
             @Override
@@ -820,6 +821,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     private FileBucket getBucket(List<FileBucket> fileBuckets, long key) {
+        //TODO: check if we can use the last bits of the key to select the bucket
         int ind = (int) ((key >> BITS_TO_DISCARD_FOR_FILE_BUCKETS) + fileBuckets.size() / 2);
         return fileBuckets.get(ind);
     }

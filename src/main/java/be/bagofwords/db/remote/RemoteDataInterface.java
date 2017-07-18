@@ -1,9 +1,9 @@
 package be.bagofwords.db.remote;
 
 import be.bagofwords.db.DataInterface;
-import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.impl.BaseDataInterface;
+import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer.Action;
 import be.bagofwords.exec.RemoteExecConfig;
@@ -16,9 +16,9 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static be.bagofwords.db.remote.Protocol.*;
@@ -163,7 +163,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     }
 
     @Override
-    public void write(Iterator<KeyValue<T>> entries) {
+    public void write(CloseableIterator<KeyValue<T>> entries) {
         Connection connection = null;
         try {
             connection = selectLargeWriteBufferConnection();
@@ -183,6 +183,8 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
         } catch (Exception e) {
             dropConnection(connection);
             throw new RuntimeException(e);
+        } finally {
+            entries.close();
         }
     }
 
@@ -191,7 +193,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     }
 
     @Override
-    public CloseableIterator<KeyValue<T>> iterator(final Iterator<Long> keyIterator) {
+    public CloseableIterator<KeyValue<T>> iterator(final CloseableIterator<Long> keyIterator) {
         Connection connection = null;
         try {
             connection = selectLargeReadBufferConnection();
@@ -205,6 +207,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
                     }
                     thisConnection.writeLong(LONG_END);
                     thisConnection.flush();
+                    keyIterator.close();
                 } catch (Exception e) {
                     Log.e("Received exception while sending keys for read(..), for interface " + getName() + ". Closing connection. ", e);
                     dropConnection(thisConnection);
@@ -254,6 +257,38 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
             RemoteExecConfig execConfig = RemoteExecConfig.create(keyFilter).add(keyFilter.getClass());
             connection = selectLargeReadBufferConnection();
             doAction(Action.VALUES_ITERATOR_WITH_KEY_FILTER, connection);
+            connection.writeValue(execConfig.pack());
+            connection.flush();
+            return createValueIterator(connection);
+        } catch (Exception e) {
+            dropConnection(connection);
+            throw new RuntimeException("Failed to iterate over values from " + host + ":" + port, e);
+        }
+    }
+
+    @Override
+    public CloseableIterator<KeyValue<T>> iterator(Predicate<T> valueFilter) {
+        Connection connection = null;
+        try {
+            RemoteExecConfig execConfig = RemoteExecConfig.create(valueFilter).add(valueFilter.getClass());
+            connection = selectLargeReadBufferConnection();
+            doAction(Action.ITERATOR_WITH_VALUE_FILTER, connection);
+            connection.writeValue(execConfig.pack());
+            connection.flush();
+            return createKeyValueIterator(connection);
+        } catch (Exception e) {
+            dropConnection(connection);
+            throw new RuntimeException("Failed to iterate over values from " + host + ":" + port, e);
+        }
+    }
+
+    @Override
+    public CloseableIterator<T> valueIterator(Predicate<T> valueFilter) {
+        Connection connection = null;
+        try {
+            RemoteExecConfig execConfig = RemoteExecConfig.create(valueFilter).add(valueFilter.getClass());
+            connection = selectLargeReadBufferConnection();
+            doAction(Action.VALUES_ITERATOR_WITH_VALUE_FILTER, connection);
             connection.writeValue(execConfig.pack());
             connection.flush();
             return createValueIterator(connection);

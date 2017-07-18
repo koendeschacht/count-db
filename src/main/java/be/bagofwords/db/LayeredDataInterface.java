@@ -5,7 +5,7 @@ import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.util.KeyValue;
 
-import java.util.Iterator;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public abstract class LayeredDataInterface<T> extends BaseDataInterface<T> {
@@ -63,12 +63,19 @@ public abstract class LayeredDataInterface<T> extends BaseDataInterface<T> {
         return baseInterface.apprSize();
     }
 
-    public void write(Iterator<KeyValue<T>> entries) {
+    @Override
+    public void write(CloseableIterator<KeyValue<T>> entries) {
         baseInterface.write(entries);
     }
 
-    public CloseableIterator<KeyValue<T>> iterator(final Iterator<Long> keyIterator) {
+    @Override
+    public CloseableIterator<KeyValue<T>> iterator(CloseableIterator<Long> keyIterator) {
         return baseInterface.iterator(keyIterator);
+    }
+
+    @Override
+    public CloseableIterator<KeyValue<T>> iterator(Predicate<T> valueFilter) {
+        return baseInterface.iterator(valueFilter);
     }
 
     @Override
@@ -76,10 +83,12 @@ public abstract class LayeredDataInterface<T> extends BaseDataInterface<T> {
         return baseInterface.iterator(keyFilter);
     }
 
+    @Override
     public CloseableIterator<Long> keyIterator() {
         return baseInterface.keyIterator();
     }
 
+    @Override
     public CloseableIterator<T> valueIterator() {
         return baseInterface.valueIterator();
     }
@@ -90,13 +99,18 @@ public abstract class LayeredDataInterface<T> extends BaseDataInterface<T> {
     }
 
     @Override
-    public CloseableIterator<T> valueIterator(Iterator<Long> keyIterator) {
+    public CloseableIterator<T> valueIterator(CloseableIterator<Long> keyIterator) {
         return baseInterface.valueIterator(keyIterator);
     }
 
     @Override
     public Stream<T> streamValues(KeyFilter keyFilter) {
         return baseInterface.streamValues(keyFilter);
+    }
+
+    @Override
+    public Stream<T> streamValues(Predicate<T> valueFilter) {
+        return baseInterface.streamValues(valueFilter);
     }
 
     public boolean mightContain(long key) {

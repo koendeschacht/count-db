@@ -1,21 +1,12 @@
 package be.bagofwords.db.impl;
 
 import be.bagofwords.db.DataInterface;
-import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.iterator.CloseableIterator;
-import be.bagofwords.iterator.IterableUtils;
-import be.bagofwords.iterator.SimpleIterator;
 import be.bagofwords.logging.Log;
-import be.bagofwords.text.BowString;
-import be.bagofwords.util.HashUtils;
 import be.bagofwords.util.KeyValue;
-import be.bagofwords.util.StreamUtils;
 import be.bagofwords.util.StringUtils;
-
-import java.util.Iterator;
-import java.util.stream.Stream;
 
 public abstract class BaseDataInterface<T extends Object> implements DataInterface<T> {
 
@@ -51,14 +42,6 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
         return objectSerializer;
     }
 
-    @Override
-    public long readCount(long key) {
-        Long result = (Long) read(key);
-        if (result == null)
-            return 0;
-        else
-            return result;
-    }
 
     public Class<T> getObjectClass() {
         return objectClass;
@@ -109,179 +92,6 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
     }
 
     @Override
-    public T read(String key) {
-        return read(HashUtils.hashCode(key));
-    }
-
-    @Override
-    public T read(BowString key) {
-        return read(HashUtils.hashCode(key));
-    }
-
-    @Override
-    public long readCount(BowString key) {
-        return readCount(HashUtils.hashCode(key));
-    }
-
-    @Override
-    public long readCount(String key) {
-        return readCount(HashUtils.hashCode(key));
-    }
-
-    @Override
-    public boolean mightContain(String key) {
-        return mightContain(HashUtils.hashCode(key));
-    }
-
-    /**
-     * This method can be overwritten in a subclass to improve efficiency
-     */
-
-    @Override
-    public boolean mightContain(long key) {
-        return read(key) != null;
-    }
-
-    /**
-     * This method can be overwritten in a subclass to improve efficiency
-     */
-
-    @Override
-    public CloseableIterator<Long> keyIterator() {
-        return IterableUtils.mapIterator(iterator(), KeyValue::getKey);
-    }
-
-    /**
-     * This method can be overwritten in a subclass to improve efficiency
-     */
-
-    @Override
-    public CloseableIterator<T> valueIterator() {
-        return IterableUtils.mapIterator(iterator(), KeyValue::getValue);
-    }
-
-    /**
-     * This method can be overwritten in a subclass to improve efficiency
-     */
-
-    @Override
-    public CloseableIterator<T> valueIterator(KeyFilter keyFilter) {
-        return IterableUtils.mapIterator(iterator(keyFilter), KeyValue::getValue);
-    }
-
-    @Override
-    public CloseableIterator<T> valueIterator(Iterator<Long> keyIterator) {
-        return IterableUtils.mapIterator(iterator(keyIterator), KeyValue::getValue);
-    }
-
-    /**
-     * This method can be overwritten in a subclass to improve efficiency
-     */
-
-    @Override
-    public CloseableIterator<KeyValue<T>> iterator(KeyFilter keyFilter) {
-        final CloseableIterator<KeyValue<T>> keyValueIterator = iterator();
-        return IterableUtils.iterator(new SimpleIterator<KeyValue<T>>() {
-            @Override
-            public KeyValue<T> next() throws Exception {
-                while (keyValueIterator.hasNext()) {
-                    KeyValue<T> next = keyValueIterator.next();
-                    if (keyFilter.acceptKey(next.getKey())) {
-                        return next;
-                    }
-                }
-                return null;
-            }
-
-            @Override
-            public void close() throws Exception {
-                keyValueIterator.close();
-            }
-        });
-    }
-
-    /**
-     * This method can be overwritten in a subclass to improve efficiency
-     */
-
-    @Override
-    public CloseableIterator<KeyValue<T>> iterator(final Iterator<Long> keyIterator) {
-        return IterableUtils.iterator(new SimpleIterator<KeyValue<T>>() {
-            @Override
-            public KeyValue<T> next() throws Exception {
-                while (keyIterator.hasNext()) {
-                    Long next = keyIterator.next();
-                    T value = read(next);
-                    if (value != null) {
-                        return new KeyValue<>(next, value);
-                    }
-                }
-                return null;
-            }
-        });
-    }
-
-    @Override
-    public CloseableIterator<KeyValue<T>> cachedValueIterator() {
-        return new CloseableIterator<KeyValue<T>>() {
-            @Override
-            protected void closeInt() {
-                //ok
-            }
-
-            @Override
-            public boolean hasNext() {
-                return false;
-            }
-
-            @Override
-            public KeyValue<T> next() {
-                return null;
-            }
-        };
-    }
-
-    @Override
-    public void write(BowString key, T value) {
-        write(HashUtils.hashCode(key.getS()), value);
-    }
-
-    @Override
-    public void write(String key, T value) {
-        write(HashUtils.hashCode(key), value);
-    }
-
-    @Override
-    public void increaseCount(String key, Long value) {
-        write(key, (T) value);
-    }
-
-    @Override
-    public void increaseCount(long key, Long value) {
-        write(key, (T) value);
-    }
-
-    @Override
-    public void increaseCount(String key) {
-        increaseCount(key, 1l);
-    }
-
-    @Override
-    public void increaseCount(long key) {
-        increaseCount(key, 1l);
-    }
-
-    @Override
-    public void remove(String key) {
-        remove(HashUtils.hashCode(key));
-    }
-
-    @Override
-    public void remove(long key) {
-        write(key, null);
-    }
-
-    @Override
     public long apprDataChecksum() {
         CloseableIterator<KeyValue<T>> valueIterator = iterator();
         final int numToSample = 10000;
@@ -314,59 +124,6 @@ public abstract class BaseDataInterface<T extends Object> implements DataInterfa
         }
         keyIt.close();
         return result;
-    }
-
-    /**
-     * This method can be overwritten in a subclass to improve efficiency
-     */
-
-    @Override
-    public void write(Iterator<KeyValue<T>> entries) {
-        while (entries.hasNext()) {
-            KeyValue<T> entry = entries.next();
-            write(entry.getKey(), entry.getValue());
-        }
-    }
-
-    /**
-     * This method can be overwritten in a subclass to improve efficiency
-     */
-
-    @Override
-    public Stream<KeyValue<T>> stream() {
-        return StreamUtils.stream(this, true);
-    }
-
-    /**
-     * This method can be overwritten in a subclass to improve efficiency
-     */
-
-    @Override
-    public Stream<KeyValue<T>> stream(KeyFilter keyFilter) {
-        return StreamUtils.stream(iterator(keyFilter), apprSize(), true);
-    }
-
-    /**
-     * This method can be overwritten in a subclass to improve efficiency
-     */
-
-    @Override
-    public Stream<T> streamValues() {
-        return StreamUtils.stream(valueIterator(), apprSize(), false);
-    }
-
-    @Override
-    public Stream<T> streamValues(KeyFilter keyFilter) {
-        return StreamUtils.stream(valueIterator(keyFilter), apprSize(), false);
-    }
-
-    /**
-     * This method can be overwritten in a subclass to improve efficiency
-     */
-
-    @Override
-    public Stream<Long> streamKeys() {
-        return StreamUtils.stream(keyIterator(), apprSize(), true);
     }
 
 }

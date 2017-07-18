@@ -94,8 +94,8 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
     }
 
     @Override
-    public void write(final Iterator<KeyValue<T>> keyValueIterator) {
-        baseInterface.write(new Iterator<KeyValue<T>>() {
+    public void write(CloseableIterator<KeyValue<T>> keyValueIterator) {
+        baseInterface.write(new CloseableIterator<KeyValue<T>>() {
             @Override
             public boolean hasNext() {
                 return keyValueIterator.hasNext();
@@ -109,8 +109,8 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
             }
 
             @Override
-            public void remove() {
-                keyValueIterator.remove();
+            public void closeInt() {
+                keyValueIterator.close();
             }
         });
     }

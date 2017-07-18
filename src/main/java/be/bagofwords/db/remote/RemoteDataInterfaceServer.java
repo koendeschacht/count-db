@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 import static be.bagofwords.db.remote.Protocol.*;
 
@@ -113,7 +114,7 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
         private DataInterface findInterface(String interfaceName) {
             synchronized (dataInterfaceFactory.getAllInterfaces()) {
                 for (DataInterfaceFactory.DataInterfaceReference reference : dataInterfaceFactory.getAllInterfaces()) {
-                    if (reference.getSubsetName().equals(interfaceName)) {
+                    if (reference.getName().equals(interfaceName)) {
                         DataInterface dataInterface = reference.get();
                         if (dataInterface != null) {
                             return dataInterface;
@@ -159,8 +160,6 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
                     handleIterator();
                 } else if (action == Action.ITERATOR_WITH_KEY_ITERATOR) {
                     handleIteratorWithKeyIterator();
-                } else if (action == Action.ITERATOR_WITH_KEY_FILTER) {
-                    handleIteratorWithKeyFilter();
                 } else if (action == Action.WRITE_VALUES) {
                     handleWriteValues();
                 } else if (action == Action.READ_KEYS) {
@@ -175,8 +174,14 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
                     handleOptimizeForReading();
                 } else if (action == Action.READ_CACHED_VALUES) {
                     handleReadCachedValues();
+                } else if (action == Action.ITERATOR_WITH_KEY_FILTER) {
+                    handleIteratorWithKeyFilter();
                 } else if (action == Action.VALUES_ITERATOR_WITH_KEY_FILTER) {
                     handleValuesIteratorWithKeyFilter();
+                } else if (action == Action.ITERATOR_WITH_VALUE_FILTER) {
+                    handleIteratorWithValueFilter();
+                } else if (action == Action.VALUES_ITERATOR_WITH_VALUE_FILTER) {
+                    handleValuesIteratorWithValueFilter();
                 } else {
                     writeError("Unkown action " + action);
                     return false;
@@ -196,6 +201,22 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
         private void handleValuesIteratorWithKeyFilter() throws IOException {
             PackedRemoteExec packedRemoteExec = connection.readValue(PackedRemoteExec.class);
             KeyFilter filter = (KeyFilter) RemoteExecUtil.loadRemoteRunner(packedRemoteExec);
+            CloseableIterator iterator = dataInterface.valueIterator(filter);
+            writeValuesInBatches(iterator);
+            iterator.close();
+        }
+
+        private void handleIteratorWithValueFilter() throws IOException {
+            PackedRemoteExec packedRemoteExec = connection.readValue(PackedRemoteExec.class);
+            Predicate filter = (Predicate) RemoteExecUtil.loadRemoteRunner(packedRemoteExec);
+            CloseableIterator<KeyValue> iterator = dataInterface.iterator(filter);
+            writeKeyValuesInBatches(iterator);
+            iterator.close();
+        }
+
+        private void handleValuesIteratorWithValueFilter() throws IOException {
+            PackedRemoteExec packedRemoteExec = connection.readValue(PackedRemoteExec.class);
+            Predicate filter = (Predicate) RemoteExecUtil.loadRemoteRunner(packedRemoteExec);
             CloseableIterator iterator = dataInterface.valueIterator(filter);
             writeValuesInBatches(iterator);
             iterator.close();
@@ -461,7 +482,7 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
     public enum Action {
         READ_VALUE, WRITE_VALUE, ITERATOR_WITH_KEY_ITERATOR, READ_KEYS, WRITE_VALUES, DROP_ALL_DATA, CLOSE_CONNECTION, FLUSH,
         ITERATOR, READ_CACHED_VALUES, APPROXIMATE_SIZE, MIGHT_CONTAIN, EXACT_SIZE, OPTMIZE_FOR_READING,
-        VALUES_ITERATOR_WITH_KEY_FILTER, ITERATOR_WITH_KEY_FILTER, LAST_FLUSH
+        VALUES_ITERATOR_WITH_KEY_FILTER, ITERATOR_WITH_KEY_FILTER, VALUES_ITERATOR_WITH_VALUE_FILTER, ITERATOR_WITH_VALUE_FILTER, LAST_FLUSH
     }
 
     public enum ConnectionType {

@@ -56,7 +56,7 @@ public class RocksDBDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public void write(Iterator<KeyValue<T>> entries) {
+    public void write(CloseableIterator<KeyValue<T>> entries) {
         writeLock.lockWriteAll();
         try {
             WriteBatch writeBatch = new WriteBatch();
@@ -87,6 +87,7 @@ public class RocksDBDataInterface<T> extends CoreDataInterface<T> {
             throw new RuntimeException("Received exception while trying to write multiple values to the DB", e);
         } finally {
             writeLock.unlockWriteAll();
+            entries.close();
         }
     }
 

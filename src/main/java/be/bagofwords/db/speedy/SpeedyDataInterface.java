@@ -279,7 +279,7 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public void write(Iterator<KeyValue<T>> entries) {
+    public void write(CloseableIterator<KeyValue<T>> entries) {
         long batchSize = getBatchSize();
         List<Pair<Long, T>> values = new ArrayList<>();
         while (entries.hasNext()) {
@@ -293,6 +293,7 @@ public class SpeedyDataInterface<T> extends CoreDataInterface<T> {
         if (!values.isEmpty()) {
             writeAllValues(values);
         }
+        entries.close();
     }
 
     @Override

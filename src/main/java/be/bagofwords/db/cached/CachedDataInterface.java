@@ -76,7 +76,6 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
                     uncachedKeys.add(key);
                 }
             }
-            Log.i("In iterator(keyFilter) we have " + uncachedKeys.size() + " uncached keys and " + cachedValues.size() + " cached keys");
             List<CloseableIterator<? extends KeyValue<T>>> iterators = new ArrayList<>();
             iterators.add(IterableUtils.iterator(cachedValues));
             CloseableIterator<KeyValue<T>> baseIterator = baseInterface.iterator(new SetKeyFilter(uncachedKeys));
@@ -195,7 +194,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     }
 
     @Override
-    public void write(Iterator<KeyValue<T>> entries) {
+    public void write(CloseableIterator<KeyValue<T>> entries) {
         int numOfEntriesWritten = 0;
         while (entries.hasNext()) {
             if (numOfEntriesWritten % 100 == 0) {
@@ -205,6 +204,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
             write(next.getKey(), next.getValue());
             numOfEntriesWritten++;
         }
+        entries.close();
     }
 
     @Override

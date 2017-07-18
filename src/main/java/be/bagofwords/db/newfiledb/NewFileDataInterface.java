@@ -173,7 +173,7 @@ public class NewFileDataInterface<T extends Object> extends CoreDataInterface<T>
     }
 
     @Override
-    public void write(Iterator<KeyValue<T>> entries) {
+    public void write(CloseableIterator<KeyValue<T>> entries) {
         long batchSize = getBatchSize();
         while (entries.hasNext()) {
             MappedLists<FileNode, KeyValue<T>> entriesToFileBuckets = new MappedLists<>();
@@ -207,10 +207,11 @@ public class NewFileDataInterface<T extends Object> extends CoreDataInterface<T>
                 batchSize = BATCH_SIZE_PRIMITIVE_VALUES * 16 * batchSize / totalSizeWrittenInBatch;
             }
         }
+        entries.close();
     }
 
     @Override
-    public CloseableIterator<KeyValue<T>> iterator(final Iterator<Long> keyIterator) {
+    public CloseableIterator<KeyValue<T>> iterator(final CloseableIterator<Long> keyIterator) {
         return new CloseableIterator<KeyValue<T>>() {
 
             private Iterator<KeyValue<T>> currBatchIterator;
@@ -246,7 +247,7 @@ public class NewFileDataInterface<T extends Object> extends CoreDataInterface<T>
 
             @Override
             protected void closeInt() {
-                //ok
+                keyIterator.close();
             }
 
             @Override

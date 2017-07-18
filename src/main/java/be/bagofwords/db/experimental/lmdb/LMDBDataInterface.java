@@ -30,7 +30,7 @@ public class LMDBDataInterface<T> extends CoreDataInterface<T> {
     }
 
     @Override
-    public void write(Iterator<KeyValue<T>> entries) {
+    public void write(CloseableIterator<KeyValue<T>> entries) {
         Transaction transaction = env.createTransaction();
         long numberOfValuesWritten = 0;
         while (entries.hasNext()) {
@@ -49,6 +49,7 @@ public class LMDBDataInterface<T> extends CoreDataInterface<T> {
             }
         }
         transaction.commit();
+        entries.close();
 //        Log.i("Wrote " + numberOfValuesWritten + " values");
     }
 

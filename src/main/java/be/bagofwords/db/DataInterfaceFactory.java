@@ -1,8 +1,10 @@
 package be.bagofwords.db;
 
 import be.bagofwords.db.combinator.Combinator;
-import be.bagofwords.db.experimental.index.DataIndexer;
-import be.bagofwords.db.experimental.index.DataInterfaceIndex;
+import be.bagofwords.db.experimental.index.MultiDataIndexer;
+import be.bagofwords.db.experimental.index.MultiDataInterfaceIndex;
+import be.bagofwords.db.experimental.index.UniqueDataIndexer;
+import be.bagofwords.db.experimental.index.UniqueDataInterfaceIndex;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.methods.ObjectSerializer;
 
@@ -14,7 +16,9 @@ public interface DataInterfaceFactory {
 
     <T> DataInterfaceConfig<T> dataInterface(String name, Class<T> objectClass);
 
-    <T> DataInterfaceIndex<T> index(DataInterface<T> dataInterface, String nameOfIndex, DataIndexer<T> indexer);
+    <T> MultiDataInterfaceIndex<T> multiIndex(DataInterface<T> dataInterface, String nameOfIndex, MultiDataIndexer<T> indexer);
+
+    <T> UniqueDataInterfaceIndex<T> uniqueIndex(DataInterface<T> dataInterface, String nameOfIndex, UniqueDataIndexer<T> indexer);
 
     DataInterface<Long> createCountDataInterface(String name);
 
@@ -39,7 +43,7 @@ public interface DataInterfaceFactory {
             this.name = referent.getName();
         }
 
-        public String getSubsetName() {
+        public String getName() {
             return name;
         }
     }

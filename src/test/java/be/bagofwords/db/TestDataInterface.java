@@ -1,10 +1,12 @@
 package be.bagofwords.db;
 
+import be.bagofwords.db.helper.EvenNumbersValueFilter;
 import be.bagofwords.db.methods.RangeKeyFilter;
 import be.bagofwords.db.helper.EvenKeysFilter;
 import be.bagofwords.db.helper.TestObject;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.iterator.CloseableIterator;
+import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.util.HashUtils;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.Utils;
@@ -15,6 +17,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @RunWith(Parameterized.class)
@@ -70,7 +73,8 @@ public class TestDataInterface extends BaseTestDataInterface {
             KeyValue<Integer> next = it.next();
             long key = next.getKey();
             Integer value = next.getValue();
-            Assert.assertEquals(value.intValue(), (int) key);
+            int expectedValue = (int) key;
+            Assert.assertEquals(value.intValue(), expectedValue);
             numOfValuesInIterator++;
         }
         Assert.assertEquals(numOfExamples, numOfValuesInIterator);
@@ -161,7 +165,7 @@ public class TestDataInterface extends BaseTestDataInterface {
         int numOfExamples = 1000;
         DataInterface<Long> db = createCountDataInterface("testApproximateSize");
         db.dropAllData();
-        db.write(IntStream.range(0, numOfExamples).mapToObj(i->new KeyValue<>(HashUtils.hashCode(Integer.toString(i)), 1l)).iterator());
+        db.write(IntStream.range(0, numOfExamples).mapToObj(i -> new KeyValue<>(HashUtils.hashCode(Integer.toString(i)), 1l)).iterator());
         db.flush();
         long apprSize = db.apprSize();
         Assert.assertTrue(apprSize > 100);
@@ -186,7 +190,7 @@ public class TestDataInterface extends BaseTestDataInterface {
         }
         db.flush();
         db.read(10);
-        CloseableIterator<KeyValue<Long>> valueIterator = db.iterator(valuesToRead.iterator());
+        CloseableIterator<KeyValue<Long>> valueIterator = db.iterator(IterableUtils.iterator(valuesToRead));
         int numOfValuesRead = 0;
         Long prevKey = null;
         while (valueIterator.hasNext()) {
@@ -372,23 +376,38 @@ public class TestDataInterface extends BaseTestDataInterface {
     public void testValuesIteratorWithRangeFilter() {
         DataInterface<Long> dataInterface = createCountDataInterface("testValuesIteratorWithRangeFilter");
         int numOfItems = 100;
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < numOfItems; i++) {
             dataInterface.write(i, (long) i);
         }
         dataInterface.flush();
         //Try with stream
         MutableInt numOfValuesRead = new MutableInt();
-        dataInterface.streamValues(new RangeKeyFilter(0,50)).forEach((v) -> numOfValuesRead.increment());
+        dataInterface.streamValues(new RangeKeyFilter(0, 50)).forEach((v) -> numOfValuesRead.increment());
         Assert.assertEquals(numOfItems / 2, numOfValuesRead.intValue());
         //Try with iterator
         numOfValuesRead.setValue(0);
-        CloseableIterator<Long> closeableIterator = dataInterface.valueIterator(new RangeKeyFilter(0,50));
+        CloseableIterator<Long> closeableIterator = dataInterface.valueIterator(new RangeKeyFilter(0, 50));
         while (closeableIterator.hasNext()) {
             closeableIterator.next();
             numOfValuesRead.increment();
         }
         closeableIterator.close();
         Assert.assertEquals(numOfItems / 2, numOfValuesRead.intValue());
+    }
+
+    @Test
+    public void testStreamValuesWithValueFilter() {
+        DataInterface<Long> dataInterface = createCountDataInterface("testValuesIteratorWithValuesFilter");
+        int numOfItems = 100;
+        for (int i = 0; i < numOfItems; i++) {
+            dataInterface.write(i, (long) i);
+        }
+        dataInterface.flush();
+        Set<Long> filteredValues = dataInterface.streamValues(new EvenNumbersValueFilter()).collect(Collectors.toSet());
+        Assert.assertEquals(numOfItems / 2, filteredValues.size());
+        for (long i = 0; i < numOfItems; i += 2) {
+            Assert.assertTrue(filteredValues.contains(i));
+        }
     }
 
     private boolean findValue(DataInterface<Long> dataInterface, long key, Long targetValue) {
@@ -408,7 +427,7 @@ public class TestDataInterface extends BaseTestDataInterface {
 
     private void writeRandomObjects(BaseDataInterface<TestObject> dataInterface, int numOfExamples, Random random) throws Exception {
         dataInterface.write(IntStream.range(0, numOfExamples)
-                .mapToObj(i->new KeyValue<>(HashUtils.hashCode(Integer.toString(random.nextInt(10000))), createRandomObject(random)))
+                .mapToObj(i -> new KeyValue<>(HashUtils.hashCode(Integer.toString(random.nextInt(10000))), createRandomObject(random)))
                 .iterator());
         dataInterface.flush();
     }

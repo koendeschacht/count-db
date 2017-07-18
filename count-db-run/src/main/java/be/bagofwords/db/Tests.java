@@ -3,6 +3,7 @@ package be.bagofwords.db;
 import be.bagofwords.logging.Log;
 import be.bagofwords.util.MappedLists;
 import be.bagofwords.util.SerializationUtils;
+import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 import net.jpountz.lz4.*;
 
 import java.io.*;
@@ -22,7 +23,40 @@ public class Tests {
         // testCompression();
         // testRandomAccess();
         // testRandomAccessWriting();
-        testBinarySearch();
+        // testBinarySearch();
+        testReadingStrings();
+    }
+
+    private static void testReadingStrings() throws IOException {
+        List<String> strings = new ArrayList<>();
+        for (int i = 0; i < 100000; i++) {
+            String outS = "This is a some string This is a some string This is a some string This is a some string This is a some string This is a some string This is a some string This is a some string " + i;
+            strings.add(outS);
+        }
+        long start = System.currentTimeMillis();
+        File outFile1 = new File("/tmp/test.bin");
+        DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outFile1)));
+        for (String string : strings) {
+            byte[] bytes = string.getBytes(StandardCharsets.UTF_8);
+            dos.writeInt(bytes.length);
+            dos.write(bytes);
+        }
+        dos.close();
+        Log.i("Encoding took " + (System.currentTimeMillis() - start) + " length is " + outFile1.length());
+        start = System.currentTimeMillis();
+        File outFile2 = new File("/tmp/test2.bin");
+        dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outFile2)));
+        for (String string : strings) {
+            ByteOutputStream bos = new ByteOutputStream();
+            ObjectOutputStream oos = new ObjectOutputStream(bos);
+            oos.writeObject(string);
+            oos.close();
+            byte[] bytes = bos.getBytes();
+            dos.writeInt(bytes.length);
+            dos.write(bytes);
+        }
+        dos.close();
+        Log.i("Native took " + (System.currentTimeMillis() - start) + " length is " + outFile2.length());
     }
 
     private static void testRandomAccessWriting() throws IOException {

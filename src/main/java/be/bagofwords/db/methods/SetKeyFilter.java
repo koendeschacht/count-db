@@ -3,6 +3,8 @@ package be.bagofwords.db.methods;
 import be.bagofwords.exec.RemoteClass;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -15,6 +17,10 @@ public class SetKeyFilter implements KeyFilter, Serializable {
 
     public SetKeyFilter(Set<Long> keys) {
         this.keys = keys;
+    }
+
+    public SetKeyFilter(List<Long> keys) {
+        this.keys = new HashSet<>(keys);
     }
 
     @Override

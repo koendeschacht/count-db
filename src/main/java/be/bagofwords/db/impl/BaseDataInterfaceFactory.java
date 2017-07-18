@@ -11,8 +11,10 @@ import be.bagofwords.db.cached.CachedDataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.combinator.OverWriteCombinator;
-import be.bagofwords.db.experimental.index.DataIndexer;
-import be.bagofwords.db.experimental.index.DataInterfaceIndex;
+import be.bagofwords.db.experimental.index.MultiDataIndexer;
+import be.bagofwords.db.experimental.index.MultiDataInterfaceIndex;
+import be.bagofwords.db.experimental.index.UniqueDataIndexer;
+import be.bagofwords.db.experimental.index.UniqueDataInterfaceIndex;
 import be.bagofwords.db.memory.InMemoryDataInterface;
 import be.bagofwords.db.methods.JsonObjectSerializer;
 import be.bagofwords.db.methods.LongObjectSerializer;
@@ -59,8 +61,13 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
     }
 
     @Override
-    public <T> DataInterfaceIndex<T> index(DataInterface<T> dataInterface, String nameOfIndex, DataIndexer<T> indexer) {
-        return new DataInterfaceIndex<>(nameOfIndex, this, dataInterface, indexer, metaDataStore);
+    public <T> MultiDataInterfaceIndex<T> multiIndex(DataInterface<T> dataInterface, String nameOfIndex, MultiDataIndexer<T> indexer) {
+        return new MultiDataInterfaceIndex<>(nameOfIndex, this, dataInterface, indexer, metaDataStore);
+    }
+
+    @Override
+    public <T> UniqueDataInterfaceIndex<T> uniqueIndex(DataInterface<T> dataInterface, String nameOfIndex, UniqueDataIndexer<T> indexer) {
+        return new UniqueDataInterfaceIndex<>(nameOfIndex, this, dataInterface, indexer, metaDataStore);
     }
 
     public <T> BaseDataInterface<T> createFromConfig(DataInterfaceConfig<T> config) {
