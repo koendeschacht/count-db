@@ -332,7 +332,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     if (next != null) {
                         FileBucket bucket = next.getFirst();
                         FileInfo file = next.getSecond();
-                        if (keyFilter.acceptKeysAboveOrEqual(bucket.getLastKey()) && keyFilter.acceptKeysBelow(file.getFirstKey())) {
+                        if (keyFilter.acceptKeysAboveOrEqual(file.getLastKey()) && keyFilter.acceptKeysBelow(file.getFirstKey())) {
                             List<KeyValue<T>> sortedEntries = readCleanValuesWithKeyFilter(file, keyFilter);
                             valuesInFileIt = sortedEntries.iterator();
                         }
@@ -551,8 +551,10 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                             dos.close();
                             swapTempForReal(file);
                             file.fileWasRewritten(sample(fileLocations, 100), currentSizeOfFile, currentSizeOfFile);
+                            long currLastKey = file.getLastKey();
+                            file.setLastKey(key);
                             fileLocations = new ArrayList<>();
-                            file = new FileInfo(key, 0, 0);
+                            file = new FileInfo(bucket.getName(), key, currLastKey, 0, 0);
                             currentSizeOfFile = 0;
                             bucket.getFiles().add(fileInd + 1, file);
                             fileInd++;
@@ -696,7 +698,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 //overflow
                 lastKey = Long.MAX_VALUE;
             }
-            bucket.add(new FileBucket(firstKey, lastKey));
+            bucket.add(new FileBucket(Long.toString(val)));
         }
         return bucket;
     }
@@ -735,9 +737,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             if (fileBucket.getFiles().isEmpty()) {
                 return false; //every bucket should contain at least one file
             }
-            if (fileBucket.getFirstKey() != fileBucket.getFiles().get(0).getFirstKey()) {
-                return false; //the first key of the bucket should match the first key of the first file
-            }
             for (int i = 0; i < fileBucket.getFiles().size() - 1; i++) {
                 if (fileBucket.getFiles().get(i).getFirstKey() >= fileBucket.getFiles().get(i + 1).getFirstKey()) {
                     return false; //files should be sorted according to first key
@@ -749,11 +748,13 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     private void updateBucketsFromFiles(String[] filesInDir) {
         for (String file : filesInDir) {
-            if (file.matches("-?[0-9]+")) {
-                long key = Long.parseLong(file);
-                FileBucket bucket = getBucket(key);
+            if (file.matches("bucket[0-9]+_-?[0-9]+_-?[0-9]+")) {
+                String[] fileParts = file.split("_");
+                long firstKey = Long.parseLong(fileParts[1]);
+                long lastKey = Long.parseLong(fileParts[2]);
+                FileBucket bucket = getBucket(firstKey);
                 long sizeOnDisk = new File(directory, file).length();
-                FileInfo fileInfo = new FileInfo(key, 0, (int) sizeOnDisk);
+                FileInfo fileInfo = new FileInfo(fileParts[0], firstKey, lastKey, 0, (int) sizeOnDisk);
                 bucket.getFiles().add(fileInfo);
                 bucket.setShouldBeCleanedBeforeRead(bucket.shouldBeCleanedBeforeRead() || sizeOnDisk > 0);
             }
@@ -764,7 +765,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         for (FileBucket bucket : fileBuckets) {
             if (bucket.getFiles().isEmpty()) {
                 //We need at least one file per bucket..
-                FileInfo first = new FileInfo(bucket.getFirstKey(), 0, 0);
+                FileInfo first = new FileInfo(bucket.getName(), Long.MIN_VALUE, Long.MAX_VALUE, 0, 0);
                 try {
                     boolean success = toFile(first).createNewFile();
                     if (!success) {
@@ -774,11 +775,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
-                }
-            } else {
-                Collections.sort(bucket.getFiles());
-                if (bucket.getFirstKey() != bucket.getFiles().get(0).getFirstKey()) {
-                    throw new RuntimeException("Missing file in " + getName() + " ? Expected file " + new File(directory, Long.toString(bucket.getFirstKey())).getAbsolutePath());
                 }
             }
         }
@@ -821,8 +817,8 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     private FileBucket getBucket(List<FileBucket> fileBuckets, long key) {
-        //TODO: check if we can use the last bits of the key to select the bucket
-        int ind = (int) ((key >> BITS_TO_DISCARD_FOR_FILE_BUCKETS) + fileBuckets.size() / 2);
+        long fileBucketInd = (key << BITS_TO_DISCARD_FOR_FILE_BUCKETS) >> BITS_TO_DISCARD_FOR_FILE_BUCKETS;
+        int ind = (int) (fileBucketInd + fileBuckets.size() / 2);
         return fileBuckets.get(ind);
     }
 
@@ -884,14 +880,14 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         if (directory == null) {
             throw new RuntimeException("Directory is null, probably the data interface was closed already!");
         }
-        return new File(directory, Long.toString(fileInfo.getFirstKey()));
+        return new File(directory, fileInfo.getBucketName() + "_" + Long.toString(fileInfo.getFirstKey()) + "_" + Long.toString(fileInfo.getLastKey()));
     }
 
     private File toTempFile(FileInfo fileInfo) {
         if (directory == null) {
             throw new RuntimeException("Directory is null, probably the data interface was closed already!");
         }
-        return new File(directory, "tmp." + Long.toString(fileInfo.getFirstKey()));
+        return new File(directory, "tmp." + fileInfo.getBucketName() + "_" + Long.toString(fileInfo.getFirstKey()));
     }
 
     private Map<Long, T> readMap(FileInfo file) {
@@ -958,15 +954,16 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 for (int i = 0; i < buckets.length; i++) {
                     buckets[i] = new ArrayList(expectedNumberOfValues / numberOfBuckets);
                 }
-                long start = file.getFirstKey();
-                long density = (1l << BITS_TO_DISCARD_FOR_FILE_BUCKETS) / numberOfBuckets;
+                float start = file.getFirstKey();
+                float end = file.getLastKey();
+                float density = (end - start) / numberOfBuckets;
                 int position = 0;
                 while (position < buffer.length) {
                     long key = SerializationUtils.bytesToLong(buffer, position);
                     position += LONG_SIZE;
                     ReadValue<T> readValue = readValue(buffer, position, true);
                     position += readValue.size;
-                    int bucketInd = (int) ((key - start) / density);
+                    int bucketInd = Math.round((key - start) / density);
                     if (bucketInd == buckets.length) {
                         bucketInd--; //rounding error?
                     }

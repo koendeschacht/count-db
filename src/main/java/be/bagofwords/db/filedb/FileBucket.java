@@ -1,6 +1,7 @@
 package be.bagofwords.db.filedb;
 
 import be.bagofwords.logging.Log;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -8,20 +9,16 @@ import java.util.List;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class FileBucket implements Comparable<FileBucket> {
+public class FileBucket {
 
-    private static final int NUMBER_OF_READ_PERMITS = 1000;
-
-    private long firstKey; //inclusive
-    private long lastKey; //inclusive
     private List<FileInfo> files;
     private final ReadWriteLock lock;
+    private final String name;
     private boolean shouldBeCleanedBeforeRead;
 
-    public FileBucket(long firstKey, long lastKey) {
-        this();
-        this.firstKey = firstKey;
-        this.lastKey = lastKey;
+    public FileBucket(@JsonProperty("name") String name) {
+        this.name = name;
+        this.lock = new ReentrantReadWriteLock();
         this.files = new ArrayList<>();
         this.shouldBeCleanedBeforeRead = false;
     }
@@ -35,7 +32,7 @@ public class FileBucket implements Comparable<FileBucket> {
             for (int i = 0; i < files.size(); i++) {
                 if (files.get(i).getFirstKey() > key) {
                     if (i == 0) {
-                        throw new RuntimeException("Incorrect bucket starting from " + getFirstKey() + " for key " + key);
+                        throw new RuntimeException("Incorrect bucket " + name + " for key " + key);
                     } else {
                         return i - 1;
                     }
@@ -50,7 +47,7 @@ public class FileBucket implements Comparable<FileBucket> {
             if (pos == -1) {
                 Log.i("ARRAY INDEX OUT OF BOUNDS!!!!");
                 Log.i("Was looking for key " + key);
-                Log.i("In bucket starting with key " + getFirstKey());
+                Log.i("In bucket " + name);
                 Log.i("In files ");
                 for (FileInfo file : files) {
                     Log.i("   " + file.getFirstKey());
@@ -60,16 +57,8 @@ public class FileBucket implements Comparable<FileBucket> {
         }
     }
 
-    public long getFirstKey() {
-        return firstKey;
-    }
-
     public FileInfo getFile(long key) {
         return files.get(getFileInd(key));
-    }
-
-    public long getLastKey() {
-        return lastKey;
     }
 
     public void lockRead() {
@@ -93,12 +82,7 @@ public class FileBucket implements Comparable<FileBucket> {
     }
 
     public String toString() {
-        return super.toString() + " " + firstKey;
-    }
-
-    @Override
-    public int compareTo(FileBucket o) {
-        return Long.compare(firstKey, o.getFirstKey());
+        return super.toString() + " " + name;
     }
 
     public boolean shouldBeCleanedBeforeRead() {
@@ -110,14 +94,6 @@ public class FileBucket implements Comparable<FileBucket> {
         this.shouldBeCleanedBeforeRead = shouldBeCleanedBeforeRead;
     }
 
-    /**
-     * Serialization:
-     */
-
-    public FileBucket() {
-        this.lock = new ReentrantReadWriteLock();
-    }
-
     public void setFiles(List<FileInfo> files) {
         this.files = files;
     }
@@ -126,11 +102,7 @@ public class FileBucket implements Comparable<FileBucket> {
         return shouldBeCleanedBeforeRead;
     }
 
-    public void setFirstKey(long firstKey) {
-        this.firstKey = firstKey;
-    }
-
-    public void setLastKey(long lastKey) {
-        this.lastKey = lastKey;
+    public String getName() {
+        return name;
     }
 }

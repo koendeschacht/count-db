@@ -2,12 +2,15 @@ package be.bagofwords.db.filedb;
 
 import be.bagofwords.util.Pair;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
 class FileInfo implements Comparable {
 
+    private String bucketName;
     private long firstKey;
+    private long lastKey;
     private int readSize;
     private int writeSize;
     private byte[] cachedFileContents;
@@ -15,8 +18,14 @@ class FileInfo implements Comparable {
     private long[] fileLocationsKeys;
     private int[] fileLocationsValues;
 
-    public FileInfo(long firstKey, int readSize, int writeSize) {
+    public FileInfo(@JsonProperty("bucketName") String bucketName,
+                    @JsonProperty("firstKey") long firstKey,
+                    @JsonProperty("lastKey") long lastKey,
+                    @JsonProperty("readSize") int readSize,
+                    @JsonProperty("writeSize") int writeSize) {
+        this.bucketName = bucketName;
         this.firstKey = firstKey;
+        this.lastKey = lastKey;
         this.readSize = readSize;
         this.writeSize = writeSize;
         if (readSize == 0) {
@@ -27,6 +36,14 @@ class FileInfo implements Comparable {
 
     public long getFirstKey() {
         return firstKey;
+    }
+
+    public String getBucketName() {
+        return bucketName;
+    }
+
+    public long getLastKey() {
+        return lastKey;
     }
 
     public int getReadSize() {
@@ -99,31 +116,7 @@ class FileInfo implements Comparable {
         return readSize == writeSize;
     }
 
-
-    /**
-     * Serialization:
-     */
-
-    public FileInfo() {
-    }
-
-    public void setFirstKey(long firstKey) {
-        this.firstKey = firstKey;
-    }
-
-    public void setReadSize(int readSize) {
-        this.readSize = readSize;
-    }
-
-    public void setWriteSize(int writeSize) {
-        this.writeSize = writeSize;
-    }
-
-    public void setFileLocationsKeys(long[] fileLocationsKeys) {
-        this.fileLocationsKeys = fileLocationsKeys;
-    }
-
-    public void setFileLocationsValues(int[] fileLocationsValues) {
-        this.fileLocationsValues = fileLocationsValues;
+    public void setLastKey(long lastKey) {
+        this.lastKey = lastKey;
     }
 }
