@@ -3,12 +3,14 @@ package be.bagofwords.db;
 import be.bagofwords.logging.Log;
 import be.bagofwords.util.MappedLists;
 import be.bagofwords.util.SerializationUtils;
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 import net.jpountz.lz4.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.toList;
@@ -29,9 +31,11 @@ public class Tests {
 
     private static void testReadingStrings() throws IOException {
         List<String> strings = new ArrayList<>();
-        for (int i = 0; i < 100000; i++) {
+        List<byte[]> stringsAsBytes = new ArrayList<>();
+        for (int i = 0; i < 4000000; i++) {
             String outS = "This is a some string This is a some string This is a some string This is a some string This is a some string This is a some string This is a some string This is a some string " + i;
             strings.add(outS);
+            stringsAsBytes.add(outS.getBytes(StandardCharsets.UTF_8));
         }
         long start = System.currentTimeMillis();
         File outFile1 = new File("/tmp/test.bin");
@@ -45,18 +49,47 @@ public class Tests {
         Log.i("Encoding took " + (System.currentTimeMillis() - start) + " length is " + outFile1.length());
         start = System.currentTimeMillis();
         File outFile2 = new File("/tmp/test2.bin");
-        dos = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outFile2)));
-        for (String string : strings) {
-            ByteOutputStream bos = new ByteOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(bos);
-            oos.writeObject(string);
-            oos.close();
-            byte[] bytes = bos.getBytes();
-            dos.writeInt(bytes.length);
-            dos.write(bytes);
+        // ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(outFile2)));
+        // for (String string : strings) {
+        //     be.bagofwords.db.test.Mystring mystring = new Mystring();
+        //     mystring.setValue(string);
+        //     oos.writeObject(mystring);
+        // }
+        // oos.close();
+        OutputStream os = new BufferedOutputStream(new FileOutputStream(outFile2));
+        byte[] lengthBytes = new byte[4];
+        for (byte[] stringsAsByte : stringsAsBytes) {
+            SerializationUtils.intToBytes(stringsAsByte.length, lengthBytes, 0);
+            os.write(lengthBytes);
+            os.write(stringsAsByte);
         }
-        dos.close();
         Log.i("Native took " + (System.currentTimeMillis() - start) + " length is " + outFile2.length());
+    }
+
+    public static void writeString(OutputStream dos, String s) throws IOException {
+        for (int sIndex = 0, sLength = s.length(); sIndex < sLength; sIndex++) {
+            char c = s.charAt(sIndex);
+            if (c < '\u0080') {
+                dos.write(c);
+            } else if (c < '\u0800') {
+                dos.write(192 | c >>> 6);
+                dos.write(128 | c & 63);
+            } else if (c < '\ud800' || c > '\udfff') {
+                dos.write(224 | c >>> 12);
+                dos.write(128 | c >>> 6 & 63);
+                dos.write(128 | c & 63);
+            } else {
+                int cp = 0;
+                if (++sIndex < sLength) cp = Character.toCodePoint(c, s.charAt(sIndex));
+                if ((cp >= 1 << 16) && (cp < 1 << 21)) {
+                    dos.write(240 | cp >>> 18);
+                    dos.write(128 | cp >>> 12 & 63);
+                    dos.write(128 | cp >>> 6 & 63);
+                    dos.write(128 | cp & 63);
+                } else
+                    dos.write((byte) '?');
+            }
+        }
     }
 
     private static void testRandomAccessWriting() throws IOException {
