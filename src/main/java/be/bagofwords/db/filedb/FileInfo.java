@@ -73,7 +73,7 @@ class FileInfo implements Comparable {
     }
 
     public String toString() {
-        return super.toString() + " " + getFirstKey() + " " + getReadSize() + " " + getWriteSize();
+        return super.toString() + " " + getFirstKey() + " " + getLastKey() + " " + getReadSize() + " " + getWriteSize();
     }
 
     public void increaseWriteSize(int diff) {

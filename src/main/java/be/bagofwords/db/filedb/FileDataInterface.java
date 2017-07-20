@@ -48,7 +48,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     private static final String LOCK_FILE = "LOCK";
 
     private static final int LONG_SIZE = 8;
-    private static final int INT_SIZE = 4;
 
     private final MemoryManager memoryManager;
     private final File directory;
@@ -193,8 +192,9 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 numRead++;
             }
             long totalSizeWrittenInBatch = 0;
-            for (FileBucket bucket : entriesToFileBuckets.keySet()) {
-                List<KeyValue<T>> values = entriesToFileBuckets.get(bucket);
+            for (Map.Entry<FileBucket, List<KeyValue<T>>> entry : entriesToFileBuckets.entrySet()) {
+                FileBucket bucket = entry.getKey();
+                List<KeyValue<T>> values = entry.getValue();
                 bucket.lockWrite();
                 try {
                     MappedLists<FileInfo, KeyValue<T>> entriesToFiles = new MappedLists<>();
@@ -532,7 +532,10 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 if (needsRewrite) {
                     //                    Log.i("Will rewrite file " + file.getFirstKey() + " " + getName() + " clean=" + file.isClean() + " force=" + forceClean + " readSize=" + file.getReadSize() + " writeSize=" + file.getWriteSize() + " targetSize=" + targetSize);
                     List<KeyValue<T>> values = readAllValues(file);
-                    int filesMergedWithThisFile = inWritePhase() ? 0 : mergeFileIfTooSmall(bucket.getFiles(), fileInd, file.getWriteSize(), targetSize, values);
+                    Long endOfMergedFile = inWritePhase() ? null : mergeFileIfTooSmall(bucket.getFiles(), fileInd, file.getWriteSize(), targetSize, values);
+                    if (endOfMergedFile != null) {
+                        file.setLastKey(endOfMergedFile);
+                    }
                     DataOutputStream dos = getOutputStreamToTempFile(file);
                     List<Pair<Long, Integer>> fileLocations = new ArrayList<>();
                     int currentSizeOfFile = 0;
@@ -545,7 +548,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                         byte[] dataToWrite = bos.toByteArray();
                         if (currentSizeOfFile > 0 && currentSizeOfFile + dataToWrite.length > targetSize) {
                             //Create new file
-                            if (filesMergedWithThisFile > 0) {
+                            if (endOfMergedFile != null) {
                                 throw new RuntimeException("Something went wrong! Merged file and then created new file?");
                             }
                             dos.close();
@@ -658,23 +661,25 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     private void swapTempForReal(FileInfo file) throws IOException {
-        synchronized (file) {
+        synchronized (file) { //Synchronized to make sure the size of the caches remains correct
             long releasedBytes = file.discardFileContents();
             updateSizeOfCachedFileContents(-releasedBytes);
         }
         Files.move(toTempFile(file).toPath(), toFile(file).toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
     }
 
-    private int mergeFileIfTooSmall(List<FileInfo> fileList, int currentFileInd, long combinedSize, long maxFileSize, List<KeyValue<T>> values) {
+    private Long mergeFileIfTooSmall(List<FileInfo> fileList, int currentFileInd, long combinedSize, long maxFileSize, List<KeyValue<T>> values) {
         int nextFileInd = currentFileInd + 1;
+        Long endOfMergedFile = null;
         while (nextFileInd < fileList.size() && combinedSize + fileList.get(nextFileInd).getWriteSize() < maxFileSize) {
             //Combine the files
             FileInfo nextFile = fileList.remove(nextFileInd);
             values.addAll(readAllValues(nextFile));
             combinedSize += nextFile.getWriteSize();
             deleteFile(nextFile);
+            endOfMergedFile = nextFile.getLastKey();
         }
-        return nextFileInd - currentFileInd - 1;
+        return endOfMergedFile;
     }
 
     private int writeValue(DataOutputStream dos, long key, T value) throws IOException {
@@ -748,15 +753,26 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     private void updateBucketsFromFiles(String[] filesInDir) {
         for (String file : filesInDir) {
-            if (file.matches("bucket[0-9]+_-?[0-9]+_-?[0-9]+")) {
+            if (file.matches("bucket[0-9]+_-?[0-9]+")) {
                 String[] fileParts = file.split("_");
                 long firstKey = Long.parseLong(fileParts[1]);
-                long lastKey = Long.parseLong(fileParts[2]);
                 FileBucket bucket = getBucket(firstKey);
                 long sizeOnDisk = new File(directory, file).length();
-                FileInfo fileInfo = new FileInfo(fileParts[0], firstKey, lastKey, 0, (int) sizeOnDisk);
+                FileInfo fileInfo = new FileInfo(fileParts[0], firstKey, Long.MIN_VALUE, 0, (int) sizeOnDisk);
                 bucket.getFiles().add(fileInfo);
                 bucket.setShouldBeCleanedBeforeRead(bucket.shouldBeCleanedBeforeRead() || sizeOnDisk > 0);
+            }
+        }
+        for (FileBucket bucket : fileBuckets) {
+            List<FileInfo> files = bucket.getFiles();
+            Collections.sort(files);
+            for (int i = 0; i < files.size(); i++) {
+                FileInfo fileInfo = files.get(i);
+                if (i == files.size() - 1) {
+                    fileInfo.setLastKey(Long.MAX_VALUE);
+                } else {
+                    fileInfo.setLastKey(files.get(i + 1).getFirstKey());
+                }
             }
         }
     }
@@ -880,7 +896,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         if (directory == null) {
             throw new RuntimeException("Directory is null, probably the data interface was closed already!");
         }
-        return new File(directory, fileInfo.getBucketName() + "_" + Long.toString(fileInfo.getFirstKey()) + "_" + Long.toString(fileInfo.getLastKey()));
+        return new File(directory, fileInfo.getBucketName() + "_" + Long.toString(fileInfo.getFirstKey()));
     }
 
     private File toTempFile(FileInfo fileInfo) {

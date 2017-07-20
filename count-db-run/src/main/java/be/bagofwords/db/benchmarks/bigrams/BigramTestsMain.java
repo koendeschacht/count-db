@@ -1,14 +1,14 @@
 package be.bagofwords.db.benchmarks.bigrams;
 
 import be.bagofwords.application.MinimalApplicationDependencies;
+import be.bagofwords.application.status.perf.ThreadSampleMonitor;
 import be.bagofwords.db.DataInterfaceFactory;
-import be.bagofwords.db.filedb.FileDataInterfaceFactory;
-import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.experimental.kyoto.KyotoDataInterfaceFactory;
-import be.bagofwords.db.remote.RemoteDatabaseInterfaceFactory;
-import be.bagofwords.db.speedy.SpeedyDataInterfaceFactory;
+import be.bagofwords.db.filedb.FileDataInterfaceFactory;
+import be.bagofwords.db.impl.BaseDataInterface;
+import be.bagofwords.db.methods.LongObjectSerializer;
 import be.bagofwords.logging.Log;
 import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.minidepi.ApplicationManager;
@@ -38,6 +38,8 @@ public class BigramTestsMain implements Runnable {
             BigramTestsMain main = new BigramTestsMain(new File(args[0]), new File("/tmp/bigrams.bin"));
             Map<String, String> config = new HashMap<>();
             config.put("data_directory", tmpDbDir.getAbsolutePath());
+            config.put("save.thread.samples.to.file", "true");
+            config.put("location.for.saved.thread.samples", "/tmp/bigram");
             ApplicationManager.run(main, config);
         }
     }
@@ -51,6 +53,8 @@ public class BigramTestsMain implements Runnable {
     private MinimalApplicationDependencies minimalApplicationDependencies;
     @Inject
     private ApplicationContext applicationContext;
+    @Inject
+    private ThreadSampleMonitor threadSampleMonitor;
 
     public BigramTestsMain(File largeTextFile, File bigramFile) {
         this.largeTextFile = largeTextFile;
@@ -106,7 +110,7 @@ public class BigramTestsMain implements Runnable {
         //        testSeparateWritingReading(dataType, new RocksDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/rocksBD", false), DatabaseCachingType.DIRECT);
 
         Log.i("Testing mixed writing / reading for data type " + dataType);
-        testMixedWritingReading(dataType, new FileDataInterfaceFactory(applicationContext), DatabaseCachingType.CACHED_AND_BLOOM);
+        // testMixedWritingReading(dataType, new FileDataInterfaceFactory(applicationContext), DatabaseCachingType.CACHED_AND_BLOOM);
         //        testMixedWritingReading(dataType, new LevelDBDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/levelDB"), DatabaseCachingType.DIRECT);
         //        testMixedWritingReading(dataType, new NewFileDataInterfaceFactory(cachesManager, memoryManager, taskScheduler, tmpDbDir.getAbsolutePath() + "/fileDb"), DatabaseCachingType.CACHED_AND_BLOOM);
         //        testMixedWritingReading(dataType, new RemoteDatabaseInterfaceactory(cachesManager, memoryManager, taskScheduler, "localhost", 1208), DatabaseCachingType.CACHED_AND_BLOOM);
@@ -168,6 +172,7 @@ public class BigramTestsMain implements Runnable {
     }
 
     private void testMixedWritingReading(DataType dataType, DataInterfaceFactory factory, DatabaseCachingType type) throws InterruptedException, FileNotFoundException {
+        applicationContext.registerBean(factory);
         for (long items = MIN_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items <= MAX_MILLION_ITEMS_TO_PROCESS * 1024 * 1024; items *= 2) {
             if (!(factory instanceof KyotoDataInterfaceFactory) || items < 256 * 1024 * 1024) {
                 testMixedWritingReading(dataType, factory, type, largeTextFile, 8, items);
@@ -217,7 +222,7 @@ public class BigramTestsMain implements Runnable {
         String dataInterfaceName = "readWriteBigrams_" + dataType + "_" + cachingType + "_" + factory.getClass().getSimpleName();
         switch (dataType) {
             case LONG_COUNT:
-                return factory.dataInterface(dataInterfaceName, Long.class).combinator(new LongCombinator()).caching(cachingType).create();
+                return factory.dataInterface(dataInterfaceName, Long.class).combinator(new LongCombinator()).serializer(new LongObjectSerializer()).caching(cachingType).create();
             case SERIALIZED_OBJECT:
                 return factory.dataInterface(dataInterfaceName, BigramCount.class).combinator(new BigramCountCombinator()).caching(cachingType).create();
             default:
