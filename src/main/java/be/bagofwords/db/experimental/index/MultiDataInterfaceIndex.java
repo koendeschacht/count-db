@@ -77,7 +77,8 @@ public class MultiDataInterfaceIndex<T> extends BaseDataInterfaceIndex<T> {
         List<Long> indexKeys = indexer.convertToIndexes(queryByObject);
         Stream<Long> keyStream = indexedDataInterface.streamValues(new SetKeyFilter(indexKeys))
                 .flatMap(Collection::stream)
-                .distinct();
+                .distinct()
+                .sorted();
         return streamValuesForKeys(keyStream);
     }
 
@@ -85,7 +86,8 @@ public class MultiDataInterfaceIndex<T> extends BaseDataInterfaceIndex<T> {
         ensureIndexUpToDate();
         Stream<Long> keyStream = indexedDataInterface.streamValues(keyFilter)
                 .flatMap(Collection::stream)
-                .distinct();
+                .distinct()
+                .sorted();
         return streamValuesForKeys(keyStream);
     }
 
@@ -97,6 +99,7 @@ public class MultiDataInterfaceIndex<T> extends BaseDataInterfaceIndex<T> {
         ensureIndexUpToDate();
         List<Long> uniqueIds = indexedDataInterface.streamValues().flatMap(Collection::stream)
                 .distinct()
+                .sorted()
                 .collect(Collectors.toList());
         if (desc) {
             Collections.reverse(uniqueIds);
