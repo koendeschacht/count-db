@@ -204,6 +204,10 @@ public interface DataInterface<T extends Object> extends DataIterable<KeyValue<T
         return StreamUtils.stream(iterator(valueFilter), apprSize(), true);
     }
 
+    default Stream<KeyValue<T>> stream(CloseableIterator<Long> keyIterator) {
+        return StreamUtils.stream(iterator(keyIterator), apprSize(), true);
+    }
+
     default Stream<T> streamValues() {
         return StreamUtils.stream(valueIterator(), apprSize(), false);
     }
