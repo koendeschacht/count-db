@@ -9,6 +9,7 @@ import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.methods.SetKeyFilter;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
+import be.bagofwords.iterator.SimpleIterator;
 import be.bagofwords.jobs.AsyncJobService;
 import be.bagofwords.logging.Log;
 import be.bagofwords.memory.MemoryGobbler;
@@ -108,6 +109,99 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
     @Override
     public CloseableIterator<T> valueIterator(KeyFilter keyFilter) {
         return IterableUtils.mapIterator(iterator(keyFilter), KeyValue::getValue);
+    }
+
+    @Override
+    public CloseableIterator<KeyValue<T>> iterator(CloseableIterator<Long> keyIterator) {
+        if (weHaveSomeFreeMemory()) {
+
+            LinkedList<KeyValue<T>> cachedValues = new LinkedList<>();
+            CloseableIterator<KeyValue<T>> notCachedValuesIterator = baseInterface.iterator(IterableUtils.iterator(new SimpleIterator<Long>() {
+
+                @Override
+                public Long next() throws Exception {
+                    while (keyIterator.hasNext()) {
+                        long key = keyIterator.next();
+                        KeyValue<T> cachedValue = readCache.get(key);
+                        if (cachedValue != null) {
+                            if (cachedValue.getValue() != null) {
+                                cachedValues.add(cachedValue);
+                            }
+                        } else {
+                            return key;
+                        }
+                    }
+                    return null;
+                }
+
+                @Override
+                public void close() throws Exception {
+                    keyIterator.close();
+                }
+            }));
+
+            return new CloseableIterator<KeyValue<T>>() {
+                long prevKey = Long.MIN_VALUE;
+
+                KeyValue<T> lastNonCached;
+
+                {
+                    readNextNotCached();
+                }
+
+                private void readNextNotCached() {
+                    if (notCachedValuesIterator.hasNext()) {
+                        lastNonCached = notCachedValuesIterator.next();
+                        if (weHaveSomeFreeMemory()) {
+                            readCache.put(lastNonCached.getKey(), lastNonCached.getValue());
+                        }
+                    } else {
+                        lastNonCached = null;
+                    }
+                }
+
+                @Override
+                public boolean hasNext() {
+                    return cachedValues.size() > 0 || lastNonCached != null;
+                }
+
+                @Override
+                public KeyValue<T> next() {
+                    KeyValue<T> result;
+                    if (lastNonCached == null) {
+                        result = cachedValues.removeFirst();
+                    } else if (cachedValues.size() > 0) {
+                        KeyValue<T> firstCached = cachedValues.getFirst();
+                        if (firstCached.getKey() < lastNonCached.getKey()) {
+                            return cachedValues.removeFirst();
+                        } else {
+                            result = lastNonCached;
+                            readNextNotCached();
+                        }
+                    } else {
+                        result = lastNonCached;
+                        readNextNotCached();
+                    }
+                    if (prevKey != Long.MIN_VALUE && prevKey > result.getKey()) {
+                        throw new RuntimeException("Something went wrong! Does the keyiterator provide keys out of order?");
+                    }
+                    prevKey = result.getKey();
+                    return result;
+                }
+
+                @Override
+                protected void closeInt() {
+                    notCachedValuesIterator.close();
+                }
+            };
+        } else {
+            return baseInterface.iterator(keyIterator);
+        }
+    }
+
+    @Override
+    public CloseableIterator<T> valueIterator(CloseableIterator<Long> keyIterator) {
+        return IterableUtils.mapIterator(iterator(keyIterator), KeyValue::getValue);
     }
 
     private boolean weHaveSomeFreeMemory() {

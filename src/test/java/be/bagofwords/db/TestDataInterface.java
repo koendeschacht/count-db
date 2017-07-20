@@ -410,6 +410,29 @@ public class TestDataInterface extends BaseTestDataInterface {
         }
     }
 
+    @Test
+    public void testIteratorWithKeyIterator() {
+        DataInterface<Long> dataInterface = createCountDataInterface("testIteratorWithKeyIterator");
+        int numOfItems = 100;
+        List<Long> keysToRequest = new ArrayList<>();
+        for (int i = 0; i < numOfItems; i++) {
+            dataInterface.write(i, (long) i);
+            if (i % 3 == 0) {
+                keysToRequest.add((long) i);
+            }
+        }
+        dataInterface.flush();
+        //Read some values, so that they are cached (only influences test if caching is used)
+        for (int i = 0; i < numOfItems; i += 6) {
+            dataInterface.read(i);
+        }
+        List<Long> readValues = dataInterface.streamValues(IterableUtils.iterator(keysToRequest)).collect(Collectors.toList());
+        Assert.assertEquals((int) Math.ceil(numOfItems / 3.0), readValues.size());
+        for (int i = 0; i < numOfItems; i += 3) {
+            Assert.assertEquals(new Long(i), readValues.get(i / 3));
+        }
+    }
+
     private boolean findValue(DataInterface<Long> dataInterface, long key, Long targetValue) {
         long started = System.currentTimeMillis();
         boolean foundValue = false;
