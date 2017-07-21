@@ -1,18 +1,21 @@
 package be.bagofwords.db.methods;
 
-import java.io.DataOutputStream;
-import java.io.IOException;
+import be.bagofwords.exec.RemoteObjectConfig;
+
+import java.io.Serializable;
 
 /**
  * Created by koen on 23/05/17.
  */
-public interface ObjectSerializer<T> {
+public interface ObjectSerializer<T> extends Serializable {
 
-    int writeValue(T obj, DataOutputStream dos) throws IOException;
+    void writeValue(T obj, DataStream ds);
 
-    ReadValue<T> readValue(byte[] buffer, int position, boolean readActualValue);
+    T readValue(DataStream ds, int size);
 
-    int getMinimumBoundOfObjectSize();
+    int getObjectSize();
 
-    int getValueWidth();
+    default RemoteObjectConfig createExecConfig() {
+        return RemoteObjectConfig.create(this).add(getClass());
+    }
 }

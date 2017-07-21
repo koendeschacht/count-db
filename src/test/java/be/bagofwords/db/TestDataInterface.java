@@ -1,10 +1,10 @@
 package be.bagofwords.db;
 
-import be.bagofwords.db.helper.EvenNumbersValueFilter;
-import be.bagofwords.db.methods.RangeKeyFilter;
 import be.bagofwords.db.helper.EvenKeysFilter;
+import be.bagofwords.db.helper.EvenNumbersValueFilter;
 import be.bagofwords.db.helper.TestObject;
 import be.bagofwords.db.impl.BaseDataInterface;
+import be.bagofwords.db.methods.RangeKeyFilter;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.util.HashUtils;
@@ -35,6 +35,7 @@ public class TestDataInterface extends BaseTestDataInterface {
         writeRandomObjects(dataInterface, 200, random);
         TestObject randomObj = createRandomObject(random);
         dataInterface.write("obj", randomObj);
+        dataInterface.flush();
         writeRandomObjects(dataInterface, 200, random);
         TestObject readObj = dataInterface.read("obj");
         Assert.assertEquals(randomObj, readObj);
@@ -144,18 +145,18 @@ public class TestDataInterface extends BaseTestDataInterface {
         DataInterface<Long> db = createCountDataInterface("testDeleteValue");
         db.dropAllData();
         for (int i = 0; i < numOfExamples; i++) {
-            db.increaseCount(Integer.toString(i));
+            db.increaseCount(i);
         }
         for (int i = 0; i < numOfExamples; i += 2) {
-            db.write(Integer.toString(i), null);
+            db.write(i, null);
         }
         db.flush();
         for (int i = 0; i < numOfExamples; i++) {
-            Long count = db.readCount(Integer.toString(i));
+            Long count = db.readCount(i);
             if (i % 2 == 0) {
-                Assert.assertEquals(0, count.intValue());
+                Assert.assertEquals(i + " should be 0", 0, count.intValue());
             } else {
-                Assert.assertEquals(1, count.intValue());
+                Assert.assertEquals(i + " should be 1", 1, count.intValue());
             }
         }
     }

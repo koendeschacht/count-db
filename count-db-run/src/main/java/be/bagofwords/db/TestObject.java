@@ -1,4 +1,4 @@
-package be.bagofwords.db.helper;
+package be.bagofwords.db;
 
 import be.bagofwords.exec.RemoteClass;
 

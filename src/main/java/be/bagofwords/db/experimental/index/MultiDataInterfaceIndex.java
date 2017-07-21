@@ -2,33 +2,31 @@ package be.bagofwords.db.experimental.index;
 
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
-import be.bagofwords.db.data.LongList;
-import be.bagofwords.db.data.LongListCombinator;
-import be.bagofwords.db.data.LongListSerializer;
+import be.bagofwords.db.data.ListCombinator;
+import be.bagofwords.db.data.ListSerializer;
 import be.bagofwords.db.impl.BaseDataInterface;
-import be.bagofwords.db.impl.MetaDataStore;
 import be.bagofwords.db.methods.KeyFilter;
-import be.bagofwords.db.methods.SetKeyFilter;
 import be.bagofwords.iterator.CloseableIterator;
+import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.util.KeyValue;
+import be.bagofwords.util.MappedLists;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class MultiDataInterfaceIndex<T> extends BaseDataInterfaceIndex<T> {
 
     private final MultiDataIndexer<T> indexer;
-    private final BaseDataInterface<LongList> indexedDataInterface;
+    private final BaseDataInterface<List<KeyValue<T>>> indexedDataInterface;
 
-    public MultiDataInterfaceIndex(String name, DataInterfaceFactory dataInterfaceFactory, DataInterface<T> dataInterface, MultiDataIndexer<T> indexer, MetaDataStore metaDataStore) {
-        super(dataInterface, metaDataStore);
+    public MultiDataInterfaceIndex(String name, DataInterfaceFactory dataInterfaceFactory, DataInterface<T> dataInterface, MultiDataIndexer<T> indexer) {
+        super(dataInterface);
         this.indexer = indexer;
-        this.indexedDataInterface = dataInterfaceFactory.createDataInterface(name, LongList.class, new LongListCombinator(), new LongListSerializer());
-        this.lastSync = metaDataStore.getLong(indexedDataInterface, "last.sync", -Long.MAX_VALUE);
+        this.indexedDataInterface = dataInterfaceFactory.createDataInterface(name, List.class, new ListCombinator(dataInterface.getCombinator()), new ListSerializer(dataInterface.getObjectSerializer()));
     }
 
     @Override
@@ -36,78 +34,72 @@ public class MultiDataInterfaceIndex<T> extends BaseDataInterfaceIndex<T> {
         return indexedDataInterface.getName();
     }
 
-    @Override
-    protected void rebuildIndex() {
-        indexedDataInterface.dropAllData();
-        lastSync = dataInterface.lastFlush();
-        CloseableIterator<KeyValue<T>> it = dataInterface.iterator();
-        while (it.hasNext()) {
-            KeyValue<T> curr = it.next();
-            T value = curr.getValue();
-            for (long indexKey : indexer.convertToIndexes(value)) {
-                indexedDataInterface.write(indexKey, new LongList(curr.getKey()));
-            }
-        }
-        it.close();
-        indexedDataInterface.flush();
-        metaDataStore.write(indexedDataInterface, "last.sync", lastSync);
+    public List<KeyValue<T>> read(long indexKey) {
+        return indexedDataInterface.read(indexKey);
     }
 
-    public List<T> read(long indexKey) {
-        ensureIndexUpToDate();
-        LongList keys = indexedDataInterface.read(indexKey);
-        List<T> result = new ArrayList<>();
-        if (keys != null) {
-            for (long key : keys) {
-                T value = dataInterface.read(key);
-                if (value != null) {
-                    result.add(value);
-                }
-            }
-        }
-        return result;
-    }
-
-    public List<T> read(T queryByObject) {
+    public List<KeyValue<T>> read(T queryByObject) {
         return streamValues(queryByObject).collect(Collectors.toList());
     }
 
-    public Stream<T> streamValues(T queryByObject) {
-        ensureIndexUpToDate();
+    public Stream<KeyValue<T>> streamValues(T queryByObject) {
         List<Long> indexKeys = indexer.convertToIndexes(queryByObject);
-        Stream<Long> keyStream = indexedDataInterface.streamValues(new SetKeyFilter(indexKeys))
+        return indexedDataInterface.streamValues(IterableUtils.iterator(indexKeys))
                 .flatMap(Collection::stream)
-                .distinct()
-                .sorted();
-        return streamValuesForKeys(keyStream);
+                .distinct();
     }
 
-    public Stream<T> streamValues(KeyFilter keyFilter) {
-        ensureIndexUpToDate();
-        Stream<Long> keyStream = indexedDataInterface.streamValues(keyFilter)
+    public Stream<KeyValue<T>> streamValues(KeyFilter keyFilter) {
+        return indexedDataInterface.streamValues(keyFilter)
                 .flatMap(Collection::stream)
-                .distinct()
-                .sorted();
-        return streamValuesForKeys(keyStream);
+                .distinct();
     }
 
-    public Stream<T> streamValues() {
+    public Stream<KeyValue<T>> streamValues() {
         return streamValues(false);
     }
 
-    public Stream<T> streamValues(boolean desc) {
-        ensureIndexUpToDate();
-        List<Long> uniqueIds = indexedDataInterface.streamValues().flatMap(Collection::stream)
-                .distinct()
-                .sorted()
-                .collect(Collectors.toList());
+    public Stream<KeyValue<T>> streamValues(boolean desc) {
         if (desc) {
-            Collections.reverse(uniqueIds);
+            throw new RuntimeException("Not yet implemented");
         }
-        return streamValuesForKeys(uniqueIds.stream());
+        return indexedDataInterface.streamValues().flatMap(Collection::stream)
+                .distinct();
     }
 
     public void close() {
         this.indexedDataInterface.close();
+    }
+
+    @Override
+    public void dateUpdated(long key, T value) {
+        List<Long> indexes = indexer.convertToIndexes(value);
+        List<KeyValue<T>> singleton = Collections.singletonList(new KeyValue<>(key, value));
+        for (Long index : indexes) {
+            indexedDataInterface.write(index, singleton);
+        }
+    }
+
+    @Override
+    public void dateUpdated(List<KeyValue<T>> keyValues) {
+        MappedLists<Long, KeyValue<T>> combinedValues = new MappedLists<>();
+        for (KeyValue<T> keyValue : keyValues) {
+            List<Long> indexes = indexer.convertToIndexes(keyValue.getValue());
+            for (Long index : indexes) {
+                combinedValues.get(index).add(keyValue);
+            }
+        }
+        CloseableIterator<KeyValue<List<KeyValue<T>>>> iterator = IterableUtils.mapIterator(IterableUtils.iterator(combinedValues.entrySet()), entry -> new KeyValue<>(entry.getKey(), entry.getValue()));
+        indexedDataInterface.write(iterator);
+    }
+
+    @Override
+    public void dataFlushed() {
+        indexedDataInterface.flush();
+    }
+
+    @Override
+    public void dataDropped() {
+        indexedDataInterface.dropAllData();
     }
 }

@@ -62,12 +62,12 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
 
     @Override
     public <T> MultiDataInterfaceIndex<T> multiIndex(DataInterface<T> dataInterface, String nameOfIndex, MultiDataIndexer<T> indexer) {
-        return new MultiDataInterfaceIndex<>(nameOfIndex, this, dataInterface, indexer, metaDataStore);
+        return new MultiDataInterfaceIndex<>(nameOfIndex, this, dataInterface, indexer);
     }
 
     @Override
     public <T> UniqueDataInterfaceIndex<T> uniqueIndex(DataInterface<T> dataInterface, String nameOfIndex, UniqueDataIndexer<T> indexer) {
-        return new UniqueDataInterfaceIndex<>(nameOfIndex, this, dataInterface, indexer, metaDataStore);
+        return new UniqueDataInterfaceIndex<>(nameOfIndex, this, dataInterface, indexer);
     }
 
     public <T> BaseDataInterface<T> createFromConfig(DataInterfaceConfig<T> config) {

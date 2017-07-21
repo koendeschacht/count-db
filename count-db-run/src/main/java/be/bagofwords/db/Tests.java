@@ -1,5 +1,10 @@
 package be.bagofwords.db;
 
+import be.bagofwords.db.methods.DataStream;
+import be.bagofwords.db.methods.JsonObjectSerializer;
+import be.bagofwords.db.methods.ObjectSerializer;
+import be.bagofwords.exec.RemoteObjectConfig;
+import be.bagofwords.exec.RemoteObjectUtil;
 import be.bagofwords.logging.Log;
 import be.bagofwords.util.MappedLists;
 import be.bagofwords.util.SerializationUtils;
@@ -22,11 +27,77 @@ import static org.xerial.snappy.SnappyFramedOutputStream.MAX_BLOCK_SIZE;
 public class Tests {
 
     public static void main(String[] args) throws IOException {
+        ObjectSerializer<TestObject> objectSerializer = new JsonObjectSerializer<>(TestObject.class, TestObject.class);
+        RemoteObjectConfig execConfig = objectSerializer.createExecConfig();
+        ObjectSerializer objectSerializer2 = (ObjectSerializer) RemoteObjectUtil.loadObject(execConfig.pack());
+        Log.i("Success!");
+
         // testCompression();
         // testRandomAccess();
         // testRandomAccessWriting();
         // testBinarySearch();
-        testReadingStrings();
+        // testReadingStrings();
+        testObjectSerializer();
+    }
+
+    private static void testObjectSerializer() throws IOException {
+        Random random = new Random();
+        int numOfItems = 40_000_000;
+        List<Long> randomValues = new ArrayList<>();
+        for (int i = 0; i < numOfItems; i++) {
+            randomValues.add(random.nextLong());
+        }
+        boolean doBytes = false;
+        boolean doNewStream = true;
+        long start = System.currentTimeMillis();
+        if (doBytes) {
+            byte[] bytes = new byte[numOfItems * 8];
+            int position = 0;
+            for (int i = 0; i < numOfItems; i++) {
+                SerializationUtils.longToBytes(randomValues.get(i), bytes, position);
+                position += 8;
+            }
+            Log.i("Writing took " + (System.currentTimeMillis() - start));
+            start = System.currentTimeMillis();
+            position = 0;
+            long sum = 0;
+            for (int i = 0; i < numOfItems; i++) {
+                sum += SerializationUtils.bytesToLong(bytes, position);
+                position += 8;
+            }
+            Log.i("Reading took " + (System.currentTimeMillis() - start) + " sum is " + sum);
+        } else if (doNewStream) {
+            byte[] bytes = new byte[numOfItems * 8];
+            DataStream dos = new DataStream(bytes);
+            for (int i = 0; i < numOfItems; i++) {
+                dos.writeLong(randomValues.get(i));
+            }
+            Log.i("Writing took " + (System.currentTimeMillis() - start));
+            start = System.currentTimeMillis();
+            dos.reset();
+            long sum = 0;
+            for (int i = 0; i < numOfItems; i++) {
+                sum += dos.readLong();
+            }
+            Log.i("Reading took " + (System.currentTimeMillis() - start) + " " + sum);
+        } else {
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            DataOutputStream dos = new DataOutputStream(bos);
+            for (int i = 0; i < numOfItems; i++) {
+                dos.writeLong(randomValues.get(i));
+            }
+            dos.close();
+            Log.i("Writing took " + (System.currentTimeMillis() - start));
+            start = System.currentTimeMillis();
+            byte[] bytes = bos.toByteArray();
+            ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+            DataInputStream dis = new DataInputStream(bis);
+            for (int i = 0; i < numOfItems; i++) {
+                dis.readLong();
+            }
+            dis.close();
+            Log.i("Reading took " + (System.currentTimeMillis() - start));
+        }
     }
 
     private static void testReadingStrings() throws IOException {

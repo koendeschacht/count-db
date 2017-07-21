@@ -1,12 +1,12 @@
 package be.bagofwords.db.remote;
 
+import be.bagofwords.db.methods.DataStream;
+import be.bagofwords.db.methods.DataStreamUtils;
+import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.util.KeyValue;
-import be.bagofwords.util.SerializationUtils;
 import org.xerial.snappy.Snappy;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -23,13 +23,13 @@ public class KeyValueSocketIterator<T> extends CloseableIterator<KeyValue<T>> {
     private final Connection connection;
     private Iterator<KeyValue<T>> nextValues;
     private boolean readAllValuesFromConnection;
-    private final int objectLength;
+    private final ObjectSerializer<T> objectSerializer;
 
     public KeyValueSocketIterator(RemoteDataInterface<T> remoteDataInterface, Connection connection) {
         this.remoteDataInterface = remoteDataInterface;
         this.connection = connection;
         this.readAllValuesFromConnection = false;
-        this.objectLength = SerializationUtils.getWidth(remoteDataInterface.getObjectClass());
+        this.objectSerializer = remoteDataInterface.getObjectSerializer();
         //Constructor
         findNextValues();
     }
@@ -45,25 +45,13 @@ public class KeyValueSocketIterator<T> extends CloseableIterator<KeyValue<T>> {
                     byte[] keys = connection.readByteArray();
                     byte[] compressedValues = connection.readByteArray();
                     byte[] uncompressedValues = Snappy.uncompress(compressedValues);
-                    DataInputStream keyIS = new DataInputStream(new ByteArrayInputStream(keys));
-                    DataInputStream valueIS = new DataInputStream(new ByteArrayInputStream(uncompressedValues));
+                    DataStream keyIS = new DataStream(keys);
+                    DataStream valueIS = new DataStream(uncompressedValues);
                     List<KeyValue<T>> nextValuesList = new ArrayList<>();
                     while (nextValuesList.size() < numOfValues) {
                         long key = keyIS.readLong();
-                        int length;
-                        if (objectLength == -1) {
-                            length = valueIS.readInt();
-                        } else {
-                            length = objectLength;
-                        }
-                        byte[] objectAsBytes = new byte[length];
-                        if (length > 0) {
-                            int bytesRead = valueIS.read(objectAsBytes);
-                            if (bytesRead < length) {
-                                throw new RuntimeException("Read " + bytesRead + " bytes, expected " + length);
-                            }
-                        }
-                        T value = SerializationUtils.bytesToObjectCheckForNull(objectAsBytes, remoteDataInterface.getObjectClass());
+                        int objectSize = DataStreamUtils.getObjectSize(valueIS, objectSerializer);
+                        T value = objectSerializer.readValue(valueIS, objectSize);
                         nextValuesList.add(new KeyValue<>(key, value));
                     }
                     if (nextValuesList.isEmpty()) {

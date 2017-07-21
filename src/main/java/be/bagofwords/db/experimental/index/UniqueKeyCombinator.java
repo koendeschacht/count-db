@@ -1,19 +1,16 @@
 package be.bagofwords.db.experimental.index;
 
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.util.KeyValue;
 
 /**
  * Created by koen on 16/07/17.
  */
-public class UniqueKeyCombinator implements Combinator<Long> {
+public class UniqueKeyCombinator<T> implements Combinator<KeyValue<T>> {
 
     @Override
-    public Long combine(Long first, Long second) {
-        if (first == null) {
-            return second;
-        } else if (second == null) {
-            return first;
-        } else if (first.equals(second)) {
+    public KeyValue<T> combine(KeyValue<T> first, KeyValue<T> second) {
+        if (first.getKey() == second.getKey()) {
             return first;
         } else {
             throw new RuntimeException("Trying to combine two keys (" + first + " and " + second + ") for same index key ");

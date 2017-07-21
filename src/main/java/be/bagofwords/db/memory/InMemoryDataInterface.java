@@ -30,8 +30,11 @@ public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T
     @Override
     public void write(long key, T value) {
         lock.lockWrite(key);
-        nonSynchronizedWrite(key, value);
-        lock.unlockWrite(key);
+        try {
+            nonSynchronizedWrite(key, value);
+        } finally {
+            lock.unlockWrite(key);
+        }
     }
 
     private void nonSynchronizedWrite(long key, T value) {
@@ -45,17 +48,21 @@ public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T
                 values.put(key, getCombinator().combine(currentValue, value));
             }
         }
+        updateListenerCollection.dateUpdated(key, value);
     }
 
     @Override
     public void write(CloseableIterator<KeyValue<T>> entries) {
         lock.lockWriteAll();
-        while (entries.hasNext()) {
-            KeyValue<T> entry = entries.next();
-            nonSynchronizedWrite(entry.getKey(), entry.getValue());
+        try {
+            while (entries.hasNext()) {
+                KeyValue<T> entry = entries.next();
+                nonSynchronizedWrite(entry.getKey(), entry.getValue());
+            }
+            entries.close();
+        } finally {
+            lock.unlockWriteAll();
         }
-        entries.close();
-        lock.unlockWriteAll();
     }
 
     @Override
@@ -94,6 +101,7 @@ public class InMemoryDataInterface<T extends Object> extends CoreDataInterface<T
         lock.lockWriteAll();
         values.clear();
         lock.unlockWriteAll();
+        updateListenerCollection.dataDropped();
     }
 
     @Override

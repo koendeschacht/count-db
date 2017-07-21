@@ -1,11 +1,7 @@
 package be.bagofwords.db.data;
 
+import be.bagofwords.db.methods.DataStream;
 import be.bagofwords.db.methods.ObjectSerializer;
-import be.bagofwords.db.methods.ReadValue;
-import be.bagofwords.util.SerializationUtils;
-
-import java.io.DataOutputStream;
-import java.io.IOException;
 
 /**
  * Created by koen on 1/07/17.
@@ -13,40 +9,24 @@ import java.io.IOException;
 public class LongListSerializer implements ObjectSerializer<LongList> {
 
     @Override
-    public int writeValue(LongList obj, DataOutputStream dos) throws IOException {
-        int length = obj.size() * 8;
-        dos.writeInt(length);
+    public void writeValue(LongList obj, DataStream ds) {
         for (int i = 0; i < obj.size(); i++) {
-            dos.writeLong(obj.get(i));
+            ds.writeLong(obj.get(i));
         }
-        return 4 + length;
     }
 
     @Override
-    public ReadValue<LongList> readValue(byte[] buffer, int position, boolean readActualValue) {
-        int length = SerializationUtils.bytesToInt(buffer, position);
-        LongList value;
-        if (readActualValue) {
-            int numOfItems = length / 8;
-            value = new LongList();
-            position += 4;
-            for (int i = 0; i < numOfItems; i++) {
-                value.add(SerializationUtils.bytesToLong(buffer, position));
-                position += 8;
-            }
-        } else {
-            value = null;
+    public LongList readValue(DataStream ds, int size) {
+        int numOfItems = size / 8;
+        LongList result = new LongList();
+        for (int i = 0; i < numOfItems; i++) {
+            result.add(ds.readLong());
         }
-        return new ReadValue<>(4 + length, value);
+        return result;
     }
 
     @Override
-    public int getMinimumBoundOfObjectSize() {
-        return 4;
-    }
-
-    @Override
-    public int getValueWidth() {
+    public int getObjectSize() {
         return -1;
     }
 }

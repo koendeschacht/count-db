@@ -1,6 +1,7 @@
 package be.bagofwords.db;
 
 import be.bagofwords.db.impl.BaseDataInterface;
+import be.bagofwords.db.impl.UpdateListener;
 import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.util.KeyValue;
@@ -56,6 +57,11 @@ public abstract class LayeredDataInterface<T> extends BaseDataInterface<T> {
     @Override
     public DataInterface<T> getCoreDataInterface() {
         return baseInterface.getCoreDataInterface();
+    }
+
+    @Override
+    public void registerUpdateListener(UpdateListener<T> updateListener) {
+        baseInterface.registerUpdateListener(updateListener);
     }
 
     @Override

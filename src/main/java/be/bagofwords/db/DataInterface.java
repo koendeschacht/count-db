@@ -1,6 +1,7 @@
 package be.bagofwords.db;
 
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.impl.UpdateListener;
 import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.iterator.CloseableIterator;
@@ -309,4 +310,5 @@ public interface DataInterface<T extends Object> extends DataIterable<KeyValue<T
 
     ObjectSerializer<T> getObjectSerializer();
 
+    void registerUpdateListener(UpdateListener<T> updateListener);
 }

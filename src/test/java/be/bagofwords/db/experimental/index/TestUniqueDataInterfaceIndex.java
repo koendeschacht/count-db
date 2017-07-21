@@ -6,6 +6,7 @@ import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.logging.Log;
 import be.bagofwords.util.HashUtils;
+import be.bagofwords.util.KeyValue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,14 +57,14 @@ public class TestUniqueDataInterfaceIndex extends BaseTestDataInterface {
 
     @Test
     public void testTextIndexer() {
-        Long result = indexedInterface.read(2);
-        assertEquals(new Long(1), result);
+        KeyValue<Long> result = indexedInterface.read(2);
+        assertEquals(new KeyValue<>(1, 1L), result);
     }
 
     @Test
     public void testQueryByExample() {
-        Long result = indexedInterface.read(new Long(1)); //Query by example
-        assertEquals(new Long(1), result);
+        KeyValue<Long> result = indexedInterface.read(new Long(1)); //Query by example
+        assertEquals(new KeyValue<>(1, 1L), result);
     }
 
     @Test
@@ -71,7 +72,7 @@ public class TestUniqueDataInterfaceIndex extends BaseTestDataInterface {
         assertEquals(null, indexedInterface.read(6));
         baseInterface.write(3, 3L);
         baseInterface.flush();
-        assertEquals(new Long(3), indexedInterface.read(6));
+        assertEquals(new KeyValue<>(3, 3L), indexedInterface.read(6));
     }
 
     @Test

@@ -8,6 +8,7 @@
     </JAVADOC>
     <SOURCES>
       <root url="jar://$MAVEN_REPOSITORY$/log4j/log4j/1.2.17/log4j-1.2.17-sources.jar!/" />
+      <root url="file://$PROJECT_DIR$/../bow-utils-extra/src/main/java" />
     </SOURCES>
   </library>
 </component>

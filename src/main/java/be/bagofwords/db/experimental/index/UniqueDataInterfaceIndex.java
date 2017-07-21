@@ -2,29 +2,26 @@ package be.bagofwords.db.experimental.index;
 
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
+import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.data.KeyValueSerializer;
 import be.bagofwords.db.impl.BaseDataInterface;
-import be.bagofwords.db.impl.MetaDataStore;
 import be.bagofwords.db.methods.KeyFilter;
-import be.bagofwords.db.methods.LongObjectSerializer;
-import be.bagofwords.iterator.CloseableIterator;
+import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.util.KeyValue;
+import be.bagofwords.util.StreamUtils;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class UniqueDataInterfaceIndex<T> extends BaseDataInterfaceIndex<T> {
 
     private final UniqueDataIndexer<T> indexer;
-    private final BaseDataInterface<Long> indexedDataInterface;
+    private final BaseDataInterface<KeyValue<T>> indexedDataInterface;
 
-    public UniqueDataInterfaceIndex(String name, DataInterfaceFactory dataInterfaceFactory, DataInterface<T> dataInterface, UniqueDataIndexer<T> indexer, MetaDataStore metaDataStore) {
-        super(dataInterface, metaDataStore);
+    public UniqueDataInterfaceIndex(String name, DataInterfaceFactory dataInterfaceFactory, DataInterface<T> dataInterface, UniqueDataIndexer<T> indexer) {
+        super(dataInterface);
         this.indexer = indexer;
-        this.indexedDataInterface = dataInterfaceFactory.createDataInterface(name, Long.class, new UniqueKeyCombinator(), new LongObjectSerializer());
-        this.lastSync = metaDataStore.getLong(indexedDataInterface, "last.sync", -Long.MAX_VALUE);
+        this.indexedDataInterface = dataInterfaceFactory.createDataInterface(name, (Class<KeyValue<T>>) (Object) KeyValue.class, new UniqueKeyCombinator(), new KeyValueSerializer<T>(dataInterface.getObjectSerializer()));
     }
 
     @Override
@@ -32,59 +29,53 @@ public class UniqueDataInterfaceIndex<T> extends BaseDataInterfaceIndex<T> {
         return indexedDataInterface.getName();
     }
 
-    @Override
-    protected void rebuildIndex() {
-        indexedDataInterface.dropAllData();
-        lastSync = dataInterface.lastFlush();
-        CloseableIterator<KeyValue<T>> it = dataInterface.iterator();
-        while (it.hasNext()) {
-            KeyValue<T> curr = it.next();
-            T value = curr.getValue();
-            long indexKey = indexer.convertToIndex(value);
-            indexedDataInterface.write(indexKey, curr.getKey());
-        }
-        it.close();
-        indexedDataInterface.flush();
-        metaDataStore.write(indexedDataInterface, "last.sync", lastSync);
+    public KeyValue<T> read(long indexKey) {
+        return indexedDataInterface.read(indexKey);
     }
 
-    public T read(long indexKey) {
-        ensureIndexUpToDate();
-        Long key = indexedDataInterface.read(indexKey);
-        if (key != null) {
-            return dataInterface.read(key);
-        } else {
-            return null;
-        }
-    }
-
-    public T read(T queryByObject) {
-        ensureIndexUpToDate();
+    public KeyValue<T> read(T queryByObject) {
         long indexKey = indexer.convertToIndex(queryByObject);
         return read(indexKey);
     }
 
-    public Stream<T> streamValues(KeyFilter keyFilter) {
-        ensureIndexUpToDate();
-        Stream<Long> keyStream = indexedDataInterface.streamValues(keyFilter);
-        return streamValuesForKeys(keyStream);
+    public Stream<KeyValue<T>> streamValues(KeyFilter keyFilter) {
+        return indexedDataInterface.streamValues(keyFilter);
     }
 
-    public Stream<T> streamValues() {
+    public Stream<KeyValue<T>> streamValues() {
         return streamValues(false);
     }
 
-    public Stream<T> streamValues(boolean desc) {
-        ensureIndexUpToDate();
-        List<Long> uniqueIds = indexedDataInterface.streamValues()
-                .collect(Collectors.toList());
+    public Stream<KeyValue<T>> streamValues(boolean desc) {
         if (desc) {
-            Collections.reverse(uniqueIds);
+            throw new RuntimeException("Not yet implemented");
         }
-        return streamValuesForKeys(uniqueIds.stream());
+        return indexedDataInterface.streamValues();
     }
 
     public void close() {
         this.indexedDataInterface.close();
+    }
+
+    @Override
+    public void dateUpdated(long key, T value) {
+        long index = indexer.convertToIndex(value);
+        indexedDataInterface.write(index, new KeyValue<>(key, value));
+    }
+
+    @Override
+    public void dateUpdated(List<KeyValue<T>> keyValues) {
+        Stream<KeyValue<KeyValue<T>>> stream = keyValues.stream().map(kv -> new KeyValue<>(indexer.convertToIndex(kv.getValue()), kv));
+        indexedDataInterface.write(StreamUtils.iterator(stream));
+    }
+
+    @Override
+    public void dataFlushed() {
+        indexedDataInterface.flush();
+    }
+
+    @Override
+    public void dataDropped() {
+        indexedDataInterface.dropAllData();
     }
 }

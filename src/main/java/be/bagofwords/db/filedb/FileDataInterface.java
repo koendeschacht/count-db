@@ -3,9 +3,10 @@ package be.bagofwords.db.filedb;
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.impl.DBUtils;
+import be.bagofwords.db.methods.DataStream;
+import be.bagofwords.db.methods.DataStreamUtils;
 import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.methods.ObjectSerializer;
-import be.bagofwords.db.methods.ReadValue;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
@@ -127,29 +128,28 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             startPos -= readBuffer.getOffset();
             endPos -= readBuffer.getOffset();
             byte firstByteOfKeyToRead = (byte) (key >> 56);
-            byte[] buffer = readBuffer.getBuffer();
-            int position = startPos;
-            while (position < endPos) {
-                byte currentByte = buffer[position];
+            DataStream ds = new DataStream(readBuffer.getBuffer(), startPos);
+            while (ds.position < endPos) {
+                byte currentByte = ds.buffer[ds.position];
                 if (currentByte == firstByteOfKeyToRead) {
-                    long currentKey = SerializationUtils.bytesToLong(buffer, position);
-                    position += LONG_SIZE;
+                    long currentKey = ds.readLong();
+                    int objectSize = DataStreamUtils.getObjectSize(ds, objectSerializer);
                     if (currentKey == key) {
-                        ReadValue<T> readValue = readValue(buffer, position, true);
-                        return readValue.value;
+                        return readValue(ds, objectSize);
                     } else if (currentKey > key) {
                         return null;
                     } else {
                         //skip value
-                        position += skipValue(buffer, position);
+                        ds.skip(objectSize);
                     }
                 } else if (currentByte > firstByteOfKeyToRead) {
                     //key too large, value not in this file
                     return null;
                 } else if (currentByte < firstByteOfKeyToRead) {
                     //key too small, skip key and value
-                    position += LONG_SIZE;
-                    position += skipValue(buffer, position);
+                    ds.skip(8);
+                    int objectSize = DataStreamUtils.getObjectSize(ds, objectSerializer);
+                    ds.skip(objectSize);
                 }
             }
             return null;
@@ -167,16 +167,17 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         bucket.lockWrite();
         FileInfo file = bucket.getFile(key);
         try {
-            DataOutputStream dos = getAppendingOutputStream(file);
-            int extraSize = writeValue(dos, key, value);
-            dos.close();
-            file.increaseWriteSize(extraSize);
+            DataStream ds = new DataStream();
+            writeKeyAndValue(ds, key, value);
+            appendBufferToFile(ds, file);
+            file.increaseWriteSize(ds.position);
             dataWasWritten();
         } catch (Exception e) {
             throw new RuntimeException("Failed to write value with key " + key + " to file " + toFile(file).getAbsolutePath(), e);
         } finally {
             bucket.unlockWrite();
         }
+        updateListenerCollection.dateUpdated(key, value);
     }
 
     @Override
@@ -185,12 +186,15 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         while (entries.hasNext()) {
             MappedLists<FileBucket, KeyValue<T>> entriesToFileBuckets = new MappedLists<>();
             int numRead = 0;
+            List<KeyValue<T>> updatedValues = new ArrayList<>();
             while (numRead < batchSize && entries.hasNext()) {
                 KeyValue<T> curr = entries.next();
                 FileBucket fileBucket = getBucket(curr.getKey());
                 entriesToFileBuckets.get(fileBucket).add(curr);
                 numRead++;
+                updatedValues.add(curr);
             }
+            updateListenerCollection.dateUpdated(updatedValues);
             long totalSizeWrittenInBatch = 0;
             for (Map.Entry<FileBucket, List<KeyValue<T>>> entry : entriesToFileBuckets.entrySet()) {
                 FileBucket bucket = entry.getKey();
@@ -205,14 +209,14 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     for (FileInfo file : entriesToFiles.keySet()) {
                         try {
                             List<KeyValue<T>> valuesForFile = entriesToFiles.get(file);
-                            DataOutputStream dos = getAppendingOutputStream(file);
+                            DataStream ds = new DataStream();
                             for (KeyValue<T> value : valuesForFile) {
-                                int extraSize = writeValue(dos, value.getKey(), value.getValue());
-                                file.increaseWriteSize(extraSize);
-                                totalSizeWrittenInBatch += extraSize;
+                                writeKeyAndValue(ds, value.getKey(), value.getValue());
                             }
+                            file.increaseWriteSize(ds.position);
+                            totalSizeWrittenInBatch += ds.position;
+                            appendBufferToFile(ds, file);
                             dataWasWritten();
-                            dos.close();
                         } catch (Exception exp) {
                             throw new RuntimeException("Failed to write values to file " + toFile(file).getAbsolutePath(), exp);
                         }
@@ -476,6 +480,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         makeSureAllFileBucketsHaveAtLeastOneFile();
         writeUnlockAllBuckets();
         writeMetaFile();
+        updateListenerCollection.dataDropped();
     }
 
     @Override
@@ -536,40 +541,35 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     if (endOfMergedFile != null) {
                         file.setLastKey(endOfMergedFile);
                     }
-                    DataOutputStream dos = getOutputStreamToTempFile(file);
+                    DataStream ds = new DataStream();
                     List<Pair<Long, Integer>> fileLocations = new ArrayList<>();
-                    int currentSizeOfFile = 0;
+                    int itemsWrittenToFile = 0;
                     for (KeyValue<T> entry : values) {
                         long key = entry.getKey();
                         T value = entry.getValue();
-                        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                        DataOutputStream tmpOutputStream = new DataOutputStream(bos);
-                        writeValue(tmpOutputStream, key, value);
-                        byte[] dataToWrite = bos.toByteArray();
-                        if (currentSizeOfFile > 0 && currentSizeOfFile + dataToWrite.length > targetSize) {
+                        int sizeOfKeyAndValue = writeKeyAndValue(ds, key, value);
+                        if (itemsWrittenToFile > 0 && ds.position > targetSize) {
                             //Create new file
                             if (endOfMergedFile != null) {
                                 throw new RuntimeException("Something went wrong! Merged file and then created new file?");
                             }
-                            dos.close();
+                            writeBufferToTempFile(ds, file);
                             swapTempForReal(file);
-                            file.fileWasRewritten(sample(fileLocations, 100), currentSizeOfFile, currentSizeOfFile);
+                            file.fileWasRewritten(sample(fileLocations, 100), ds.position, ds.position);
                             long currLastKey = file.getLastKey();
                             file.setLastKey(key);
                             fileLocations = new ArrayList<>();
                             file = new FileInfo(bucket.getName(), key, currLastKey, 0, 0);
-                            currentSizeOfFile = 0;
+                            ds.reset();
                             bucket.getFiles().add(fileInd + 1, file);
                             fileInd++;
-                            dos = getOutputStreamToTempFile(file);
                         }
-                        fileLocations.add(new Pair<>(key, currentSizeOfFile));
-                        dos.write(dataToWrite);
-                        currentSizeOfFile += dataToWrite.length;
+                        fileLocations.add(new Pair<>(key, ds.position - sizeOfKeyAndValue));
+                        itemsWrittenToFile++;
                     }
+                    writeBufferToTempFile(ds, file);
                     swapTempForReal(file);
-                    file.fileWasRewritten(sample(fileLocations, 100), currentSizeOfFile, currentSizeOfFile);
-                    dos.close();
+                    file.fileWasRewritten(sample(fileLocations, 50), ds.position, ds.position);
                     numOfRewrittenFiles++;
                 }
             }
@@ -682,14 +682,13 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         return endOfMergedFile;
     }
 
-    private int writeValue(DataOutputStream dos, long key, T value) throws IOException {
-        dos.writeLong(key);
-        int extraSize = objectSerializer.writeValue(value, dos);
-        return 8 + extraSize;
+    private int writeKeyAndValue(DataStream ds, long key, T value) throws IOException {
+        ds.writeLong(key);
+        return DataStreamUtils.writeValue(value, ds, objectSerializer) + 8;
     }
 
-    private ReadValue<T> readValue(byte[] buffer, int position, boolean readActualValue) throws IOException {
-        return objectSerializer.readValue(buffer, position, readActualValue);
+    private T readValue(DataStream ds, int size) throws IOException {
+        return objectSerializer.readValue(ds, size);
     }
 
     private List<FileBucket> createEmptyFileBuckets() {
@@ -880,16 +879,16 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         }
     }
 
-    private int skipValue(byte[] buffer, int position) throws IOException {
-        return readValue(buffer, position, false).size;
+    private void appendBufferToFile(DataStream dataStream, FileInfo fileInfo) throws IOException {
+        OutputStream os = new FileOutputStream(toFile(fileInfo), true);
+        os.write(dataStream.buffer, 0, dataStream.position);
+        os.close();
     }
 
-    private DataOutputStream getAppendingOutputStream(FileInfo fileInfo) throws FileNotFoundException {
-        return new DataOutputStream(new BufferedOutputStream(new FileOutputStream(toFile(fileInfo), true)));
-    }
-
-    private DataOutputStream getOutputStreamToTempFile(FileInfo fileInfo) throws FileNotFoundException {
-        return new DataOutputStream(new BufferedOutputStream(new FileOutputStream(toTempFile(fileInfo), false)));
+    private void writeBufferToTempFile(DataStream dataStream, FileInfo fileInfo) throws IOException {
+        OutputStream os = new FileOutputStream(toTempFile(fileInfo), false);
+        os.write(dataStream.buffer, 0, dataStream.position);
+        os.close();
     }
 
     private File toFile(FileInfo fileInfo) {
@@ -920,13 +919,12 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             byte[] buffer = getReadBuffer(file, 0, file.getReadSize()).getBuffer();
             int expectedNumberOfValues = getLowerBoundOnNumberOfValues(file.getReadSize());
             List<KeyValue<T>> result = new ArrayList<>(expectedNumberOfValues);
-            int position = 0;
-            while (position < buffer.length) {
-                long key = SerializationUtils.bytesToLong(buffer, position);
-                position += LONG_SIZE;
-                ReadValue<T> readValue = readValue(buffer, position, true);
-                position += readValue.size;
-                result.add(new KeyValue<>(key, readValue.value));
+            DataStream ds = new DataStream(buffer);
+            while (ds.position < buffer.length) {
+                long key = ds.readLong();
+                int objectSize = getObjectSize(ds);
+                T value = readValue(ds, objectSize);
+                result.add(new KeyValue<>(key, value));
             }
             dataWasRead();
             return result;
@@ -940,15 +938,15 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             byte[] buffer = getReadBuffer(file, 0, file.getReadSize()).getBuffer();
             int expectedNumberOfValues = getLowerBoundOnNumberOfValues(file.getReadSize());
             List<KeyValue<T>> result = new ArrayList<>(expectedNumberOfValues);
-            int position = 0;
-            while (position < buffer.length) {
-                long key = SerializationUtils.bytesToLong(buffer, position);
-                position += LONG_SIZE;
-                boolean readActualValue = keyFilter.acceptKey(key);
-                ReadValue<T> readValue = readValue(buffer, position, readActualValue);
-                position += readValue.size;
-                if (readActualValue) {
-                    result.add(new KeyValue<>(key, readValue.value));
+            DataStream ds = new DataStream(buffer);
+            while (ds.position < buffer.length) {
+                long key = ds.readLong();
+                int objectSize = getObjectSize(ds);
+                if (keyFilter.acceptKey(key)) {
+                    T value = readValue(ds, objectSize);
+                    result.add(new KeyValue<>(key, value));
+                } else {
+                    ds.skip(objectSize);
                 }
             }
             dataWasRead();
@@ -956,6 +954,10 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         } catch (Exception ex) {
             throw new RuntimeException("Unexpected exception while reading values from file " + toFile(file).getAbsolutePath(), ex);
         }
+    }
+
+    private int getObjectSize(DataStream ds) {
+        return DataStreamUtils.getObjectSize(ds, objectSerializer);
     }
 
     private List<KeyValue<T>> readAllValues(FileInfo file) {
@@ -973,17 +975,16 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                 float start = file.getFirstKey();
                 float end = file.getLastKey();
                 float density = (end - start) / numberOfBuckets;
-                int position = 0;
-                while (position < buffer.length) {
-                    long key = SerializationUtils.bytesToLong(buffer, position);
-                    position += LONG_SIZE;
-                    ReadValue<T> readValue = readValue(buffer, position, true);
-                    position += readValue.size;
+                DataStream ds = new DataStream(buffer);
+                while (ds.position < buffer.length) {
+                    long key = ds.readLong();
+                    int size = getObjectSize(ds);
+                    T value = readValue(ds, size);
                     int bucketInd = Math.round((key - start) / density);
                     if (bucketInd == buckets.length) {
                         bucketInd--; //rounding error?
                     }
-                    buckets[bucketInd].add(new KeyValue<>(key, readValue.value));
+                    buckets[bucketInd].add(new KeyValue<>(key, value));
                 }
                 for (int bucketInd = 0; bucketInd < buckets.length; bucketInd++) {
                     List<KeyValue<T>> currentBucket = buckets[bucketInd];
@@ -1013,18 +1014,22 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     private int getLowerBoundOnNumberOfValues(int sizeOfFile) {
-        int width = objectSerializer.getMinimumBoundOfObjectSize();
-        return sizeOfFile / (8 + width);
+        int objectSize = objectSerializer.getObjectSize();
+        if (objectSize == -1) {
+            return sizeOfFile / 1000;
+        } else {
+            return sizeOfFile / objectSize;
+        }
     }
 
     private List<Long> readKeys(FileInfo file) throws IOException {
         List<Long> result = new ArrayList<>();
         byte[] buffer = getReadBuffer(file, 0, file.getReadSize()).getBuffer();
-        int position = 0;
-        while (position < buffer.length) {
-            result.add(SerializationUtils.bytesToLong(buffer, position));
-            position += LONG_SIZE;
-            position += skipValue(buffer, position);
+        DataStream ds = new DataStream(buffer);
+        while (ds.position < buffer.length) {
+            result.add(ds.readLong());
+            int objectSize = DataStreamUtils.getObjectSize(ds, objectSerializer);
+            ds.skip(objectSize);
         }
         dataWasRead();
         return result;
@@ -1068,7 +1073,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     }
 
     private long getBatchSize() {
-        return objectSerializer.getValueWidth() == -1 ? BATCH_SIZE_NON_PRIMITIVE_VALUES : BATCH_SIZE_PRIMITIVE_VALUES;
+        return objectSerializer.getObjectSize() == -1 ? BATCH_SIZE_NON_PRIMITIVE_VALUES : BATCH_SIZE_PRIMITIVE_VALUES;
     }
 
     private static class ReadBuffer {

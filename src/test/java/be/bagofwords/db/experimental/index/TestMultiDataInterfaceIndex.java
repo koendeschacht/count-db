@@ -6,6 +6,7 @@ import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.logging.Log;
 import be.bagofwords.util.HashUtils;
+import be.bagofwords.util.KeyValue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,14 +22,14 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
-public class TestDataInterfaceIndex extends BaseTestDataInterface {
+public class TestMultiDataInterfaceIndex extends BaseTestDataInterface {
 
     private final Function<String, Long> tokenHasher = word -> HashUtils.hashCode(word.toLowerCase());
     private final MultiDataIndexer<String> tokenizer = text -> Arrays.stream(text.split(" ")).map(tokenHasher).collect(toList());
     private BaseDataInterface<String> baseInterface;
     private MultiDataInterfaceIndex<String> indexedInterface;
 
-    public TestDataInterfaceIndex(DatabaseCachingType type, DatabaseBackendType backendType) throws Exception {
+    public TestMultiDataInterfaceIndex(DatabaseCachingType type, DatabaseBackendType backendType) throws Exception {
         super(type, backendType);
     }
 
@@ -50,14 +51,16 @@ public class TestDataInterfaceIndex extends BaseTestDataInterface {
 
     @Test
     public void testTextIndexer() {
-        List<String> results = indexedInterface.read(tokenHasher.apply("this"));
-        assertEquals(Collections.singletonList("This is a test"), results);
+        List<KeyValue<String>> results = indexedInterface.read(tokenHasher.apply("this"));
+        assertEquals(1, results.size());
+        assertEquals("This is a test", results.get(0).getValue());
     }
 
     @Test
     public void testQueryByExample() {
-        List<String> results = indexedInterface.read("another test");
-        assertEquals(Collections.singletonList("This is a test"), results);
+        List<KeyValue<String>> results = indexedInterface.read("another test");
+        assertEquals(1, results.size());
+        assertEquals("This is a test", results.get(0).getValue());
     }
 
     @Test
@@ -66,7 +69,9 @@ public class TestDataInterfaceIndex extends BaseTestDataInterface {
         Log.i("Writing extra value");
         baseInterface.write(3, "yolo and stuff");
         baseInterface.flush();
-        assertEquals(Collections.singletonList("yolo and stuff"), indexedInterface.read("yolo"));
+        List<KeyValue<String>> result = indexedInterface.read("yolo");
+        assertEquals(1, result.size());
+        assertEquals("yolo and stuff", result.get(0).getValue());
     }
 
 }

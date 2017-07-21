@@ -5,6 +5,7 @@ import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DatabaseBackendType;
 import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.util.HashUtils;
+import be.bagofwords.util.KeyValue;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -34,19 +35,22 @@ public class TestDataInterfaceIndexOpenClose extends BaseTestDataInterface {
         baseInterface.write(1, "This is a test");
         baseInterface.write(2, "Negative example");
         baseInterface.flush();
-        List<String> results = indexedInterface.read("another test");
-        assertEquals(Collections.singletonList("This is a test"), results);
+        List<KeyValue<String>> results = indexedInterface.read("another test");
+        assertEquals(1, results.size());
+        assertEquals("This is a test", results.get(0).getValue());
         baseInterface.close();
         indexedInterface.close();
         if (backendType != DatabaseBackendType.MEMORY) {
             baseInterface = dataInterfaceFactory.dataInterface("testIndexed", String.class).caching(type).create();
             indexedInterface = dataInterfaceFactory.multiIndex(baseInterface, "tokens", tokenizer);
             results = indexedInterface.read("another test");
-            assertEquals(Collections.singletonList("This is a test"), results);
+            assertEquals(1, results.size());
+            assertEquals("This is a test", results.get(0).getValue());
             baseInterface.write(3, "hi there");
             baseInterface.flush();
             results = indexedInterface.read("hi");
-            assertEquals(Collections.singletonList("hi there"), results);
+            assertEquals(1, results.size());
+            assertEquals("hi there", results.get(0).getValue());
         }
     }
 

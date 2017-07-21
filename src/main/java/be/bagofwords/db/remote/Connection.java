@@ -1,5 +1,9 @@
 package be.bagofwords.db.remote;
 
+import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.methods.ObjectSerializer;
+import be.bagofwords.exec.RemoteObjectConfig;
+import be.bagofwords.exec.RemoteObjectUtil;
 import be.bagofwords.util.SocketConnection;
 
 import java.io.IOException;
@@ -34,7 +38,12 @@ public class Connection extends SocketConnection {
         writeString(remoteDataInterface.getName());
         writeBoolean(remoteDataInterface.isTemporaryDataInterface());
         writeString(remoteDataInterface.getObjectClass().getCanonicalName());
-        writeString(remoteDataInterface.getCombinator().getClass().getCanonicalName());
+        Combinator combinator = remoteDataInterface.getCombinator();
+        RemoteObjectConfig execConfig = combinator.createExecConfig();
+        writeValue(execConfig.pack());
+        ObjectSerializer objectSerializer = remoteDataInterface.getObjectSerializer();
+        execConfig = objectSerializer.createExecConfig();
+        writeValue(execConfig.pack());
         flush();
         long response = readLong();
         if (response == LONG_ERROR) {

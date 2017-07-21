@@ -3,10 +3,13 @@ package be.bagofwords.db.remote;
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.impl.BaseDataInterface;
+import be.bagofwords.db.impl.UpdateListener;
+import be.bagofwords.db.impl.UpdateListenerCollection;
+import be.bagofwords.db.methods.DataStream;
 import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer.Action;
-import be.bagofwords.exec.RemoteExecConfig;
+import be.bagofwords.exec.RemoteObjectConfig;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.jobs.AsyncJobService;
 import be.bagofwords.logging.Log;
@@ -34,6 +37,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     private final List<Connection> largeWriteBufferConnections;
     private final List<Connection> largeReadBufferConnections;
     private final ExecutorService executorService;
+    private final UpdateListenerCollection<T> updateListenerCollection;
 
     public RemoteDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer, String host, int port, boolean isTemporaryDataInterface, AsyncJobService taskScheduler) {
         super(name, objectClass, combinator, objectSerializer, isTemporaryDataInterface);
@@ -44,6 +48,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
         this.largeWriteBufferConnections = new ArrayList<>();
         executorService = ExecutorServiceFactory.createExecutorService("remote_data_interface");
         taskScheduler.schedulePeriodicJob(() -> ifNotClosed(this::removeUnusedConnections), 1000);
+        updateListenerCollection = new UpdateListenerCollection<>();
     }
 
     private Connection selectSmallBufferConnection() throws IOException {
@@ -104,13 +109,23 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
             doAction(Action.READ_VALUE, connection);
             connection.writeLong(key);
             connection.flush();
-            T value = connection.readValue(getObjectClass());
+            T value = readValue(connection);
             releaseConnection(connection);
             return value;
         } catch (Exception e) {
             dropConnection(connection);
             throw new RuntimeException(e);
         }
+    }
+
+    private T readValue(Connection connection) throws IOException {
+        int size = objectSerializer.getObjectSize();
+        if (size == -1) {
+            size = connection.readInt();
+        }
+        byte[] bytes = connection.readByteArray(size);
+        DataStream ds = new DataStream(bytes);
+        return objectSerializer.readValue(ds, size);
     }
 
     @Override
@@ -160,6 +175,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
             dropConnection(connection);
             throw new RuntimeException(e);
         }
+        updateListenerCollection.dateUpdated(key, value);
     }
 
     @Override
@@ -172,6 +188,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
                 KeyValue<T> entry = entries.next();
                 connection.writeLong(entry.getKey());
                 writeValue(entry.getValue(), connection);
+                updateListenerCollection.dateUpdated(entry.getKey(), entry.getValue());
             }
             connection.writeLong(LONG_END);
             connection.flush();
@@ -189,7 +206,13 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     }
 
     private void writeValue(T value, Connection connection) throws IOException {
-        connection.writeValue(value, getObjectClass());
+        DataStream ds = new DataStream();
+        objectSerializer.writeValue(value, ds);
+        int objectSize = objectSerializer.getObjectSize();
+        if (objectSize == -1) {
+            connection.writeInt(ds.position);
+        }
+        connection.writeByteArray(ds.buffer, ds.position);
     }
 
     @Override
@@ -238,7 +261,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     public CloseableIterator<KeyValue<T>> iterator(KeyFilter keyFilter) {
         Connection connection = null;
         try {
-            RemoteExecConfig execConfig = RemoteExecConfig.create(keyFilter).add(keyFilter.getClass());
+            RemoteObjectConfig execConfig = RemoteObjectConfig.create(keyFilter).add(keyFilter.getClass());
             connection = selectLargeReadBufferConnection();
             doAction(Action.ITERATOR_WITH_KEY_FILTER, connection);
             connection.writeValue(execConfig.pack());
@@ -254,7 +277,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     public CloseableIterator<T> valueIterator(KeyFilter keyFilter) {
         Connection connection = null;
         try {
-            RemoteExecConfig execConfig = RemoteExecConfig.create(keyFilter).add(keyFilter.getClass());
+            RemoteObjectConfig execConfig = RemoteObjectConfig.create(keyFilter).add(keyFilter.getClass());
             connection = selectLargeReadBufferConnection();
             doAction(Action.VALUES_ITERATOR_WITH_KEY_FILTER, connection);
             connection.writeValue(execConfig.pack());
@@ -270,7 +293,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     public CloseableIterator<KeyValue<T>> iterator(Predicate<T> valueFilter) {
         Connection connection = null;
         try {
-            RemoteExecConfig execConfig = RemoteExecConfig.create(valueFilter).add(valueFilter.getClass());
+            RemoteObjectConfig execConfig = RemoteObjectConfig.create(valueFilter).add(valueFilter.getClass());
             connection = selectLargeReadBufferConnection();
             doAction(Action.ITERATOR_WITH_VALUE_FILTER, connection);
             connection.writeValue(execConfig.pack());
@@ -286,7 +309,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     public CloseableIterator<T> valueIterator(Predicate<T> valueFilter) {
         Connection connection = null;
         try {
-            RemoteExecConfig execConfig = RemoteExecConfig.create(valueFilter).add(valueFilter.getClass());
+            RemoteObjectConfig execConfig = RemoteObjectConfig.create(valueFilter).add(valueFilter.getClass());
             connection = selectLargeReadBufferConnection();
             doAction(Action.VALUES_ITERATOR_WITH_VALUE_FILTER, connection);
             connection.writeValue(execConfig.pack());
@@ -387,6 +410,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     @Override
     public void dropAllData() {
         doSimpleAction(Action.DROP_ALL_DATA);
+        updateListenerCollection.dataDropped();
     }
 
     @Override
@@ -418,6 +442,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     @Override
     public synchronized void flush() {
         ifNotClosed(() -> doSimpleAction(Action.FLUSH));
+        updateListenerCollection.dataFlushed();
     }
 
     private void removeUnusedConnections() {
@@ -460,6 +485,11 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     @Override
     public DataInterface<T> getCoreDataInterface() {
         return this;
+    }
+
+    @Override
+    public void registerUpdateListener(UpdateListener<T> updateListener) {
+        updateListenerCollection.registerUpdateListener(updateListener);
     }
 
     void doAction(Action action, Connection connection) throws IOException {
