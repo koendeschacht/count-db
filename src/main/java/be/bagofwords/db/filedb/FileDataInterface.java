@@ -48,8 +48,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     private static final String META_FILE = "META_FILE";
     private static final String LOCK_FILE = "LOCK";
 
-    private static final int LONG_SIZE = 8;
-
     private final MemoryManager memoryManager;
     private final File directory;
     private List<FileBucket> fileBuckets;

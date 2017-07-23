@@ -46,7 +46,7 @@ public class ListCombinator<T> implements Combinator<List<KeyValue<T>>> {
             result.add(first.get(ind1));
             ind1++;
         }
-        while (ind2 < first.size()) {
+        while (ind2 < second.size()) {
             result.add(second.get(ind2));
             ind2++;
         }

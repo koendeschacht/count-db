@@ -31,6 +31,7 @@ public class TestDataInterfaceIndexOpenClose extends BaseTestDataInterface {
     @Test
     public void testOpenClose() {
         DataInterface<String> baseInterface = dataInterfaceFactory.dataInterface("testIndexed", String.class).caching(type).create();
+        baseInterface.dropAllData();
         MultiDataInterfaceIndex<String> indexedInterface = dataInterfaceFactory.multiIndex(baseInterface, "tokens", tokenizer);
         baseInterface.write(1, "This is a test");
         baseInterface.write(2, "Negative example");

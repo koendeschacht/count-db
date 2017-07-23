@@ -1,10 +1,11 @@
 package be.bagofwords.db.methods;
 
-import be.bagofwords.logging.Log;
-
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class DataStream {
+
+    private static final String NULL_VALUE = "xxx_NULL";
 
     public byte[] buffer;
     public int position;
@@ -75,6 +76,7 @@ public class DataStream {
         buffer[position + 1] = (byte) ((value >>> 16));
         buffer[position + 2] = (byte) ((value >>> 8));
         buffer[position + 3] = (byte) ((value));
+        position += 4;
     }
 
     public void writeInt(int value, int position) {
@@ -111,11 +113,7 @@ public class DataStream {
 
     public void writeBytes(byte[] bytes) {
         ensureSize(bytes.length);
-        try {
-            System.arraycopy(bytes, 0, buffer, position, bytes.length);
-        } catch (ArrayIndexOutOfBoundsException exp) {
-            Log.i("huh?");
-        }
+        System.arraycopy(bytes, 0, buffer, position, bytes.length);
         position += bytes.length;
     }
 
@@ -124,6 +122,37 @@ public class DataStream {
         System.arraycopy(buffer, position, result, 0, size);
         position += size;
         return result;
+    }
+
+    public void writeString(String value) {
+        writeString(value, true);
+    }
+
+    public void writeString(String value, boolean storeLength) {
+        if (value == null) {
+            value = NULL_VALUE;
+        } else if (value.equals(NULL_VALUE)) {
+            throw new RuntimeException("Sorry value " + NULL_VALUE + " is a reserved value");
+        }
+        byte[] bytes = value.getBytes(StandardCharsets.UTF_8);
+        if (storeLength) {
+            writeInt(bytes.length);
+        }
+        writeBytes(bytes);
+    }
+
+    public String readString() {
+        int length = readInt();
+        return readString(length);
+    }
+
+    public String readString(int length) {
+        byte[] bytes = readBytes(length);
+        String value = new String(bytes, StandardCharsets.UTF_8);
+        if (value.equals(NULL_VALUE)) {
+            value = null;
+        }
+        return value;
     }
 
     public byte[] getNonEmptyBytes() {
@@ -135,6 +164,7 @@ public class DataStream {
     }
 
     public void skip(int size) {
+        ensureSize(size);
         position += size;
     }
 }
