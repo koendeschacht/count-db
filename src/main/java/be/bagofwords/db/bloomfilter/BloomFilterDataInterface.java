@@ -34,7 +34,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
             writeCountOfSavedFilter = -Long.MAX_VALUE;
             actualWriteCount = writeCountOfSavedFilter + 1;
         }
-        taskScheduler.schedulePeriodicJob(() -> ifNotClosed(this::writeBloomFilterToDiskIfNecessary), 1000);
+        asyncJobService.schedulePeriodicJob(() -> ifNotClosed(this::writeBloomFilterToDiskIfNecessary), 1000);
     }
 
     @Override

@@ -47,7 +47,7 @@ public class CachedDataInterface<T extends Object> extends LayeredDataInterface<
         }
         this.initializeCachesThread = new InitializeCachesThread(baseInterface);
         this.initializeCachesThread.start();
-        taskScheduler.schedulePeriodicTask(() -> ifNotClosed(this::flushWriteBuffer), TIME_BETWEEN_FLUSHES_WRITE_BUFFER);
+        asyncJobService.schedulePeriodicJob(() -> ifNotClosed(this::flushWriteBuffer), TIME_BETWEEN_FLUSHES_WRITE_BUFFER);
         timeOfLastFlushOfWriteBuffer = System.currentTimeMillis();
     }
 

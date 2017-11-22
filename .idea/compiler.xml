@@ -22,7 +22,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
+        <processorPath>
           <entry name="$PROJECT_DIR$/../remote-exec/target/remote-exec-master-SNAPSHOT.jar" />
         </processorPath>
         <module name="count-db" />
