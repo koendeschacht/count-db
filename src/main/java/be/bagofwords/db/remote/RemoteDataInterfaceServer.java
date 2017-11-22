@@ -50,10 +50,12 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
     private final List<DataInterface> createdInterfaces;
     private final Object createNewInterfaceLock = new Object();
     private final MemoryManager memoryManager;
+    private final RemoteObjectService remoteObjectService;
 
     public RemoteDataInterfaceServer(ApplicationContext context) {
         this.dataInterfaceFactory = context.getBean(DataInterfaceFactory.class);
         this.memoryManager = context.getBean(MemoryManager.class);
+        this.remoteObjectService = context.getBean(RemoteObjectService.class);
         this.createdInterfaces = new ArrayList<>();
     }
 
@@ -93,10 +95,10 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
             String interfaceName = connection.readString();
             boolean isTemporary = connection.readBoolean();
             Class objectClass = readClass();
-            PackedRemoteObject packedRemoteExec = connection.readValue(PackedRemoteObject.class);
-            Combinator combinator = (Combinator) RemoteObjectUtil.loadObject(packedRemoteExec);
-            packedRemoteExec = connection.readValue(PackedRemoteObject.class);
-            ObjectSerializer objectSerializer = (ObjectSerializer) RemoteObjectUtil.loadObject(packedRemoteExec);
+            PackedRemoteObject packedRemoteObject = connection.readValue(PackedRemoteObject.class);
+            Combinator combinator = (Combinator) remoteObjectService.loadObject(packedRemoteObject);
+            packedRemoteObject = connection.readValue(PackedRemoteObject.class);
+            ObjectSerializer objectSerializer = (ObjectSerializer) remoteObjectService.loadObject(packedRemoteObject);
             synchronized (createNewInterfaceLock) {
                 dataInterface = findInterface(interfaceName);
                 if (dataInterface != null) {

@@ -1,6 +1,7 @@
 package be.bagofwords.db;
 
 import be.bagofwords.application.MinimalApplicationDependencies;
+import be.bagofwords.db.combinator.OverWriteCombinator;
 import be.bagofwords.db.methods.LongObjectSerializer;
 import be.bagofwords.web.SocketServer;
 import be.bagofwords.db.combinator.LongCombinator;
@@ -22,6 +23,8 @@ import java.util.List;
  */
 public class BaseTestDataInterface {
 
+    private static long count = System.currentTimeMillis();
+
     @Parameterized.Parameters(name = "{0} {1}")
     public static List<Object[]> getManagers() throws IOException {
         List<Object[]> result = new ArrayList<>();
@@ -31,8 +34,6 @@ public class BaseTestDataInterface {
         backendTypes.add(DatabaseBackendType.MEMORY);
         backendTypes.add(DatabaseBackendType.REMOTE);
         backendTypes.add(DatabaseBackendType.FILE);
-        // backendTypes.add(DatabaseBackendType.SPEED);
-        // backendTypes.add(DatabaseBackendType.NEW_FILE);
         //        backendTypes.add(DatabaseBackendType.LMDB); --> too slow
         //        backendTypes.add(DatabaseBackendType.KYOTO);
         //        backendTypes.add(DatabaseBackendType.ROCKSDB);
@@ -77,7 +78,9 @@ public class BaseTestDataInterface {
 
     @After
     public void closeFactory() {
-        dataInterfaceFactory.closeAllInterfaces();
+        if (dataInterfaceFactory != null) {
+            dataInterfaceFactory.closeAllInterfaces();
+        }
         context.terminate();
     }
 
@@ -86,7 +89,11 @@ public class BaseTestDataInterface {
     }
 
     protected DataInterface<Long> createCountDataInterface(String name) {
-        return dataInterfaceFactory.dataInterface(name + "_" + System.currentTimeMillis(), Long.class).combinator(new LongCombinator()).serializer(new LongObjectSerializer()).caching(type).create();
+        return dataInterfaceFactory.dataInterface(name + "_" + (count++), Long.class).combinator(new LongCombinator()).serializer(new LongObjectSerializer()).caching(type).create();
+    }
+
+    protected <T> DataInterfaceConfig<T> createDataInterface(String name, Class<T> _class) {
+        return dataInterfaceFactory.dataInterface(name + "_" + (count++), _class);
     }
 
 }

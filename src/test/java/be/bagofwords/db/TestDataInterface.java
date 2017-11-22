@@ -30,7 +30,7 @@ public class TestDataInterface extends BaseTestDataInterface {
     @Test
     public void sanityCheck() throws Exception {
         Random random = new Random(1204);
-        BaseDataInterface<TestObject> dataInterface = dataInterfaceFactory.dataInterface("sanityCheck", TestObject.class).caching(type).create();
+        BaseDataInterface<TestObject> dataInterface = createDataInterface("sanityCheck", TestObject.class).caching(type).create();
         dataInterface.dropAllData();
         writeRandomObjects(dataInterface, 200, random);
         TestObject randomObj = createRandomObject(random);
@@ -45,7 +45,7 @@ public class TestDataInterface extends BaseTestDataInterface {
     public void testDropData() throws Exception {
         Random random = new Random();
         TestObject randomObj = createRandomObject(random);
-        BaseDataInterface<TestObject> dataInterface = dataInterfaceFactory.dataInterface("testDropData", TestObject.class).caching(type).create();
+        BaseDataInterface<TestObject> dataInterface = createDataInterface("testDropData", TestObject.class).caching(type).create();
         dataInterface.write("obj", randomObj);
         dataInterface.flush();
         TestObject readObj = dataInterface.read("obj");
@@ -57,7 +57,7 @@ public class TestDataInterface extends BaseTestDataInterface {
     @Test
     public void testIterator() throws Exception {
         int numOfExamples = 100;
-        BaseDataInterface<Integer> dataInterface = dataInterfaceFactory.dataInterface("testIterator", Integer.class).caching(type).create();
+        BaseDataInterface<Integer> dataInterface = createDataInterface("testIterator", Integer.class).caching(type).create();
         dataInterface.dropAllData();
         for (int i = 0; i < numOfExamples; i++) {
             dataInterface.write(i, i);
@@ -85,7 +85,7 @@ public class TestDataInterface extends BaseTestDataInterface {
     @Test
     public void testRandomValues() throws Exception {
         long numOfExamples = 200;
-        BaseDataInterface<TestObject> dataInterface = dataInterfaceFactory.dataInterface("testRandomValues", TestObject.class).caching(type).create();
+        BaseDataInterface<TestObject> dataInterface = createDataInterface("testRandomValues", TestObject.class).caching(type).create();
         dataInterface.dropAllData();
         for (int i = 0; i < numOfExamples; i++) {
             dataInterface.write(Integer.toString(i), new TestObject(i, Integer.toString(i)));
@@ -273,7 +273,7 @@ public class TestDataInterface extends BaseTestDataInterface {
 
     @Test
     public void testNullString() {
-        BaseDataInterface<String> db = dataInterfaceFactory.dataInterface("testNullString", String.class).caching(type).create();
+        BaseDataInterface<String> db = createDataInterface("testNullString", String.class).caching(type).create();
         db.dropAllData();
         db.write("test", "null");
         db.flush();
@@ -288,7 +288,7 @@ public class TestDataInterface extends BaseTestDataInterface {
 
     @Test
     public void testMightContain() {
-        BaseDataInterface<String> db = dataInterfaceFactory.dataInterface("testMightContain", String.class).caching(type).create();
+        BaseDataInterface<String> db = createDataInterface("testMightContain", String.class).caching(type).create();
         db.write("doescontain", "hoi");
         db.write("someothervalue1", "daag");
         db.flush();
@@ -299,7 +299,7 @@ public class TestDataInterface extends BaseTestDataInterface {
 
     @Test
     public void testAccents() {
-        BaseDataInterface<String> dataInterface = dataInterfaceFactory.dataInterface("testAccents", String.class).caching(type).create();
+        BaseDataInterface<String> dataInterface = createDataInterface("testAccents", String.class).caching(type).create();
         String valuesWithAccents = "mé$àç7€";
         String keyWithAccents = "à§péçïàĺķĕƛ";
         dataInterface.write("key", valuesWithAccents);
