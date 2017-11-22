@@ -2,10 +2,10 @@ package be.bagofwords.db.remote;
 
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
-import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.combinator.Combinator;
-import be.bagofwords.exec.PackedRemoteExec;
-import be.bagofwords.exec.RemoteExecUtil;
+import be.bagofwords.db.methods.KeyFilter;
+import be.bagofwords.exec.PackedRemoteObject;
+import be.bagofwords.exec.RemoteObjectUtil;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
@@ -186,16 +186,16 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
         }
 
         private void handleIteratorWithKeyFilter() throws IOException {
-            PackedRemoteExec packedRemoteExec = connection.readValue(PackedRemoteExec.class);
-            KeyFilter filter = (KeyFilter) RemoteExecUtil.loadRemoteRunner(packedRemoteExec);
+            PackedRemoteObject packedRemoteObject = connection.readValue(PackedRemoteObject.class);
+            KeyFilter filter = (KeyFilter) RemoteObjectUtil.loadObject(packedRemoteObject);
             CloseableIterator<KeyValue> iterator = dataInterface.iterator(filter);
             writeKeyValuesInBatches(iterator);
             iterator.close();
         }
 
         private void handleValuesIteratorWithKeyFilter() throws IOException {
-            PackedRemoteExec packedRemoteExec = connection.readValue(PackedRemoteExec.class);
-            KeyFilter filter = (KeyFilter) RemoteExecUtil.loadRemoteRunner(packedRemoteExec);
+            PackedRemoteObject packedRemoteObject = connection.readValue(PackedRemoteObject.class);
+            KeyFilter filter = (KeyFilter) RemoteObjectUtil.loadObject(packedRemoteObject);
             CloseableIterator iterator = dataInterface.valueIterator(filter);
             writeValuesInBatches(iterator);
             iterator.close();

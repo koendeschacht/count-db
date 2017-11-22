@@ -1,13 +1,13 @@
 package be.bagofwords.db.filedb;
 
-import be.bagofwords.application.TaskSchedulerService;
 import be.bagofwords.db.CoreDataInterface;
-import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.impl.DBUtils;
+import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
+import be.bagofwords.jobs.AsyncJobService;
 import be.bagofwords.logging.Log;
 import be.bagofwords.memory.MemoryGobbler;
 import be.bagofwords.memory.MemoryManager;
@@ -23,7 +23,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class FileDataInterface<T extends Object> extends CoreDataInterface<T> implements MemoryGobbler {
 
@@ -56,7 +55,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     private boolean closeWasRequested;
 
-    public FileDataInterface(MemoryManager memoryManager, Combinator<T> combinator, Class<T> objectClass, String directory, String name, boolean isTemporaryDataInterface, TaskSchedulerService taskScheduler) {
+    public FileDataInterface(MemoryManager memoryManager, Combinator<T> combinator, Class<T> objectClass, String directory, String name, boolean isTemporaryDataInterface, AsyncJobService asyncJobService) {
         super(name, objectClass, combinator, isTemporaryDataInterface);
         this.directory = new File(directory, name);
         this.sizeOfValues = SerializationUtils.getWidth(objectClass);
@@ -68,7 +67,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         initializeFromMetaFile();
         writeLockFile(randomId);
         currentSizeOfCachedFileContents = 0;
-        taskScheduler.schedulePeriodicTask(() -> ifNotClosed(() -> {
+        asyncJobService.schedulePeriodicJob(() -> ifNotClosed(() -> {
             rewriteAllFiles(false);
             checkLock();
         }), 1000); //rewrite files that are too large

@@ -109,11 +109,6 @@
             <version>master-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>com.github.koendeschacht</groupId>
-            <artifactId>remote-exec</artifactId>
-            <version>master-SNAPSHOT</version>
-        </dependency>
-        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>19.0</version>

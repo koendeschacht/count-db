@@ -1,13 +1,13 @@
 package be.bagofwords.db.remote;
 
-import be.bagofwords.application.TaskSchedulerService;
 import be.bagofwords.db.DataInterface;
-import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.impl.BaseDataInterface;
+import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer.Action;
-import be.bagofwords.exec.RemoteExecConfig;
+import be.bagofwords.exec.RemoteObjectConfig;
 import be.bagofwords.iterator.CloseableIterator;
+import be.bagofwords.jobs.AsyncJobService;
 import be.bagofwords.logging.Log;
 import be.bagofwords.util.ExecutorServiceFactory;
 import be.bagofwords.util.KeyValue;
@@ -34,7 +34,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     private final List<Connection> largeReadBufferConnections;
     private final ExecutorService executorService;
 
-    public RemoteDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, String host, int port, boolean isTemporaryDataInterface, TaskSchedulerService taskScheduler) {
+    public RemoteDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, String host, int port, boolean isTemporaryDataInterface, AsyncJobService asyncJobService) {
         super(name, objectClass, combinator, isTemporaryDataInterface);
         this.host = host;
         this.port = port;
@@ -42,7 +42,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
         this.largeReadBufferConnections = new ArrayList<>();
         this.largeWriteBufferConnections = new ArrayList<>();
         executorService = ExecutorServiceFactory.createExecutorService("remote_data_interface");
-        taskScheduler.schedulePeriodicTask(() -> ifNotClosed(this::removeUnusedConnections), 1000);
+        asyncJobService.schedulePeriodicJob(() -> ifNotClosed(this::removeUnusedConnections), 1000);
     }
 
     private Connection selectSmallBufferConnection() throws IOException {
@@ -234,10 +234,10 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     public CloseableIterator<KeyValue<T>> iterator(KeyFilter keyFilter) {
         Connection connection = null;
         try {
-            RemoteExecConfig execConfig = RemoteExecConfig.create(keyFilter).add(keyFilter.getClass());
+            RemoteObjectConfig remoteObjectConfig = RemoteObjectConfig.create(keyFilter).add(keyFilter.getClass());
             connection = selectLargeReadBufferConnection();
             doAction(Action.ITERATOR_WITH_KEY_FILTER, connection);
-            connection.writeValue(execConfig.pack());
+            connection.writeValue(remoteObjectConfig.pack());
             connection.flush();
             return createKeyValueIterator(connection);
         } catch (Exception e) {
@@ -250,10 +250,10 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     public CloseableIterator<T> valueIterator(KeyFilter keyFilter) {
         Connection connection = null;
         try {
-            RemoteExecConfig execConfig = RemoteExecConfig.create(keyFilter).add(keyFilter.getClass());
+            RemoteObjectConfig remoteObjectConfig = RemoteObjectConfig.create(keyFilter).add(keyFilter.getClass());
             connection = selectLargeReadBufferConnection();
             doAction(Action.VALUES_ITERATOR_WITH_KEY_FILTER, connection);
-            connection.writeValue(execConfig.pack());
+            connection.writeValue(remoteObjectConfig.pack());
             connection.flush();
             return createValueIterator(connection);
         } catch (Exception e) {
