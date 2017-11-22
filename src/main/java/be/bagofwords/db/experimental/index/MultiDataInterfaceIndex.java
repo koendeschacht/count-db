@@ -14,7 +14,6 @@ import be.bagofwords.util.MappedLists;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -56,13 +55,6 @@ public class MultiDataInterfaceIndex<T> extends BaseDataInterfaceIndex<T> {
     }
 
     public Stream<KeyValue<T>> streamValues() {
-        return streamValues(false);
-    }
-
-    public Stream<KeyValue<T>> streamValues(boolean desc) {
-        if (desc) {
-            throw new RuntimeException("Not yet implemented");
-        }
         return indexedDataInterface.streamValues().flatMap(Collection::stream)
                 .distinct();
     }

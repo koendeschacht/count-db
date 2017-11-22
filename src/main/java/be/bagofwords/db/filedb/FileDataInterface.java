@@ -481,11 +481,6 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         updateListenerCollection.dataDropped();
     }
 
-    @Override
-    public long lastFlush() {
-        return timeOfLastWrite;
-    }
-
     private void updateShouldBeCleanedInfo() {
         for (FileBucket fileBucket : fileBuckets) {
             fileBucket.lockWrite();

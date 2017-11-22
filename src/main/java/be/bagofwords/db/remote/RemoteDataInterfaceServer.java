@@ -157,8 +157,6 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
                     handleExactSize();
                 } else if (action == Action.APPROXIMATE_SIZE) {
                     handleApproximateSize();
-                } else if (action == Action.LAST_FLUSH) {
-                    handleLastFlush();
                 } else if (action == Action.READ_VALUE) {
                     handleReadValue();
                 } else if (action == Action.WRITE_VALUE) {
@@ -287,12 +285,6 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
             long appSize = dataInterface.apprSize();
             connection.writeLong(LONG_OK);
             connection.writeLong(appSize);
-        }
-
-        private void handleLastFlush() throws IOException {
-            long lastFlush = dataInterface.lastFlush();
-            connection.writeLong(LONG_OK);
-            connection.writeLong(lastFlush);
         }
 
         private void handleExactSize() throws IOException {
@@ -499,7 +491,7 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
     public enum Action {
         READ_VALUE, WRITE_VALUE, ITERATOR_WITH_KEY_ITERATOR, READ_KEYS, WRITE_VALUES, DROP_ALL_DATA, CLOSE_CONNECTION, FLUSH,
         ITERATOR, READ_CACHED_VALUES, APPROXIMATE_SIZE, MIGHT_CONTAIN, EXACT_SIZE, OPTMIZE_FOR_READING,
-        VALUES_ITERATOR_WITH_KEY_FILTER, ITERATOR_WITH_KEY_FILTER, VALUES_ITERATOR_WITH_VALUE_FILTER, ITERATOR_WITH_VALUE_FILTER, LAST_FLUSH
+        VALUES_ITERATOR_WITH_KEY_FILTER, ITERATOR_WITH_KEY_FILTER, VALUES_ITERATOR_WITH_VALUE_FILTER, ITERATOR_WITH_VALUE_FILTER
     }
 
     public enum ConnectionType {

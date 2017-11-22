@@ -2,11 +2,9 @@ package be.bagofwords.db.experimental.index;
 
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.DataInterfaceFactory;
-import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.data.KeyValueSerializer;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.methods.KeyFilter;
-import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.StreamUtils;
 
@@ -43,13 +41,6 @@ public class UniqueDataInterfaceIndex<T> extends BaseDataInterfaceIndex<T> {
     }
 
     public Stream<KeyValue<T>> streamValues() {
-        return streamValues(false);
-    }
-
-    public Stream<KeyValue<T>> streamValues(boolean desc) {
-        if (desc) {
-            throw new RuntimeException("Not yet implemented");
-        }
         return indexedDataInterface.streamValues();
     }
 

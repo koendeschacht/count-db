@@ -413,11 +413,6 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
         updateListenerCollection.dataDropped();
     }
 
-    @Override
-    public long lastFlush() {
-        return readLong(Action.LAST_FLUSH);
-    }
-
     private long readLong(Action action) {
         Connection connection = null;
         try {

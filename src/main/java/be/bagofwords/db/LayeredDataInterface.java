@@ -39,11 +39,6 @@ public abstract class LayeredDataInterface<T> extends BaseDataInterface<T> {
     }
 
     @Override
-    public long lastFlush() {
-        return baseInterface.lastFlush();
-    }
-
-    @Override
     public void flush() {
         baseInterface.flush();
     }

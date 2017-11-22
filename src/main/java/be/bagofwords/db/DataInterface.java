@@ -300,12 +300,6 @@ public interface DataInterface<T extends Object> extends DataIterable<KeyValue<T
 
     void ifNotClosed(Runnable action);
 
-    /**
-     * Returns a number of the last flush, monotonically increasing
-     */
-
-    long lastFlush();
-
     DataInterface<T> getCoreDataInterface();
 
     ObjectSerializer<T> getObjectSerializer();
