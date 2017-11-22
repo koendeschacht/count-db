@@ -23,7 +23,7 @@ public class BloomFilterDataInterface<T extends Object> extends LayeredDataInter
     private long actualWriteCount;
     private long writeCountOfSavedFilter;
 
-    public BloomFilterDataInterface(BaseDataInterface<T> baseInterface, BaseDataInterface<LongBloomFilterWithCheckSum> bloomFilterDataInterface, AsyncJobService taskScheduler) {
+    public BloomFilterDataInterface(BaseDataInterface<T> baseInterface, BaseDataInterface<LongBloomFilterWithCheckSum> bloomFilterDataInterface, AsyncJobService asyncJobService) {
         super(baseInterface);
         this.bloomFilterDataInterface = bloomFilterDataInterface;
         this.modifyBloomFilterLock = new ReentrantLock();

@@ -7,6 +7,7 @@ import be.bagofwords.db.methods.DataStream;
 import be.bagofwords.db.methods.DataStreamUtils;
 import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.methods.ObjectSerializer;
+import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
@@ -64,7 +65,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
 
     private boolean closeWasRequested;
 
-    public FileDataInterface(MemoryManager memoryManager, Combinator<T> combinator, Class<T> objectClass, String directory, String name, boolean isTemporaryDataInterface, AsyncJobService taskScheduler, ObjectSerializer<T> objectSerializer) {
+    public FileDataInterface(MemoryManager memoryManager, Combinator<T> combinator, Class<T> objectClass, String directory, String name, boolean isTemporaryDataInterface, AsyncJobService asyncJobService, ObjectSerializer<T> objectSerializer) {
         super(name, objectClass, combinator, objectSerializer, isTemporaryDataInterface);
         this.directory = new File(directory, name);
         this.randomId = new Random().nextLong();
@@ -75,7 +76,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         initializeFromMetaFile();
         writeLockFile(randomId);
         currentSizeOfCachedFileContents = 0;
-        taskScheduler.schedulePeriodicJob(() -> ifNotClosed(() -> {
+        asyncJobService.schedulePeriodicJob(() -> ifNotClosed(() -> {
             rewriteAllFiles(false);
             checkLock();
         }), 1000); //rewrite files that are too large

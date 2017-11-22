@@ -39,7 +39,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     private final ExecutorService executorService;
     private final UpdateListenerCollection<T> updateListenerCollection;
 
-    public RemoteDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer, String host, int port, boolean isTemporaryDataInterface, AsyncJobService taskScheduler) {
+    public RemoteDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer, String host, int port, boolean isTemporaryDataInterface, AsyncJobService asyncJobService) {
         super(name, objectClass, combinator, objectSerializer, isTemporaryDataInterface);
         this.host = host;
         this.port = port;
@@ -47,7 +47,7 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
         this.largeReadBufferConnections = new ArrayList<>();
         this.largeWriteBufferConnections = new ArrayList<>();
         executorService = ExecutorServiceFactory.createExecutorService("remote_data_interface");
-        taskScheduler.schedulePeriodicJob(() -> ifNotClosed(this::removeUnusedConnections), 1000);
+        asyncJobService.schedulePeriodicJob(() -> ifNotClosed(this::removeUnusedConnections), 1000);
         updateListenerCollection = new UpdateListenerCollection<>();
     }
 
@@ -261,10 +261,10 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     public CloseableIterator<KeyValue<T>> iterator(KeyFilter keyFilter) {
         Connection connection = null;
         try {
-            RemoteObjectConfig execConfig = RemoteObjectConfig.create(keyFilter).add(keyFilter.getClass());
+            RemoteObjectConfig remoteObjectConfig = RemoteObjectConfig.create(keyFilter).add(keyFilter.getClass());
             connection = selectLargeReadBufferConnection();
             doAction(Action.ITERATOR_WITH_KEY_FILTER, connection);
-            connection.writeValue(execConfig.pack());
+            connection.writeValue(remoteObjectConfig.pack());
             connection.flush();
             return createKeyValueIterator(connection);
         } catch (Exception e) {
@@ -277,10 +277,10 @@ public class RemoteDataInterface<T> extends BaseDataInterface<T> {
     public CloseableIterator<T> valueIterator(KeyFilter keyFilter) {
         Connection connection = null;
         try {
-            RemoteObjectConfig execConfig = RemoteObjectConfig.create(keyFilter).add(keyFilter.getClass());
+            RemoteObjectConfig remoteObjectConfig = RemoteObjectConfig.create(keyFilter).add(keyFilter.getClass());
             connection = selectLargeReadBufferConnection();
             doAction(Action.VALUES_ITERATOR_WITH_KEY_FILTER, connection);
-            connection.writeValue(execConfig.pack());
+            connection.writeValue(remoteObjectConfig.pack());
             connection.flush();
             return createValueIterator(connection);
         } catch (Exception e) {

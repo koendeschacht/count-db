@@ -9,6 +9,9 @@ import be.bagofwords.db.methods.KeyFilter;
 import be.bagofwords.db.methods.ObjectSerializer;
 import be.bagofwords.exec.PackedRemoteObject;
 import be.bagofwords.exec.RemoteObjectUtil;
+import be.bagofwords.db.methods.KeyFilter;
+import be.bagofwords.exec.PackedRemoteObject;
+import be.bagofwords.exec.RemoteObjectUtil;
 import be.bagofwords.iterator.CloseableIterator;
 import be.bagofwords.iterator.IterableUtils;
 import be.bagofwords.iterator.SimpleIterator;
@@ -198,32 +201,32 @@ public class RemoteDataInterfaceServer implements SocketRequestHandlerFactory {
         }
 
         private void handleIteratorWithKeyFilter() throws IOException {
-            PackedRemoteObject packedRemoteExec = connection.readValue(PackedRemoteObject.class);
-            KeyFilter filter = (KeyFilter) RemoteObjectUtil.loadObject(packedRemoteExec);
+            PackedRemoteObject packedRemoteObject = connection.readValue(PackedRemoteObject.class);
+            KeyFilter filter = (KeyFilter) RemoteObjectUtil.loadObject(packedRemoteObject);
             CloseableIterator<KeyValue> iterator = dataInterface.iterator(filter);
             writeKeyValuesInBatches(iterator);
             iterator.close();
         }
 
         private void handleValuesIteratorWithKeyFilter() throws IOException {
-            PackedRemoteObject packedRemoteExec = connection.readValue(PackedRemoteObject.class);
-            KeyFilter filter = (KeyFilter) RemoteObjectUtil.loadObject(packedRemoteExec);
+            PackedRemoteObject packedRemoteObject = connection.readValue(PackedRemoteObject.class);
+            KeyFilter filter = (KeyFilter) RemoteObjectUtil.loadObject(packedRemoteObject);
             CloseableIterator iterator = dataInterface.valueIterator(filter);
             writeValuesInBatches(iterator);
             iterator.close();
         }
 
         private void handleIteratorWithValueFilter() throws IOException {
-            PackedRemoteObject packedRemoteExec = connection.readValue(PackedRemoteObject.class);
-            Predicate filter = (Predicate) RemoteObjectUtil.loadObject(packedRemoteExec);
+            PackedRemoteObject packedRemoteObject = connection.readValue(PackedRemoteObject.class);
+            Predicate filter = (Predicate) RemoteObjectUtil.loadObject(packedRemoteObject);
             CloseableIterator<KeyValue> iterator = dataInterface.iterator(filter);
             writeKeyValuesInBatches(iterator);
             iterator.close();
         }
 
         private void handleValuesIteratorWithValueFilter() throws IOException {
-            PackedRemoteObject packedRemoteExec = connection.readValue(PackedRemoteObject.class);
-            Predicate filter = (Predicate) RemoteObjectUtil.loadObject(packedRemoteExec);
+            PackedRemoteObject packedRemoteObject = connection.readValue(PackedRemoteObject.class);
+            Predicate filter = (Predicate) RemoteObjectUtil.loadObject(packedRemoteObject);
             CloseableIterator iterator = dataInterface.valueIterator(filter);
             writeValuesInBatches(iterator);
             iterator.close();
