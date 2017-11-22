@@ -13,7 +13,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="count-db" />
     <orderEntry type="library" name="Maven: com.github.koendeschacht:bow-utils:master-SNAPSHOT" level="project" />
-    <orderEntry type="library" name="Maven: it.unimi.dsi:fastutil:7.0.13" level="project" />
     <orderEntry type="library" name="Maven: com.github.koendeschacht:bow-utils-extra:master-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.sparkjava:spark-core:2.5.5" level="project" />
     <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-server:9.3.6.v20151106" level="project" />
@@ -30,7 +29,9 @@
     <orderEntry type="library" name="Maven: org.eclipse.jetty.websocket:websocket-client:9.3.6.v20151106" level="project" />
     <orderEntry type="library" name="Maven: org.eclipse.jetty.websocket:websocket-servlet:9.3.6.v20151106" level="project" />
     <orderEntry type="library" name="Maven: org.eclipse.jetty.websocket:websocket-api:9.3.6.v20151106" level="project" />
-    <orderEntry type="library" name="Maven: org.java-websocket:Java-WebSocket:1.3.0" level="project" />
+    <orderEntry type="library" name="Maven: com.github.koendeschacht:flexible-slf4j:master-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Maven: org.java-websocket:Java-WebSocket:1.3.4" level="project" />
+    <orderEntry type="library" name="Maven: it.unimi.dsi:fastutil:8.1.0" level="project" />
     <orderEntry type="library" name="Maven: com.github.koendeschacht:mini-dep-i:master-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.github.koendeschacht:remote-exec:master-SNAPSHOT" level="project" />
     <orderEntry type="module-library">
