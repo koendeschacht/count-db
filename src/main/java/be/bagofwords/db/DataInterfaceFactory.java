@@ -1,11 +1,13 @@
 package be.bagofwords.db;
 
 import be.bagofwords.db.combinator.Combinator;
+import be.bagofwords.db.combinator.OverWriteCombinator;
 import be.bagofwords.db.experimental.index.MultiDataIndexer;
 import be.bagofwords.db.experimental.index.MultiDataInterfaceIndex;
 import be.bagofwords.db.experimental.index.UniqueDataIndexer;
 import be.bagofwords.db.experimental.index.UniqueDataInterfaceIndex;
 import be.bagofwords.db.impl.BaseDataInterface;
+import be.bagofwords.db.methods.JsonObjectSerializer;
 import be.bagofwords.db.methods.ObjectSerializer;
 
 import java.lang.ref.ReferenceQueue;
@@ -25,6 +27,10 @@ public interface DataInterfaceFactory {
     DataInterface<Long> createTmpCountDataInterface(String name);
 
     DataInterface<Long> createInMemoryCountDataInterface(String name);
+
+    default <T extends Object> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass) {
+        return createDataInterface(name, objectClass, new OverWriteCombinator<>(), new JsonObjectSerializer<>(objectClass));
+    }
 
     <T extends Object> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer);
 

@@ -19,12 +19,12 @@ import java.util.Date;
 public class ExampleUsage {
 
     public static void main(String[] args) throws ParseException {
-        // Create data interface factory that stores all data in /tmp/myData
+        // Create a data interface factory that stores all data in /tmp/myData
         DataInterfaceFactory dataInterfaceFactory = EmbeddedDBContextFactory.createDataInterfaceFactory("/tmp/myData");
 
         // Create data interfaces
         DataInterface<Long> myLogDataInterface = dataInterfaceFactory.createCountDataInterface("myLoginCounts");
-        BaseDataInterface<UserObject> myUserDataInterface = dataInterfaceFactory.createDataInterface("myUsers", UserObject.class, new OverWriteCombinator<>(), new JsonObjectSerializer<>(UserObject.class));
+        BaseDataInterface<UserObject> myUserDataInterface = dataInterfaceFactory.createDataInterface("myUsers", UserObject.class);
 
         // Write data
         long userId = 12939;

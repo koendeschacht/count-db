@@ -33,12 +33,12 @@ Create a data interface and use it:
 
 ``` java
 
-// Create data interface factory that stores all data in /tmp/myData
+// Create a data interface factory that stores all data in /tmp/myData
 DataInterfaceFactory dataInterfaceFactory = EmbeddedDBContextFactory.createDataInterfaceFactory("/tmp/myData");
 
 // Create data interfaces
 DataInterface<Long> myLogDataInterface = dataInterfaceFactory.createCountDataInterface("myLoginCounts");
-DataInterface<UserObject> myUserDataInterface = dataInterfaceFactory.createDataInterface("myUsers", UserObject.class, new OverWriteCombinator<>());
+BaseDataInterface<UserObject> myUserDataInterface = dataInterfaceFactory.createDataInterface("myUsers", UserObject.class);
 
 // Write data
 long userId = 12939;
@@ -57,16 +57,18 @@ System.out.println("User " + user.getFirstName() + " " + user.getLastName() + " 
 // Iterate over all data
 CloseableIterator<KeyValue<UserObject>> iterator = myUserDataInterface.iterator();
 while (iterator.hasNext()) {
-KeyValue<UserObject> curr = iterator.next();
-UserObject currUser = curr.getValue();
-long currUserId = curr.getKey();
-System.out.println("User " + currUser.getFirstName() + " " + currUser.getLastName() + " with id " + currUserId);
+    KeyValue<UserObject> curr = iterator.next();
+    UserObject currUser = curr.getValue();
+    long currUserId = curr.getKey();
+    System.out.println("User " + currUser.getFirstName() + " " + currUser.getLastName() + " with id " + currUserId);
 }
 iterator.close();
 
 // Drop all data
 myLogDataInterface.dropAllData();
 myUserDataInterface.dropAllData();
+
+dataInterfaceFactory.terminate();
 
 ```
 

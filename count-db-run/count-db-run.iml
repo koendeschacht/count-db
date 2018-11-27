@@ -14,6 +14,7 @@
     <orderEntry type="library" name="Maven: it.unimi.dsi:fastutil:7.0.13" level="project" />
     <orderEntry type="module" module-name="count-db" />
     <orderEntry type="library" name="Maven: com.github.koendeschacht:bow-utils:master-8e8001e1ec-1" level="project" />
+    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.25" level="project" />
     <orderEntry type="library" name="Maven: com.github.koendeschacht:bow-utils-extra:master-2017.1.1-g2b0b2a5-32" level="project" />
     <orderEntry type="library" name="Maven: com.sparkjava:spark-core:2.5.5" level="project" />
     <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-server:9.3.6.v20151106" level="project" />
@@ -43,9 +44,6 @@
     <orderEntry type="library" name="Maven: org.deephacks.lmdbjni:lmdbjni-linux64:0.4.6" level="project" />
     <orderEntry type="library" name="Maven: org.deephacks.lmdbjni:lmdbjni:0.4.6" level="project" />
     <orderEntry type="library" name="Maven: org.xerial.snappy:snappy-java:1.1.2.6" level="project" />
-    <orderEntry type="library" name="Maven: org.slf4j:slf4j-log4j12:1.7.24" level="project" />
-    <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.24" level="project" />
-    <orderEntry type="library" name="Maven: log4j:log4j:1.2.17" level="project" />
     <orderEntry type="module-library">
       <library name="Maven: extraLibs:kyotocabinet:1.24">
         <CLASSES>

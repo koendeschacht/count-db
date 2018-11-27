@@ -165,12 +165,6 @@
             <scope>system</scope>
             <systemPath>${basedir}/lib/leveldb/leveldbjni-all-99-master-SNAPSHOT.jar</systemPath>
         </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.24</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
 </project>
