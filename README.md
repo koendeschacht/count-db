@@ -74,11 +74,3 @@ dataInterfaceFactory.terminate();
 
 For more details, see [ExampleUsage.java](https://github.com/koendeschacht/count-db/blob/master/src/main/java/be/bagofwords/main/ExampleUsage.java).
 
-### Optionally
-
-If you want to use the ``LevelDBDataInterfaceFactory``, you will need to have the snappy compression library installed on your system. For example on Ubunt 14.04 you need to run
-
-```
-sudo apt-get install libsnappy1
-```
-
