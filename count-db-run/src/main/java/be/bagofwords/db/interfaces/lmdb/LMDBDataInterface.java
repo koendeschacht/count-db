@@ -1,4 +1,4 @@
-package be.bagofwords.db.experimental.lmdb;
+package be.bagofwords.db.interfaces.lmdb;
 
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.combinator.Combinator;
@@ -10,7 +10,6 @@ import be.bagofwords.util.SerializationUtils;
 import org.fusesource.lmdbjni.*;
 
 import java.util.Arrays;
-import java.util.Iterator;
 
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/16/14.

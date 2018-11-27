@@ -1,4 +1,4 @@
-package be.bagofwords.db.experimental.rocksdb;
+package be.bagofwords.db.interfaces.rocksdb;
 
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.combinator.Combinator;
@@ -11,7 +11,6 @@ import org.apache.commons.io.FileUtils;
 import org.rocksdb.*;
 
 import java.io.File;
-import java.util.Iterator;
 
 /**
  * Created by Koen Deschacht (koendeschacht@gmail.com) on 9/17/14.

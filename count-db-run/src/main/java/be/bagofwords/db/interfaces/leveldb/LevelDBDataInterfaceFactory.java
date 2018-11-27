@@ -1,4 +1,4 @@
-package be.bagofwords.db.leveldb;
+package be.bagofwords.db.interfaces.leveldb;
 
 import be.bagofwords.db.DataInterface;
 import be.bagofwords.db.impl.BaseDataInterfaceFactory;

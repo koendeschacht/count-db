@@ -5,8 +5,11 @@ import be.bagofwords.application.status.perf.ThreadSampleMonitor;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.combinator.LongCombinator;
+import be.bagofwords.db.interfaces.rocksdb.RocksDBDataInterfaceFactory;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.impl.BaseDataInterface;
+import be.bagofwords.db.interfaces.kyoto.KyotoDataInterfaceFactory;
+import be.bagofwords.db.interfaces.leveldb.LevelDBDataInterfaceFactory;
 import be.bagofwords.logging.Log;
 import be.bagofwords.minidepi.ApplicationContext;
 import be.bagofwords.minidepi.ApplicationManager;
@@ -49,12 +52,11 @@ public class UniformDataTestsMain implements Runnable {
     public void run() {
         noException(() -> {
             prepareTmpDir(tmpDbDir);
-            // testWritingReading(new LevelDBDataInterfaceFactory(context), DatabaseCachingType.DIRECT);
-            // testWritingReading(new NewFileDataInterfaceFactory(context), DatabaseCachingType.CACHED_AND_BLOOM);
+            testWritingReading(new LevelDBDataInterfaceFactory(context), DatabaseCachingType.DIRECT);
             testWritingReading(new FileDataInterfaceFactory(context), DatabaseCachingType.CACHED_AND_BLOOM);
-            // testWritingReading(new KyotoDataInterfaceFactory(context), DatabaseCachingType.DIRECT);
-            // testWritingReading(new RocksDBDataInterfaceFactory(context, false), DatabaseCachingType.DIRECT);
-            // testWritingReading(new RocksDBDataInterfaceFactory(context, true), DatabaseCachingType.DIRECT);
+            testWritingReading(new KyotoDataInterfaceFactory(context), DatabaseCachingType.DIRECT);
+            testWritingReading(new RocksDBDataInterfaceFactory(context, false), DatabaseCachingType.DIRECT);
+            testWritingReading(new RocksDBDataInterfaceFactory(context, true), DatabaseCachingType.DIRECT);
         });
     }
 

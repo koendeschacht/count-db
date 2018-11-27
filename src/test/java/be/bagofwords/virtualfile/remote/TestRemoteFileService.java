@@ -14,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ public class TestRemoteFileService {
         VirtualFile dir = remoteFileService.getRootDirectory();
         VirtualFile file = dir.getFile("test1");
         OutputStream os1 = file.createOutputStream();
-        IOUtils.write("test", os1);
+        IOUtils.write("test", os1, StandardCharsets.UTF_8);
         os1.close();
         BufferedReader rdr = new BufferedReader(new InputStreamReader(file.createInputStream()));
         Assert.assertEquals("test", rdr.readLine());

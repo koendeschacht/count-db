@@ -48,8 +48,5 @@
     <orderEntry type="library" name="Maven: org.deephacks.lmdbjni:lmdbjni-linux64:0.4.6" level="project" />
     <orderEntry type="library" name="Maven: org.deephacks.lmdbjni:lmdbjni:0.4.6" level="project" />
     <orderEntry type="library" name="Maven: org.xerial.snappy:snappy-java:1.1.2.6" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: extraLibs:kyotocabinet:1.24" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: extraLibs:rocksdb:1.0" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: extraLibs:leveldbjni-all:99-master-SNAPSHOT" level="project" />
   </component>
 </module>

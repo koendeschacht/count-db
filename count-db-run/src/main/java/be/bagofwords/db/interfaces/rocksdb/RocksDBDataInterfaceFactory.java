@@ -1,4 +1,4 @@
-package be.bagofwords.db.experimental.rocksdb;
+package be.bagofwords.db.interfaces.rocksdb;
 
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.DataInterface;

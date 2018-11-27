@@ -1,4 +1,4 @@
-package be.bagofwords.db.leveldb;
+package be.bagofwords.db.interfaces.leveldb;
 
 import be.bagofwords.db.CoreDataInterface;
 import be.bagofwords.db.combinator.Combinator;
@@ -13,7 +13,6 @@ import org.iq80.leveldb.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Map;
 
 import static org.fusesource.leveldbjni.JniDBFactory.factory;

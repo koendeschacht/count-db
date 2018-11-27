@@ -144,27 +144,6 @@
             <artifactId>snappy-java</artifactId>
             <version>1.1.2.6</version>
         </dependency>
-        <dependency>
-            <!-- Install using the install_extra_libs.sh script -->
-            <groupId>extraLibs</groupId>
-            <artifactId>kyotocabinet</artifactId>
-            <version>1.24</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <!-- Install using the install_extra_libs.sh script -->
-            <groupId>extraLibs</groupId>
-            <artifactId>rocksdb</artifactId>
-            <version>1.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <!-- Install using the install_extra_libs.sh script -->
-            <groupId>extraLibs</groupId>
-            <artifactId>leveldbjni-all</artifactId>
-            <version>99-master-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 
 </project>

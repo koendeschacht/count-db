@@ -5,7 +5,7 @@ import be.bagofwords.application.status.perf.ThreadSampleMonitor;
 import be.bagofwords.db.DataInterfaceFactory;
 import be.bagofwords.db.DatabaseCachingType;
 import be.bagofwords.db.combinator.LongCombinator;
-import be.bagofwords.db.experimental.kyoto.KyotoDataInterfaceFactory;
+import be.bagofwords.db.interfaces.kyoto.KyotoDataInterfaceFactory;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.impl.BaseDataInterface;
 import be.bagofwords.db.methods.LongObjectSerializer;
