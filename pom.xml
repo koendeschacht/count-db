@@ -145,25 +145,25 @@
             <version>1.1.2.6</version>
         </dependency>
         <dependency>
+            <!-- Install using the install_extra_libs.sh script -->
             <groupId>extraLibs</groupId>
             <artifactId>kyotocabinet</artifactId>
             <version>1.24</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/kyotocabinet-1.24/kyotocabinet.jar</systemPath>
+            <scope>provided</scope>
         </dependency>
         <dependency>
+            <!-- Install using the install_extra_libs.sh script -->
             <groupId>extraLibs</groupId>
             <artifactId>rocksdb</artifactId>
             <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/rocksdb/rocksdbjni.jar</systemPath>
+            <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.fusesource.leveldbjni</groupId>
+            <!-- Install using the install_extra_libs.sh script -->
+            <groupId>extraLibs</groupId>
             <artifactId>leveldbjni-all</artifactId>
             <version>99-master-SNAPSHOT</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/lib/leveldb/leveldbjni-all-99-master-SNAPSHOT.jar</systemPath>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 

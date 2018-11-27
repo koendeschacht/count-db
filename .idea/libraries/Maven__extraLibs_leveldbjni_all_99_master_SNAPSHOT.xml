@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: extraLibs:leveldbjni-all:99-master-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/extraLibs/leveldbjni-all/99-master-SNAPSHOT/leveldbjni-all-99-master-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/extraLibs/leveldbjni-all/99-master-SNAPSHOT/leveldbjni-all-99-master-SNAPSHOT-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/extraLibs/leveldbjni-all/99-master-SNAPSHOT/leveldbjni-all-99-master-SNAPSHOT-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

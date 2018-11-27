@@ -55,30 +55,30 @@
             <version>master-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>extraLibs</groupId>
-            <artifactId>kyotocabinet</artifactId>
-            <version>1.24</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/../lib/kyotocabinet-1.24/kyotocabinet.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>extraLibs</groupId>
-            <artifactId>rocksdb</artifactId>
-            <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/../lib/rocksdb/rocksdbjni.jar</systemPath>
-        </dependency>
-        <dependency>
-            <groupId>org.fusesource.leveldbjni</groupId>
-            <artifactId>leveldbjni-all</artifactId>
-            <version>99-master-SNAPSHOT</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/../lib/leveldb/leveldbjni-all-99-master-SNAPSHOT.jar</systemPath>
-        </dependency>
-        <dependency>
             <groupId>net.jpountz.lz4</groupId>
             <artifactId>lz4</artifactId>
             <version>1.3.0</version>
+        </dependency>
+        <dependency>
+            <!-- Install using the install_extra_libs.sh script -->
+            <groupId>extraLibs</groupId>
+            <artifactId>kyotocabinet</artifactId>
+            <version>1.24</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <!-- Install using the install_extra_libs.sh script -->
+            <groupId>extraLibs</groupId>
+            <artifactId>rocksdb</artifactId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <!-- Install using the install_extra_libs.sh script -->
+            <groupId>extraLibs</groupId>
+            <artifactId>leveldbjni-all</artifactId>
+            <version>99-master-SNAPSHOT</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
