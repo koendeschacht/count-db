@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.github.koendeschacht:flexible-slf4j:master-8207c42e1b-1">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/koendeschacht/flexible-slf4j/master-8207c42e1b-1/flexible-slf4j-master-8207c42e1b-1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/koendeschacht/flexible-slf4j/master-8207c42e1b-1/flexible-slf4j-master-8207c42e1b-1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/koendeschacht/flexible-slf4j/master-8207c42e1b-1/flexible-slf4j-master-8207c42e1b-1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
