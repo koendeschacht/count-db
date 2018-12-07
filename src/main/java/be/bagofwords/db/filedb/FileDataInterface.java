@@ -54,7 +54,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     private List<FileBucket> fileBuckets;
     private final long randomId;
 
-    private final String sizeOfCachedFileContentsLock = new String("LOCK");
+    private final String sizeOfCachedFileContentsLock = "LOCK";
     private final long maxSizeOfCachedFileContents;
     private long currentSizeOfCachedFileContents;
 
@@ -889,14 +889,14 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         if (directory == null) {
             throw new RuntimeException("Directory is null, probably the data interface was closed already!");
         }
-        return new File(directory, fileInfo.getBucketName() + "_" + Long.toString(fileInfo.getFirstKey()));
+        return new File(directory, fileInfo.getBucketName() + "_" + fileInfo.getFirstKey());
     }
 
     private File toTempFile(FileInfo fileInfo) {
         if (directory == null) {
             throw new RuntimeException("Directory is null, probably the data interface was closed already!");
         }
-        return new File(directory, "tmp." + fileInfo.getBucketName() + "_" + Long.toString(fileInfo.getFirstKey()));
+        return new File(directory, "tmp." + fileInfo.getBucketName() + "_" + fileInfo.getFirstKey());
     }
 
     private Map<Long, T> readMap(FileInfo file) {

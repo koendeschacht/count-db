@@ -15,7 +15,7 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.8.3" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.8.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.8.3" level="project" />
-    <orderEntry type="library" name="Maven: com.github.koendeschacht:bow-utils:master-8e8001e1ec-1" level="project" />
+    <orderEntry type="library" name="Maven: com.github.koendeschacht:bow-utils:master-47da41fe9e-1" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.25" level="project" />
     <orderEntry type="library" name="Maven: com.github.koendeschacht:bow-utils-extra:master-2017.1.1-g2b0b2a5-32" level="project" />
     <orderEntry type="library" name="Maven: com.sparkjava:spark-core:2.5.5" level="project" />
@@ -36,7 +36,7 @@
     <orderEntry type="library" name="Maven: com.github.koendeschacht:flexible-slf4j:master-8207c42e1b-1" level="project" />
     <orderEntry type="library" name="Maven: org.java-websocket:Java-WebSocket:1.3.4" level="project" />
     <orderEntry type="library" name="Maven: it.unimi.dsi:fastutil:8.1.0" level="project" />
-    <orderEntry type="library" name="Maven: com.github.koendeschacht:mini-dep-i:master-1b6b54a5a5-1" level="project" />
+    <orderEntry type="library" name="Maven: com.github.koendeschacht:mini-dep-i:master-13b7e6640a-1" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:19.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.12" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />

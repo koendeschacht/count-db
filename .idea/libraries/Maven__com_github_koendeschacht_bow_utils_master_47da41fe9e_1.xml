@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.github.koendeschacht:bow-utils:master-47da41fe9e-1">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/koendeschacht/bow-utils/master-47da41fe9e-1/bow-utils-master-47da41fe9e-1.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/koendeschacht/bow-utils/master-47da41fe9e-1/bow-utils-master-47da41fe9e-1-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/github/koendeschacht/bow-utils/master-47da41fe9e-1/bow-utils-master-47da41fe9e-1-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
