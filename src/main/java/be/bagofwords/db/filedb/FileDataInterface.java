@@ -54,7 +54,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
     private List<FileBucket> fileBuckets;
     private final long randomId;
 
-    private final String sizeOfCachedFileContentsLock = "LOCK";
+    private final Object sizeOfCachedFileContentsLock = new Object();
     private final long maxSizeOfCachedFileContents;
     private long currentSizeOfCachedFileContents;
 
@@ -529,7 +529,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     targetSize = MAX_FILE_SIZE_READ;
                 }
                 if (needsRewrite) {
-                    //                    Log.i("Will rewrite file " + file.getFirstKey() + " " + getName() + " clean=" + file.isClean() + " force=" + forceClean + " readSize=" + file.getReadSize() + " writeSize=" + file.getWriteSize() + " targetSize=" + targetSize);
+                    // Log.i("Will rewrite file " + file.getFirstKey() + " " + getName() + " clean=" + file.isClean() + " force=" + forceClean + " readSize=" + file.getReadSize() + " writeSize=" + file.getWriteSize() + " targetSize=" + targetSize);
                     List<KeyValue<T>> values = readAllValues(file);
                     Long endOfMergedFile = inWritePhase() ? null : mergeFileIfTooSmall(bucket.getFiles(), fileInd, file.getWriteSize(), targetSize, values);
                     if (endOfMergedFile != null) {
@@ -538,6 +538,7 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                     DataStream ds = new DataStream();
                     List<Pair<Long, Integer>> fileLocations = new ArrayList<>();
                     int itemsWrittenToFile = 0;
+                    int endOfPreviousItem = 0;
                     for (KeyValue<T> entry : values) {
                         long key = entry.getKey();
                         T value = entry.getValue();
@@ -547,21 +548,26 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
                             if (endOfMergedFile != null) {
                                 throw new RuntimeException("Something went wrong! Merged file and then created new file?");
                             }
-                            writeBufferToTempFile(ds, file);
+                            writeBufferToTempFile(ds, endOfPreviousItem, file);
                             swapTempForReal(file);
-                            file.fileWasRewritten(sample(fileLocations, 100), ds.position, ds.position);
+                            file.fileWasRewritten(sample(fileLocations, 100), endOfPreviousItem, endOfPreviousItem);
                             long currLastKey = file.getLastKey();
                             file.setLastKey(key);
                             fileLocations = new ArrayList<>();
                             file = new FileInfo(bucket.getName(), key, currLastKey, 0, 0);
-                            ds.reset();
+                            ds.moveDataToFront(endOfPreviousItem, ds.position);
                             bucket.getFiles().add(fileInd + 1, file);
                             fileInd++;
                         }
-                        fileLocations.add(new Pair<>(key, ds.position - sizeOfKeyAndValue));
+                        int position = ds.position - sizeOfKeyAndValue;
+                        if (position < 0) {
+                            throw new RuntimeException("Invalid position " + position + " in file " + toFile(file).getAbsolutePath());
+                        }
+                        fileLocations.add(new Pair<>(key, position));
                         itemsWrittenToFile++;
+                        endOfPreviousItem = ds.position;
                     }
-                    writeBufferToTempFile(ds, file);
+                    writeBufferToTempFile(ds, ds.position, file);
                     swapTempForReal(file);
                     file.fileWasRewritten(sample(fileLocations, 50), ds.position, ds.position);
                     numOfRewrittenFiles++;
@@ -574,6 +580,9 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
             if (numOfRewrittenFiles > 0) {
                 metaFileOutOfSync = true;
             }
+            if (DBUtils.DEBUG) {
+                checkValidityOfFiles(bucket);
+            }
             return numOfRewrittenFiles;
         } catch (Exception exp) {
             Log.e("Unexpected exception while rewriting files", exp);
@@ -581,6 +590,28 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         } finally {
             bucket.unlockWrite();
         }
+    }
+
+    private void checkValidityOfFiles(FileBucket bucket) {
+        bucket.getFiles().forEach(this::checkValidityOfFile);
+    }
+
+    private void checkValidityOfFile(FileInfo file) {
+        long sizeOnDisk = toFile(file).length();
+        if (sizeOnDisk < file.getWriteSize()) {
+            throw new RuntimeException("Size on disk is " + sizeOnDisk + " write size is " + file.getWriteSize());
+        }
+        if (sizeOnDisk < file.getReadSize()) {
+            throw new RuntimeException("Size on disk " + sizeOnDisk + " read size is " + file.getReadSize());
+        }
+        if (file.isClean() && !(file.getReadSize() == sizeOnDisk && file.getWriteSize() == sizeOnDisk)) {
+            throw new RuntimeException("Clean size on disk " + sizeOnDisk + " read size is " + file.getReadSize() + " write size is " + file.getWriteSize());
+        }
+        Arrays.stream(file.getFileLocationsValues()).forEach(value -> {
+            if (value < 0 || value > sizeOnDisk) {
+                throw new RuntimeException("Invalid file location value " + value);
+            }
+        });
     }
 
     private boolean allFilesClean(FileBucket bucket) {
@@ -879,9 +910,9 @@ public class FileDataInterface<T extends Object> extends CoreDataInterface<T> im
         os.close();
     }
 
-    private void writeBufferToTempFile(DataStream dataStream, FileInfo fileInfo) throws IOException {
+    private void writeBufferToTempFile(DataStream dataStream, int bytesToWrite, FileInfo fileInfo) throws IOException {
         OutputStream os = new FileOutputStream(toTempFile(fileInfo), false);
-        os.write(dataStream.buffer, 0, dataStream.position);
+        os.write(dataStream.buffer, 0, bytesToWrite);
         os.close();
     }
 

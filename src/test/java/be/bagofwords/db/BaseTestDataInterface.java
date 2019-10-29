@@ -1,18 +1,19 @@
 package be.bagofwords.db;
 
 import be.bagofwords.application.MinimalApplicationDependencies;
-import be.bagofwords.db.combinator.OverWriteCombinator;
-import be.bagofwords.db.methods.LongObjectSerializer;
-import be.bagofwords.web.SocketServer;
 import be.bagofwords.db.combinator.LongCombinator;
 import be.bagofwords.db.filedb.FileDataInterfaceFactory;
 import be.bagofwords.db.helper.DataInterfaceFactoryFactory;
+import be.bagofwords.db.methods.LongObjectSerializer;
 import be.bagofwords.db.remote.RemoteDataInterfaceServer;
 import be.bagofwords.minidepi.ApplicationContext;
+import be.bagofwords.web.SocketServer;
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runners.Parameterized;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -58,7 +59,7 @@ public class BaseTestDataInterface {
     @Before
     public void setUp() throws Exception {
         HashMap<String, String> config = new HashMap<>();
-        config.put("data_directory", "/tmp/dbServer_" + System.currentTimeMillis());
+        config.put("data_directory", "/tmp/dbServer/" + System.currentTimeMillis());
         config.put("socket.host", "localhost");
         config.put("socket.port", "1208");
         context = new ApplicationContext(config);
@@ -73,11 +74,15 @@ public class BaseTestDataInterface {
     }
 
     @After
-    public void closeFactory() {
+    public void closeFactory() throws IOException {
         if (dataInterfaceFactory != null) {
             dataInterfaceFactory.closeAllInterfaces();
         }
         context.terminate();
+        File directory = new File("/tmp/dbServer");
+        if (directory.exists()) {
+            FileUtils.deleteDirectory(directory);
+        }
     }
 
     public void createDataInterfaceFactory(DataInterfaceFactoryFactory dataInterfaceFactoryFactory) {

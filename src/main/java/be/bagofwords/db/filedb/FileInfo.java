@@ -58,6 +58,9 @@ class FileInfo implements Comparable {
         for (int i = 0; i < fileLocations.size(); i++) {
             fileLocationsKeys[i] = fileLocations.get(i).getFirst();
             fileLocationsValues[i] = fileLocations.get(i).getSecond();
+            if (fileLocationsValues[i] < 0) {
+                throw new RuntimeException("Illegal value for file location " + fileLocationsValues[i]);
+            }
         }
     }
 

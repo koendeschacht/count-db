@@ -167,4 +167,20 @@ public class DataStream {
         ensureSize(size);
         position += size;
     }
+
+    public void moveDataToFront(int start, int end) {
+        if (start < 0) {
+            throw new RuntimeException("Invalid value for start " + start);
+        }
+        if (end < start) {
+            throw new RuntimeException("Invalid value for end " + end);
+        }
+        if (end > buffer.length) {
+            throw new RuntimeException("Invalid value for end " + end + " (buffer size is " + buffer.length + ")");
+        }
+        for (int i = start; i < end; i++) {
+            buffer[i - start] = buffer[i];
+        }
+        position = end - start;
+    }
 }

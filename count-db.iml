@@ -15,9 +15,19 @@
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.8.3" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.8.0" level="project" />
     <orderEntry type="library" name="Maven: com.fasterxml.jackson.core:jackson-core:2.8.3" level="project" />
-    <orderEntry type="library" name="Maven: com.github.koendeschacht:bow-utils:master-47da41fe9e-1" level="project" />
+    <orderEntry type="library" name="Maven: com.github.koendeschacht:bow-utils:master-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.25" level="project" />
-    <orderEntry type="library" name="Maven: com.github.koendeschacht:bow-utils-extra:master-2017.1.1-g2b0b2a5-32" level="project" />
+    <orderEntry type="library" name="Maven: com.github.koendeschacht:remote-exec:master-SNAPSHOT" level="project" />
+    <orderEntry type="module-library">
+      <library name="Maven: com.sun:tools:1.9">
+        <CLASSES>
+          <root url="jar:///usr/lib/jvm/java-8-oracle/lib/tools.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="Maven: com.github.koendeschacht:bow-utils-extra:master-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.sparkjava:spark-core:2.5.5" level="project" />
     <orderEntry type="library" name="Maven: org.eclipse.jetty:jetty-server:9.3.6.v20151106" level="project" />
     <orderEntry type="library" name="Maven: javax.servlet:javax.servlet-api:3.1.0" level="project" />
@@ -33,10 +43,10 @@
     <orderEntry type="library" name="Maven: org.eclipse.jetty.websocket:websocket-client:9.3.6.v20151106" level="project" />
     <orderEntry type="library" name="Maven: org.eclipse.jetty.websocket:websocket-servlet:9.3.6.v20151106" level="project" />
     <orderEntry type="library" name="Maven: org.eclipse.jetty.websocket:websocket-api:9.3.6.v20151106" level="project" />
-    <orderEntry type="library" name="Maven: com.github.koendeschacht:flexible-slf4j:master-8207c42e1b-1" level="project" />
+    <orderEntry type="library" name="Maven: com.github.koendeschacht:flexible-slf4j:master-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: org.java-websocket:Java-WebSocket:1.3.4" level="project" />
     <orderEntry type="library" name="Maven: it.unimi.dsi:fastutil:8.1.0" level="project" />
-    <orderEntry type="library" name="Maven: com.github.koendeschacht:mini-dep-i:master-13b7e6640a-1" level="project" />
+    <orderEntry type="library" name="Maven: com.github.koendeschacht:mini-dep-i:master-SNAPSHOT" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:19.0" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.12" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />

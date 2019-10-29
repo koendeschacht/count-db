@@ -32,6 +32,10 @@ public interface DataInterfaceFactory {
         return createDataInterface(name, objectClass, new OverWriteCombinator<>(), new JsonObjectSerializer<>(objectClass));
     }
 
+    default <T extends Object> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
+        return createDataInterface(name, objectClass, combinator, new JsonObjectSerializer<>(objectClass));
+    }
+
     <T extends Object> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer);
 
     List<DataInterfaceReference> getAllInterfaces();

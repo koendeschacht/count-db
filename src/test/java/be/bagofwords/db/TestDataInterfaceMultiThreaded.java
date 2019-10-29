@@ -6,7 +6,6 @@ import be.bagofwords.util.HashUtils;
 import be.bagofwords.util.KeyValue;
 import be.bagofwords.util.SafeThread;
 import be.bagofwords.util.Utils;
-import org.apache.commons.lang3.mutable.MutableLong;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,7 +22,7 @@ public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
     }
 
     @Test
-    public void testStrings() throws InterruptedException {
+    public void testCountsWriteDelete() throws InterruptedException {
         final int numOfThreads = 10;
         final int numOfExamples = 200;
         final int numOfIterations = 10000;
@@ -86,7 +85,7 @@ public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
     @Test
     public void testCounts() {
         int numOfThreads = 10;
-        final int numOfWritesPerThread = 50 ;
+        final int numOfWritesPerThread = 50;
         final DataInterface<Long> db = createCountDataInterface("testCounts");
         db.dropAllData();
         SafeThread[] threads = new SafeThread[numOfThreads];
@@ -129,6 +128,46 @@ public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
         iterator.close();
     }
 
+    @Test
+    public void testLargeStrings() {
+        int numOfThreads = 10;
+        final int numOfWritesPerThread = 100;
+        final DataInterface<String> db = createDataInterface("testStrings_" + type, String.class).create();
+        final String longValue = longValue();
+        db.dropAllData();
+        SafeThread[] threads = new SafeThread[numOfThreads];
+        for (int i = 0; i < threads.length; i++) {
+            int threadNr = i;
+            threads[i] = new SafeThread("testThread_" + i, false) {
+                @Override
+                protected void runImpl() {
+                    for (int j = 0; j < numOfWritesPerThread; j++) {
+                        db.write(HashUtils.randomDistributeHash(threadNr) + "_" + HashUtils.randomDistributeHash(j), longValue);
+                    }
+                }
+
+            };
+            threads[i].start();
+        }
+        for (SafeThread thread : threads) {
+            thread.waitForFinish();
+        }
+        db.flush();
+        for (int i = 0; i < numOfThreads; i++) {
+            for (int j = 0; j < numOfWritesPerThread; j++) {
+                String value = db.read(HashUtils.randomDistributeHash(i) + "_" + HashUtils.randomDistributeHash(j));
+                Assert.assertEquals(longValue, value);
+            }
+        }
+    }
+
+    private String longValue() {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < 20000; i++) {
+            result.append(HashUtils.randomDistributeHash(i));
+        }
+        return result.toString();
+    }
 
     private boolean allRemoved(long[] numAdded) {
         boolean allRemoved = true;
@@ -137,6 +176,5 @@ public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
         }
         return allRemoved;
     }
-
 
 }
