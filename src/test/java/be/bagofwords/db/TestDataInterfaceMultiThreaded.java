@@ -128,6 +128,9 @@ public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
         iterator.close();
     }
 
+    /**
+     * Test that writes sufficient data to trigger a rewrite of the files in FileDataInterface
+     */
     @Test
     public void testLargeStrings() {
         int numOfThreads = 10;
@@ -143,6 +146,9 @@ public class TestDataInterfaceMultiThreaded extends BaseTestDataInterface {
                 protected void runImpl() {
                     for (int j = 0; j < numOfWritesPerThread; j++) {
                         db.write(HashUtils.randomDistributeHash(threadNr) + "_" + HashUtils.randomDistributeHash(j), longValue);
+                        if (j % 20 == 0) {
+                            db.flush();
+                        }
                     }
                 }
 
