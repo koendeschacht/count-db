@@ -48,8 +48,8 @@ public abstract class BaseDataInterfaceFactory implements LifeCycleBean, DataInt
         this.allInterfacesReferenceQueue = new ReferenceQueue<>();
     }
 
-    public <T> DataInterfaceConfig<T> dataInterface(String name, Class<T> objectClass) {
-        return new DataInterfaceConfig<>(name, objectClass, this);
+    public <T> DataInterfaceConfig<T> dataInterface(String name, Class<T> objectClass, Class... genericParams) {
+        return new DataInterfaceConfig<>(name, objectClass, this, genericParams);
     }
 
     @Override

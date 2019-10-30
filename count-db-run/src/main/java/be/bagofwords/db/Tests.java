@@ -3,6 +3,8 @@ package be.bagofwords.db;
 import be.bagofwords.db.methods.DataStream;
 import be.bagofwords.db.methods.JsonObjectSerializer;
 import be.bagofwords.db.methods.ObjectSerializer;
+import be.bagofwords.exec.PackedRemoteObject;
+import be.bagofwords.exec.RemoteObjectClassLoader;
 import be.bagofwords.exec.RemoteObjectConfig;
 import be.bagofwords.exec.RemoteObjectUtil;
 import be.bagofwords.logging.Log;
@@ -29,7 +31,10 @@ public class Tests {
     public static void main(String[] args) throws IOException {
         ObjectSerializer<TestObject> objectSerializer = new JsonObjectSerializer<>(TestObject.class, TestObject.class);
         RemoteObjectConfig execConfig = objectSerializer.createExecConfig();
-        ObjectSerializer objectSerializer2 = (ObjectSerializer) RemoteObjectUtil.loadObject(execConfig.pack());
+        PackedRemoteObject packedRemoteObject = execConfig.pack();
+        RemoteObjectClassLoader classLoader = new RemoteObjectClassLoader(packedRemoteObject);
+        classLoader.addRemoteClasses(packedRemoteObject.classSources);
+        ObjectSerializer objectSerializer2 = (ObjectSerializer) RemoteObjectUtil.loadObject(packedRemoteObject, classLoader);
         Log.i("Success!");
 
         // testCompression();

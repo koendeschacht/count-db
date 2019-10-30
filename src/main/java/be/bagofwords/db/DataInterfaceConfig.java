@@ -22,14 +22,14 @@ public class DataInterfaceConfig<T> {
     public boolean isTemporary;
     public boolean inMemory;
 
-    public DataInterfaceConfig(String name, Class<T> objectClass, BaseDataInterfaceFactory factory) {
+    public DataInterfaceConfig(String name, Class<T> objectClass, BaseDataInterfaceFactory factory, Class... genericParams) {
         this.name = name;
         this.objectClass = objectClass;
         this.factory = factory;
         this.combinator = new OverWriteCombinator<>();
         this.cache = true;
         this.bloomFilter = false;
-        this.objectSerializer = new JsonObjectSerializer<>(objectClass);
+        this.objectSerializer = new JsonObjectSerializer<>(objectClass, genericParams);
     }
 
     public DataInterfaceConfig<T> combinator(Combinator<T> combinator) {

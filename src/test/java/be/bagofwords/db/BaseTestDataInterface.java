@@ -61,7 +61,7 @@ public class BaseTestDataInterface {
         HashMap<String, String> config = new HashMap<>();
         config.put("data_directory", "/tmp/dbServer/" + System.currentTimeMillis());
         config.put("socket.host", "localhost");
-        config.put("socket.port", "1208");
+        config.put("socket.port", "1308");
         context = new ApplicationContext(config);
         context.registerBean(MinimalApplicationDependencies.class);
         DataInterfaceFactoryFactory dataInterfaceFactoryFactory = new DataInterfaceFactoryFactory(context);

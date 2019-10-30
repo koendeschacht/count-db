@@ -2,6 +2,8 @@ package be.bagofwords.db;
 
 import be.bagofwords.db.combinator.Combinator;
 import be.bagofwords.db.combinator.OverWriteCombinator;
+import be.bagofwords.db.experimental.id.IdDataInterface;
+import be.bagofwords.db.experimental.id.IdObject;
 import be.bagofwords.db.experimental.index.MultiDataIndexer;
 import be.bagofwords.db.experimental.index.MultiDataInterfaceIndex;
 import be.bagofwords.db.experimental.index.UniqueDataIndexer;
@@ -16,7 +18,7 @@ import java.util.List;
 
 public interface DataInterfaceFactory {
 
-    <T> DataInterfaceConfig<T> dataInterface(String name, Class<T> objectClass);
+    <T> DataInterfaceConfig<T> dataInterface(String name, Class<T> objectClass, Class... genericParams);
 
     <T> MultiDataInterfaceIndex<T> multiIndex(DataInterface<T> dataInterface, String nameOfIndex, MultiDataIndexer<T> indexer);
 
@@ -28,15 +30,29 @@ public interface DataInterfaceFactory {
 
     DataInterface<Long> createInMemoryCountDataInterface(String name);
 
-    default <T extends Object> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass) {
+    default <T extends IdObject> IdDataInterfaceConfig<T> idDataInterface(String name, Class<T> objectClass) {
+        return new IdDataInterfaceConfig<T>(dataInterface(name, List.class, objectClass));
+    }
+
+    default <T> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass) {
         return createDataInterface(name, objectClass, new OverWriteCombinator<>(), new JsonObjectSerializer<>(objectClass));
     }
 
-    default <T extends Object> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
+    default <T> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
         return createDataInterface(name, objectClass, combinator, new JsonObjectSerializer<>(objectClass));
     }
 
-    <T extends Object> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer);
+    default <T extends IdObject> IdDataInterface<T> createIdDataInterface(String name, Class<T> objectClass) {
+        return idDataInterface(name, objectClass).create();
+    }
+
+    default <T extends IdObject> IdDataInterface<T> createIdDataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
+        return idDataInterface(name, objectClass)
+                .combinator(combinator)
+                .create();
+    }
+
+    <T> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer);
 
     List<DataInterfaceReference> getAllInterfaces();
 
