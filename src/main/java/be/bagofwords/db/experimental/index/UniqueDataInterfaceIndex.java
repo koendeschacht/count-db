@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 public class UniqueDataInterfaceIndex<T> extends BaseDataInterfaceIndex<T> {
 
     private final UniqueDataIndexer<T> indexer;
-    private final BaseDataInterface<KeyValue<T>> indexedDataInterface;
+    private final DataInterface<KeyValue<T>> indexedDataInterface;
 
     public UniqueDataInterfaceIndex(String name, DataInterfaceFactory dataInterfaceFactory, DataInterface<T> dataInterface, UniqueDataIndexer<T> indexer) {
         super(dataInterface);

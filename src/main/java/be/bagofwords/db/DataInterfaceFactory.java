@@ -34,11 +34,11 @@ public interface DataInterfaceFactory {
         return new IdDataInterfaceConfig<T>(dataInterface(name, List.class, objectClass));
     }
 
-    default <T> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass) {
+    default <T> DataInterface<T> createDataInterface(String name, Class<T> objectClass) {
         return createDataInterface(name, objectClass, new OverWriteCombinator<>(), new JsonObjectSerializer<>(objectClass));
     }
 
-    default <T> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
+    default <T> DataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator) {
         return createDataInterface(name, objectClass, combinator, new JsonObjectSerializer<>(objectClass));
     }
 
@@ -52,7 +52,7 @@ public interface DataInterfaceFactory {
                 .create();
     }
 
-    <T> BaseDataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer);
+    <T> DataInterface<T> createDataInterface(String name, Class<T> objectClass, Combinator<T> combinator, ObjectSerializer<T> objectSerializer);
 
     List<DataInterfaceReference> getAllInterfaces();
 

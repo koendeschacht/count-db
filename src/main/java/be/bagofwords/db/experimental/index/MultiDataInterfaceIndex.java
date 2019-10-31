@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 public class MultiDataInterfaceIndex<T> extends BaseDataInterfaceIndex<T> {
 
     private final MultiDataIndexer<T> indexer;
-    private final BaseDataInterface<List<KeyValue<T>>> indexedDataInterface;
+    private final DataInterface<List<KeyValue<T>>> indexedDataInterface;
 
     public MultiDataInterfaceIndex(String name, DataInterfaceFactory dataInterfaceFactory, DataInterface<T> dataInterface, MultiDataIndexer<T> indexer) {
         super(dataInterface);

@@ -13,11 +13,11 @@ public class FileBucket {
 
     private List<FileInfo> files;
     private final ReadWriteLock lock;
-    private final String name;
+    private final int index;
     private boolean shouldBeCleanedBeforeRead;
 
-    public FileBucket(@JsonProperty("name") String name) {
-        this.name = name;
+    public FileBucket(@JsonProperty("name") int index) {
+        this.index = index;
         this.lock = new ReentrantReadWriteLock();
         this.files = new ArrayList<>();
         this.shouldBeCleanedBeforeRead = false;
@@ -32,7 +32,7 @@ public class FileBucket {
             for (int i = 0; i < files.size(); i++) {
                 if (files.get(i).getFirstKey() > key) {
                     if (i == 0) {
-                        throw new RuntimeException("Incorrect bucket " + name + " for key " + key);
+                        throw new RuntimeException("Incorrect bucket " + index + " for key " + key);
                     } else {
                         return i - 1;
                     }
@@ -47,7 +47,7 @@ public class FileBucket {
             if (pos == -1) {
                 Log.i("ARRAY INDEX OUT OF BOUNDS!!!!");
                 Log.i("Was looking for key " + key);
-                Log.i("In bucket " + name);
+                Log.i("In bucket " + index);
                 Log.i("In files ");
                 for (FileInfo file : files) {
                     Log.i("   " + file.getFirstKey());
@@ -82,13 +82,12 @@ public class FileBucket {
     }
 
     public String toString() {
-        return super.toString() + " " + name;
+        return super.toString() + " " + index;
     }
 
     public boolean shouldBeCleanedBeforeRead() {
         return shouldBeCleanedBeforeRead;
     }
-
 
     public void setShouldBeCleanedBeforeRead(boolean shouldBeCleanedBeforeRead) {
         this.shouldBeCleanedBeforeRead = shouldBeCleanedBeforeRead;
@@ -102,7 +101,7 @@ public class FileBucket {
         return shouldBeCleanedBeforeRead;
     }
 
-    public String getName() {
-        return name;
+    public int getIndex() {
+        return index;
     }
 }

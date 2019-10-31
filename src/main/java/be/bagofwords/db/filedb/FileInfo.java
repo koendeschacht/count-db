@@ -1,14 +1,16 @@
 package be.bagofwords.db.filedb;
 
+import be.bagofwords.logging.Log;
 import be.bagofwords.util.Pair;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
 import java.util.List;
 
 class FileInfo implements Comparable {
 
-    private String bucketName;
+    private int bucketIndex;
     private long firstKey;
     private long lastKey;
     private int readSize;
@@ -18,12 +20,12 @@ class FileInfo implements Comparable {
     private long[] fileLocationsKeys;
     private int[] fileLocationsValues;
 
-    public FileInfo(@JsonProperty("bucketName") String bucketName,
+    public FileInfo(@JsonProperty("bucketIndex") int bucketIndex,
                     @JsonProperty("firstKey") long firstKey,
                     @JsonProperty("lastKey") long lastKey,
                     @JsonProperty("readSize") int readSize,
                     @JsonProperty("writeSize") int writeSize) {
-        this.bucketName = bucketName;
+        this.bucketIndex = bucketIndex;
         this.firstKey = firstKey;
         this.lastKey = lastKey;
         this.readSize = readSize;
@@ -38,8 +40,8 @@ class FileInfo implements Comparable {
         return firstKey;
     }
 
-    public String getBucketName() {
-        return bucketName;
+    public int getBucketIndex() {
+        return bucketIndex;
     }
 
     public long getLastKey() {
@@ -51,6 +53,7 @@ class FileInfo implements Comparable {
     }
 
     public void fileWasRewritten(List<Pair<Long, Integer>> fileLocations, int newReadSize, int newWriteSize) {
+        fileLocations = sample(fileLocations, 50);
         this.readSize = newReadSize;
         this.writeSize = newWriteSize;
         this.fileLocationsKeys = new long[fileLocations.size()];
@@ -122,4 +125,15 @@ class FileInfo implements Comparable {
     public void setLastKey(long lastKey) {
         this.lastKey = lastKey;
     }
+
+    private List<Pair<Long, Integer>> sample(List<Pair<Long, Integer>> fileLocations, int invSampleRate) {
+        List<Pair<Long, Integer>> result = new ArrayList<>(fileLocations.size() / invSampleRate);
+        for (int i = 0; i < fileLocations.size(); i++) {
+            if (i % invSampleRate == 0) {
+                result.add(fileLocations.get(i));
+            }
+        }
+        return result;
+    }
+
 }
