@@ -72,5 +72,5 @@ dataInterfaceFactory.terminate();
 
 ```
 
-For more details, see [ExampleUsage.java](https://github.com/koendeschacht/count-db/blob/master/src/main/java/be/bagofwords/main/ExampleUsage.java).
+For more details, see [ExampleUsage.java](https://github.com/koendeschacht/count-db/blob/master/count-db-run/src/main/java/be/bagofwords/db/example/ExampleUsage.java).
 
